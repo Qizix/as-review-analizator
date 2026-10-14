@@ -4,6 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
     "httpx>=0.28.1",
+    "scikit-learn>=1.9.1",
     "torch>=2.14.1",
     "transformers>=5.19.0",
 ]

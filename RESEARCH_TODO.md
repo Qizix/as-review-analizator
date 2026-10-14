@@ -13,7 +13,8 @@ Start with separate scripts that perform each task independently, then connect t
 - [ ] How to preprocess data for analysis?
 - [x] How to perform sentiment analysis (positive, negative, neutral) on the reviews?
   Use the Transformers text-classification pipeline with `cardiffnlp/twitter-roberta-base-sentiment-latest` on CPU, batch size 8, truncation enabled, and maximum length 512. Implemented in `scripts/analyze_sentiment.py`, adding a label and confidence score to each review.
-- [ ] How to identify common keywords or phrases in negative reviews?
+- [x] How to identify common keywords or phrases in negative reviews?
+  Use CountVectorizer with ngram_range=(1, 3), binary=True, min_df=1, lowercase=True, and stop_words=None. Rank by document frequency across negative reviews, then filter generic candidates while preserving negation. Implemented in `scripts/extract_phrases.py`.
 - [ ] How to provide actionable insights, such as areas of improvement based on review sentiment?
 - [ ] What is the API design schema?
 - [ ] How to visualize insights (e.g., sentiment distribution, rating distribution)?
