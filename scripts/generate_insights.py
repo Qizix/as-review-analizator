@@ -98,7 +98,7 @@ def request_insights(groups, prompt):
             config=types.GenerateContentConfig(
                 system_instruction=prompt,
                 response_mime_type="application/json",
-                response_schema=ModelReport,
+                response_json_schema=ModelReport.model_json_schema(),
                 max_output_tokens=8192,
             ),
         )

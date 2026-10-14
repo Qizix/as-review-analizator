@@ -20,6 +20,8 @@ Sentiment classification uses CardiffNLP's model on CPU and adds a positive, neg
 
 Set `GEMINI_API_KEY` or `GOOGLE_API_KEY` in your environment before generating insights. This step sends preprocessed reviews to Gemini 3.5 Flash-Lite, grouped by sentiment. Negative reviews support improvements; positive and neutral reviews provide context. It saves short actions grouped by priority and recurrence to `output/reviews_sentiment_insights.json` and a matching `.md` report. Use `--output PATH.json` to choose another location.
 
+If your API key is in `.env`, run `uv run --env-file .env scripts/generate_insights.py output/reviews_sentiment.json`.
+
 Run the offline tests with `uv run python -m unittest discover -s tests -v`.
 
 - [Assignment requirements](TEST_TASK.md)

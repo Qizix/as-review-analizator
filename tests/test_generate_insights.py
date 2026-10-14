@@ -88,7 +88,8 @@ class GenerateInsightsTests(unittest.TestCase):
         self.assertNotIn('"sentiment":', kwargs["contents"])
         self.assertEqual(kwargs["config"].system_instruction, "System instructions")
         self.assertEqual(kwargs["config"].response_mime_type, "application/json")
-        self.assertEqual(kwargs["config"].response_schema, ModelReport)
+        self.assertEqual(kwargs["config"].response_json_schema, ModelReport.model_json_schema())
+        self.assertIsNone(kwargs["config"].response_schema)
         self.assertEqual(client.call_args.kwargs["http_options"].timeout, 60000)
         self.assertEqual(client.call_args.kwargs["http_options"].retry_options.attempts, 3)
         self.assertEqual(result, response())
@@ -127,6 +128,12 @@ class GenerateInsightsTests(unittest.TestCase):
         self.assertIn(MODEL, str(requests[-1].url))
         self.assertEqual(payload["systemInstruction"]["parts"][0]["text"], "System prompt")
         self.assertEqual(payload["generationConfig"]["responseMimeType"], "application/json")
+        schema = payload["generationConfig"]["responseJsonSchema"]
+        self.assertNotIn("responseSchema", payload["generationConfig"])
+        self.assertEqual(schema, ModelReport.model_json_schema())
+        self.assertIs(schema["additionalProperties"], False)
+        self.assertIs(schema["$defs"]["Issue"]["additionalProperties"], False)
+        self.assertNotIn("additional_properties", json.dumps(schema))
         groups = json.loads(payload["contents"][0]["parts"][0]["text"])
         self.assertEqual(set(groups), {"negative", "positive", "neutral"})
 
@@ -139,6 +146,15 @@ class GenerateInsightsTests(unittest.TestCase):
                 fake.models.generate_content.return_value = SimpleNamespace(text=text)
                 with self.assertRaises(ValueError):
                     request_insights(prepare_reviews(collection()), "Prompt")
+
+    def test_local_validation_rejects_extra_fields(self):
+        for data in [{"issues": [], "unexpected": True}, {"issues": [{
+            "category": "Startup", "action": "Investigate startup failures.",
+            "priority": "high", "evidence_ids": ["n1"], "unexpected": True,
+        }]}]:
+            with self.subTest(data=data):
+                with self.assertRaises(ValueError):
+                    ModelReport.model_validate(data)
 
     def test_counts_priorities_recurrence_and_metadata(self):
         data = collection()
