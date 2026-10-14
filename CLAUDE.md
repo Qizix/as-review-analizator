@@ -9,6 +9,8 @@ Read [TEST_TASK.md](TEST_TASK.md) for the company assignment and its requirement
 ## Working Approach
 
 - Build the assignment step by step with the user.
+- Track research questions and the user's answers in [RESEARCH_TODO.md](RESEARCH_TODO.md).
+- Start implementation with separate scripts for individual tasks, then connect them into one project.
 - The current stage is documentation only. Do not scaffold or implement the API until the user requests the next step.
 - Choose the technology stack and design decisions during subsequent steps; none have been selected yet.
 - Keep README.md short and human-facing. Put detailed technical explanations in docs/ when needed.
