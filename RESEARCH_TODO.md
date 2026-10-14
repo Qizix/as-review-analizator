@@ -10,12 +10,14 @@ Start with separate scripts that perform each task independently, then connect t
   Skip invalid review records, deduplicate by review ID, save available reviews, and explicitly report any shortfall or page failures in collection metadata.
 - [x] How to extract data from the API or scraping results?
   Read ID, title, content, and rating labels from `feed.entry`; require nonempty text fields and ratings from 1 to 5.
-- [ ] How to preprocess data for analysis?
+- [x] How to preprocess data for analysis?
+  Before Gemini, convert emoji to descriptive words, normalize whitespace, and limit titles to 200 characters and texts to 4,000 while preserving their beginning and end. Mark truncated fields and keep source files intact.
 - [x] How to perform sentiment analysis (positive, negative, neutral) on the reviews?
   Use the Transformers text-classification pipeline with `cardiffnlp/twitter-roberta-base-sentiment-latest` on CPU, batch size 8, truncation enabled, and maximum length 512. Implemented in `scripts/analyze_sentiment.py`, adding a label and confidence score to each review.
 - [x] How to identify common keywords or phrases in negative reviews?
-  Use CountVectorizer with ngram_range=(1, 3), binary=True, min_df=1, lowercase=True, and stop_words=None. Rank by document frequency across negative reviews, then filter generic candidates while preserving negation. Implemented in `scripts/extract_phrases.py`.
-- [ ] How to provide actionable insights, such as areas of improvement based on review sentiment?
+  Replace phrase-frequency extraction with Gemini grouping of equivalent complaints into evidence-linked issue categories. Recurrence is calculated locally from unique supporting negative-review IDs.
+- [x] How to provide actionable insights, such as areas of improvement based on review sentiment?
+  Use Gemini 3.5 Flash-Lite with grouped negative/positive/neutral JSON and a system prompt. Negative reviews are evidence; other sentiments provide context. Validate structured output and evidence IDs, then generate short actions grouped by priority and recurrence. Empty issue lists are valid. Implemented in `scripts/generate_insights.py`.
 - [ ] What is the API design schema?
 - [ ] How to visualize insights (e.g., sentiment distribution, rating distribution)?
 - [ ] How to deploy the API on a cloud platform (e.g., AWS, Heroku, or Google Cloud)?
