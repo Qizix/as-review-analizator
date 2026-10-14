@@ -11,7 +11,8 @@ Start with separate scripts that perform each task independently, then connect t
 - [x] How to extract data from the API or scraping results?
   Read ID, title, content, and rating labels from `feed.entry`; require nonempty text fields and ratings from 1 to 5.
 - [ ] How to preprocess data for analysis?
-- [ ] How to perform sentiment analysis (positive, negative, neutral) on the reviews?
+- [x] How to perform sentiment analysis (positive, negative, neutral) on the reviews?
+  Use the Transformers text-classification pipeline with `cardiffnlp/twitter-roberta-base-sentiment-latest` on CPU, batch size 8, truncation enabled, and maximum length 512. Implemented in `scripts/analyze_sentiment.py`, adding a label and confidence score to each review.
 - [ ] How to identify common keywords or phrases in negative reviews?
 - [ ] How to provide actionable insights, such as areas of improvement based on review sentiment?
 - [ ] What is the API design schema?
