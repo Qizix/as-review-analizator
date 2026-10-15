@@ -3,7 +3,7 @@ sequenceDiagram
     participant UI as Dashboard / Chart.js
     participant API as FastAPI
     participant Pipeline as Analyzer
-    participant Apple as Apple RSS / Lookup
+    participant Apple as Apple Catalog / Lookup
     participant Prep as Preprocessor
     participant Sentiment as Local RoBERTa (CPU)
     participant Gemini as Gemini Flash-Lite
@@ -17,10 +17,10 @@ sequenceDiagram
     API->>Pipeline: Start analysis
     Pipeline->>Pipeline: Acquire single-analysis lock
 
-    loop Pages 1-10, sequentially
-        Pipeline->>Apple: Fetch recent reviews
+    loop Up to 10 pages using next offsets, sequentially
+        Pipeline->>Apple: Fetch catalog reviews
         Apple-->>Pipeline: Review records
-        Note over Pipeline,Apple: Timeouts and bounded retries
+        Note over Pipeline,Apple: Timeouts, pacing, and bounded retries
     end
     Pipeline->>Pipeline: Validate records, deduplicate IDs, sample uniformly
     Note over Pipeline: Report actual count and any shortfall

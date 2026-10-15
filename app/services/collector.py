@@ -2,6 +2,7 @@ import random
 import re
 import time
 from datetime import datetime, timezone
+from urllib.parse import parse_qs, urlsplit
 
 import httpx
 
@@ -19,9 +20,10 @@ COUNTRIES = set(
     "tt tv tw tz ua ug um us uy uz va vc ve vg vi vn vu wf ws ye yt za zm zw".split()
 )
 URL_TEMPLATE = (
-    "https://itunes.apple.com/{country}/rss/customerreviews/"
-    "page={page}/id={app_id}/sortby=mostrecent/json"
+    "https://apps.apple.com/api/apps/v1/catalog/{country}/apps/{app_id}/reviews"
+    "?l=en-US&offset={offset}&platform=web&additionalPlatforms=appletv,ipad,iphone,mac"
 )
+PAGE_SIZE = 10
 
 
 def validate_inputs(app_id, country, count):
@@ -44,12 +46,11 @@ def fetch_page(client, url, deadline=None):
             response = client.get(url, timeout=remaining)
             response.raise_for_status()
             payload = response.json()
-            if not isinstance(payload, dict) or not isinstance(payload.get("feed"), dict):
-                raise ValueError("response does not contain a review feed")
-            entries = payload["feed"].get("entry", [])
-            if not isinstance(entries, list):
-                raise ValueError("feed entries must be a list")
-            return entries
+            if not isinstance(payload, dict) or not isinstance(payload.get("data"), list):
+                raise ValueError("response must contain a review data list")
+            if payload.get("next") is not None and not isinstance(payload["next"], str):
+                raise ValueError("next page must be a URL string")
+            return payload
         except httpx.HTTPStatusError as exc:
             if exc.response.status_code != 429 and exc.response.status_code < 500:
                 raise
@@ -65,17 +66,18 @@ def extract_review(entry):
     if not isinstance(entry, dict):
         return None
     try:
-        review_id = entry["id"]["label"]
-        title = entry["title"]["label"]
-        text = entry["content"]["label"]
-        rating = entry["im:rating"]["label"]
+        review_id = entry["id"]
+        attributes = entry["attributes"]
+        title = attributes["title"]
+        text = attributes["review"]
+        rating = attributes["rating"]
     except (KeyError, TypeError):
         return None
     if not all(isinstance(value, str) and value.strip() for value in (review_id, title, text)):
         return None
-    if not isinstance(rating, str) or rating not in {"1", "2", "3", "4", "5"}:
+    if type(rating) is not int or not 1 <= rating <= 5:
         return None
-    return {"id": review_id, "title": title, "text": text, "rating": int(rating)}
+    return {"id": review_id, "title": title, "text": text, "rating": rating}
 
 
 def collect_reviews(client, app_id, country="us", count=100, seed=42, deadline=None):
@@ -85,17 +87,24 @@ def collect_reviews(client, app_id, country="us", count=100, seed=42, deadline=N
     failed_pages = []
     invalid_records = 0
     duplicate_records = 0
+    offset = 0
+    fetched_offsets = []
     for page in range(1, 11):
+        if page > 1:
+            time.sleep(0.5 if deadline is None else min(0.5, max(0, deadline - time.monotonic())))
         if deadline is not None and time.monotonic() >= deadline:
             failed_pages.extend({"page": skipped, "error": "Collection deadline exceeded"} for skipped in range(page, 11))
             break
-        url = URL_TEMPLATE.format(country=country, app_id=app_id, page=page)
+        url = URL_TEMPLATE.format(country=country, app_id=app_id, offset=offset)
         try:
-            entries = fetch_page(client, url, deadline)
+            payload = fetch_page(client, url, deadline)
         except (httpx.HTTPError, ValueError) as exc:
-            failed_pages.append({"page": page, "error": str(exc)})
+            failed_pages.append({"page": page, "offset": offset, "error": str(exc)})
+            offset += PAGE_SIZE
             continue
         fetched_pages.append(page)
+        fetched_offsets.append(offset)
+        entries = payload["data"]
         for entry in entries:
             review = extract_review(entry)
             if review is None:
@@ -104,6 +113,16 @@ def collect_reviews(client, app_id, country="us", count=100, seed=42, deadline=N
                 duplicate_records += 1
             else:
                 reviews[review["id"]] = review
+        if not entries or not payload.get("next"):
+            break
+        try:
+            next_offset = int(parse_qs(urlsplit(payload["next"]).query)["offset"][0])
+            if next_offset <= offset:
+                raise ValueError("next offset must increase")
+        except (ValueError, KeyError) as exc:
+            failed_pages.append({"page": page, "offset": offset, "error": f"Invalid pagination: {exc}"})
+            break
+        offset = next_offset
     available = list(reviews.values())
     selected = random.Random(seed).sample(available, min(count, len(available)))
     return {
@@ -116,9 +135,11 @@ def collect_reviews(client, app_id, country="us", count=100, seed=42, deadline=N
             "shortfall": max(0, count - len(selected)),
             "seed": seed,
             "collected_at": datetime.now(timezone.utc).isoformat(),
-            "source": "Apple customer reviews RSS JSON",
-            "sampling_pool": "Unique valid reviews from pages 1–10 sorted by most recent",
+            "source": "Apple App Store catalog reviews JSON",
+            "sampling_pool": "Unique valid reviews from up to 10 catalog pages in Apple response order",
+            "language": "en-US",
             "fetched_pages": fetched_pages,
+            "fetched_offsets": fetched_offsets,
             "failed_pages": failed_pages,
             "invalid_records": invalid_records,
             "duplicate_records": duplicate_records,

@@ -12,7 +12,7 @@ import httpx
 from app.services.collector import COUNTRIES, URL_TEMPLATE, validate_inputs, fetch_page, extract_review, collect_reviews
 
 def main():
-    parser = argparse.ArgumentParser(description="Sample Apple App Store reviews from RSS JSON")
+    parser = argparse.ArgumentParser(description="Sample Apple App Store catalog reviews")
     parser.add_argument("app_id")
     parser.add_argument("--country", default="us")
     parser.add_argument("--count", type=int, default=100)

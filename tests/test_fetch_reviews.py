@@ -16,14 +16,19 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 
 class FetchReviewsTests(unittest.TestCase):
-    def test_live_fixture_sampling(self):
-        fixture = json.loads((FIXTURES / "apple_reviews.json").read_text())
+    @patch("app.services.collector.time.sleep")
+    def test_live_fixture_sampling(self, sleep):
+        fixture = json.loads((FIXTURES / "apple_catalog_reviews.json").read_text())
         requested_pages = []
 
         def respond(request):
-            page = int(str(request.url).split("page=")[1].split("/")[0])
+            self.assertEqual(request.url.host, "apps.apple.com")
+            self.assertEqual(request.url.params["l"], "en-US")
+            self.assertEqual(request.url.params["platform"], "web")
+            self.assertEqual(request.url.params["additionalPlatforms"], "appletv,ipad,iphone,mac")
+            page = int(request.url.params["offset"]) // 10 + 1
             requested_pages.append(page)
-            return httpx.Response(200, json=fixture["pages"][str(page)])
+            return httpx.Response(200, json=fixture["pages"][str((page - 1) * 10)])
 
         with httpx.Client(transport=httpx.MockTransport(respond)) as client:
             first = collect_reviews(client, fixture["app_id"])
@@ -39,9 +44,10 @@ class FetchReviewsTests(unittest.TestCase):
         self.assertTrue(all(1 <= review["rating"] <= 5 for review in first["reviews"]))
         self.assertEqual(first["metadata"]["shortfall"], 0)
         self.assertEqual(first["metadata"]["failed_pages"], [])
+        self.assertEqual(first["metadata"]["fetched_offsets"], list(range(0, 100, 10)))
         pool = {}
         for page in fixture["pages"].values():
-            for entry in page["feed"].get("entry", []):
+            for entry in page["data"]:
                 review = extract_review(entry)
                 if review is not None:
                     pool.setdefault(review["id"], review)
@@ -54,10 +60,11 @@ class FetchReviewsTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     validate_inputs(app_id, country, count)
 
-    def test_shortfall_and_invalid_records(self):
-        entry = {"id": {"label": "1"}, "title": {"label": "Title"}, "content": {"label": "Text"}, "im:rating": {"label": "5"}}
-        invalid = [None, {}, {**entry, "im:rating": {"label": "6"}}, {**entry, "content": {"label": " "}}, {**entry, "id": None}]
-        transport = httpx.MockTransport(lambda request: httpx.Response(200, json={"feed": {"entry": [entry, entry, *invalid]}}))
+    @patch("app.services.collector.time.sleep")
+    def test_shortfall_and_invalid_records(self, sleep):
+        entry = {"id": "1", "attributes": {"title": "Title", "review": "Text", "rating": 5}}
+        invalid = [None, {}, {**entry, "attributes": {**entry["attributes"], "rating": 6}}, {**entry, "attributes": {**entry["attributes"], "review": " "}}, {**entry, "id": None}]
+        transport = httpx.MockTransport(lambda request: httpx.Response(200, json={"data": [entry, entry, *invalid], "next": f"/v1/catalog/us/apps/123/reviews?offset={int(request.url.params['offset']) + 10}"}))
         with httpx.Client(transport=transport) as client:
             result = collect_reviews(client, "123")
         self.assertEqual(result["reviews"], [{"id": "1", "title": "Title", "text": "Text", "rating": 5}])
@@ -67,7 +74,7 @@ class FetchReviewsTests(unittest.TestCase):
         self.assertEqual(result["metadata"]["invalid_records"], 50)
 
     def test_cli_saves_shortfall(self):
-        client = httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(200, json={"feed": {}})))
+        client = httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(200, json={"data": []})))
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "nested/reviews.json"
             stderr = io.StringIO()
@@ -81,26 +88,26 @@ class FetchReviewsTests(unittest.TestCase):
 
     @patch("app.services.collector.time.sleep")
     def test_partial_page_failure(self, sleep):
-        fixture = json.loads((FIXTURES / "apple_reviews.json").read_text())
+        fixture = json.loads((FIXTURES / "apple_catalog_reviews.json").read_text())
 
         def respond(request):
-            page = str(request.url).split("page=")[1].split("/")[0]
-            if page == "1":
+            offset = request.url.params["offset"]
+            if offset == "0":
                 return httpx.Response(404)
-            return httpx.Response(200, json=fixture["pages"][page])
+            return httpx.Response(200, json=fixture["pages"][offset])
 
         with httpx.Client(transport=httpx.MockTransport(respond)) as client:
             result = collect_reviews(client, fixture["app_id"])
-        self.assertEqual(len(result["reviews"]), 100)
+        self.assertEqual(len(result["reviews"]), 90)
         self.assertEqual(result["metadata"]["fetched_pages"], list(range(2, 11)))
         self.assertEqual([page["page"] for page in result["metadata"]["failed_pages"]], [1])
-        sleep.assert_not_called()
+        self.assertEqual(sleep.call_args_list, [unittest.mock.call(0.5)] * 9)
 
     @patch("app.services.collector.time.sleep")
     def test_retry_then_success(self, sleep):
-        responses = [httpx.Response(429), httpx.Response(503), httpx.Response(200, json={"feed": {}})]
+        responses = [httpx.Response(429), httpx.Response(503), httpx.Response(200, json={"data": []})]
         with httpx.Client(transport=httpx.MockTransport(lambda request: responses.pop(0))) as client:
-            self.assertEqual(fetch_page(client, "https://example.com"), [])
+            self.assertEqual(fetch_page(client, "https://example.com"), {"data": []})
         self.assertEqual(sleep.call_args_list, [unittest.mock.call(1), unittest.mock.call(2)])
 
     @patch("app.services.collector.time.sleep")
@@ -137,11 +144,67 @@ class FetchReviewsTests(unittest.TestCase):
                 raise httpx.ReadTimeout("Timed out", request=request)
             if len(requests) == 2:
                 return httpx.Response(200, text="not JSON")
-            return httpx.Response(200, json={"feed": {"entry": []}})
+            return httpx.Response(200, json={"data": []})
 
         with httpx.Client(transport=httpx.MockTransport(respond)) as client:
-            self.assertEqual(fetch_page(client, "https://example.com"), [])
+            self.assertEqual(fetch_page(client, "https://example.com"), {"data": []})
         self.assertEqual(len(requests), 3)
+
+    @patch("app.services.collector.time.sleep")
+    def test_follows_next_offset_and_stops_at_last_page(self, sleep):
+        offsets = []
+
+        def respond(request):
+            offset = int(request.url.params["offset"])
+            offsets.append(offset)
+            entry = {"id": str(offset), "attributes": {"title": "Title", "review": "Text", "rating": 2}}
+            payload = {"data": [entry]}
+            if offset == 0:
+                payload["next"] = "/v1/catalog/us/apps/123/reviews?l=en-US&offset=25"
+            return httpx.Response(200, json=payload)
+
+        with httpx.Client(transport=httpx.MockTransport(respond)) as client:
+            result = collect_reviews(client, "123")
+        self.assertEqual(offsets, [0, 25])
+        self.assertEqual(result["metadata"]["actual_count"], 2)
+        self.assertEqual(result["metadata"]["shortfall"], 98)
+        self.assertEqual(result["metadata"]["failed_pages"], [])
+
+    def test_empty_catalog_page_stops_collection(self):
+        requests = []
+
+        def respond(request):
+            requests.append(request)
+            return httpx.Response(200, json={"data": []})
+
+        with httpx.Client(transport=httpx.MockTransport(respond)) as client:
+            result = collect_reviews(client, "123")
+        self.assertEqual(len(requests), 1)
+        self.assertEqual(result["reviews"], [])
+        self.assertEqual(result["metadata"]["shortfall"], 100)
+
+    def test_invalid_next_offset_reports_partial_collection(self):
+        entry = {"id": "1", "attributes": {"title": "Title", "review": "Text", "rating": 2}}
+        for next_link in ("?offset=0", "?offset=-1", "?offset=abc", "?other=10"):
+            with self.subTest(next_link=next_link):
+                with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(200, json={"data": [entry], "next": next_link}))) as client:
+                    result = collect_reviews(client, "123")
+                self.assertEqual(result["metadata"]["actual_count"], 1)
+                self.assertIn("Invalid pagination", result["metadata"]["failed_pages"][0]["error"])
+
+    @patch("app.services.collector.time.sleep")
+    def test_malformed_catalog_payload_is_not_an_empty_result(self, sleep):
+        for payload in ({"feed": {}}, {"errors": []}, {"data": {}}, {"data": [], "next": 10}):
+            with self.subTest(payload=payload):
+                with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(200, json=payload))) as client:
+                    with self.assertRaises(ValueError):
+                        fetch_page(client, "https://example.com")
+
+    def test_catalog_ratings_must_be_integers(self):
+        for rating in (True, "5", 0, 6, 2.5, None):
+            with self.subTest(rating=rating):
+                entry = {"id": "1", "attributes": {"title": "Title", "review": "Text", "rating": rating}}
+                self.assertIsNone(extract_review(entry))
 
 
 if __name__ == "__main__":

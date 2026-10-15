@@ -31,7 +31,7 @@ With the server running, check readiness:
 curl http://127.0.0.1:8000/api/health
 ```
 
-Collect up to 100 reviews without model analysis. Change `country` to `ua` for Ukraine or use another two-letter country code:
+Collect up to 100 reviews from Apple’s catalog reviews endpoint without model analysis. Change `country` to `ua` for Ukraine or use another two-letter country code:
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/reviews/collect \
