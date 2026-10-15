@@ -1,6 +1,5 @@
 import json
 import io
-import random
 import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
@@ -18,7 +17,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 class FetchReviewsTests(unittest.TestCase):
     @patch("app.services.collector.time.sleep")
-    def test_live_fixture_sampling(self, sleep):
+    def test_live_fixture_source_order(self, sleep):
         fixture = json.loads((FIXTURES / "apple_catalog_reviews.json").read_text())
         requested_pages = []
 
@@ -37,9 +36,8 @@ class FetchReviewsTests(unittest.TestCase):
             different = collect_reviews(client, fixture["app_id"], seed=43)
         self.assertEqual(requested_pages, list(range(1, 11)) * 3)
         self.assertEqual(first["reviews"], second["reviews"])
-        self.assertNotEqual(first["reviews"], different["reviews"])
+        self.assertEqual(first["reviews"], different["reviews"])
         ids = [review["id"] for review in first["reviews"]]
-        self.assertEqual(ids, fixture["expected_seed_42_ids"])
         self.assertEqual(len(ids), 100)
         self.assertEqual(len(set(ids)), 100)
         self.assertTrue(all(1 <= review["rating"] <= 5 for review in first["reviews"]))
@@ -52,7 +50,26 @@ class FetchReviewsTests(unittest.TestCase):
                 review = extract_review(entry)
                 if review is not None:
                     pool.setdefault(review["id"], review)
-        self.assertEqual(first["reviews"], random.Random(42).sample(list(pool.values()), 100))
+        self.assertEqual(first["reviews"], list(pool.values())[:100])
+        self.assertEqual(first["metadata"]["selection"], "first_unique")
+
+    @patch("app.services.collector.time.sleep")
+    def test_stops_mid_page_at_requested_count(self, sleep):
+        fixture = json.loads((FIXTURES / "apple_catalog_reviews.json").read_text())
+        offsets = []
+
+        def respond(request):
+            offset = request.url.params["offset"]
+            offsets.append(int(offset))
+            return httpx.Response(200, json=fixture["pages"][offset])
+
+        with httpx.Client(transport=httpx.MockTransport(respond)) as client:
+            result = collect_reviews(client, fixture["app_id"], count=12)
+        expected = [extract_review(entry) for offset in ("0", "10") for entry in fixture["pages"][offset]["data"]][:12]
+        self.assertEqual(result["reviews"], expected)
+        self.assertEqual(offsets, [0, 10])
+        self.assertEqual(result["metadata"]["available_count"], 12)
+        self.assertEqual(result["metadata"]["shortfall"], 0)
 
     def test_validation(self):
         self.assertEqual(validate_inputs("389801252", "US", 100), "us")

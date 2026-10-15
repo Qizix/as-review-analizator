@@ -29,7 +29,7 @@ With the server running, check readiness:
 curl http://127.0.0.1:8000/api/health
 ```
 
-Collect up to 100 reviews without model analysis. Collection tries catalog JSON, then RSS JSON, then embedded App Store webpage JSON when earlier sources fail or leave a shortfall. Reviews stay within the requested country and are deduplicated across sources; metadata records attempts and failures. Change `country` to `ua` for Ukraine or use another two-letter country code:
+Collect the first 100 unique valid reviews in source order without model analysis. Collection stops at the requested count, trying catalog JSON, then RSS JSON, then embedded App Store webpage JSON as needed. It returns fewer if all sources are exhausted. Reviews stay within the requested country; metadata records attempts and failures. Change `country` to `ua` for Ukraine or use another two-letter country code:
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/reviews/collect \
@@ -37,8 +37,7 @@ curl -X POST http://127.0.0.1:8000/api/reviews/collect \
   -d '{
     "app_id": "1459969523",
     "country": "us",
-    "review_count": 100,
-    "seed": 42
+    "review_count": 100
   }'
 ```
 
@@ -50,8 +49,7 @@ curl -X POST http://127.0.0.1:8000/api/analyze \
   -d '{
     "app_id": "389801252",
     "country": "us",
-    "review_count": 100,
-    "seed": 42
+    "review_count": 100
   }'
 ```
 

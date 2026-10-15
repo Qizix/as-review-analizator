@@ -1,6 +1,5 @@
 import argparse
 import json
-import random
 import re
 import sys
 import time
@@ -12,11 +11,11 @@ import httpx
 from app.services.collector import COUNTRIES, URL_TEMPLATE, validate_inputs, fetch_page, extract_review, collect_reviews
 
 def main():
-    parser = argparse.ArgumentParser(description="Sample Apple App Store reviews with catalog, RSS, and webpage fallbacks")
+    parser = argparse.ArgumentParser(description="Collect the first App Store reviews with catalog, RSS, and webpage fallbacks")
     parser.add_argument("app_id")
     parser.add_argument("--country", default="us")
     parser.add_argument("--count", type=int, default=100)
-    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--seed", type=int, default=42, help="Deprecated compatibility option; ignored")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     try:

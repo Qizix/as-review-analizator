@@ -4,7 +4,7 @@
 
 ## Services and lifecycle
 
-- `collector.py`: validates ID/country/count and tries catalog JSON, RSS JSON, then embedded webpage JSON until enough unique reviews are available. It keeps the requested storefront, deduplicates across sources, and samples with a local seeded RNG. Each source has a bounded time budget; metadata preserves partial results, source attempts, and failures. See [review collection](fetch_reviews.md) for pagination, parsing, and deadline details.
+- `collector.py`: validates ID/country/count and tries catalog JSON, RSS JSON, then embedded webpage JSON until enough unique reviews are available. It keeps the requested storefront, deduplicates across sources, and returns the first valid unique reviews in encounter order, stopping at the requested count. Each source has a bounded time budget; metadata preserves partial results, source attempts, and failures. See [review collection](fetch_reviews.md) for pagination, parsing, and deadline details.
 - `app_info.py`: best-effort Apple lookup for name, developer, store/icon URLs, and current version. Failure retains ID/country without fabricating metadata.
 - `preprocessor.py`: converts Unicode emoji to bracketed words, collapses whitespace, caps titles at 200 characters and texts at 4,000 with head/tail preservation, and records truncated IDs. Original source text is retained for the final report.
 - `sentiment.py`: loads CardiffNLP RoBERTa on CPU, classifies preprocessed text in batches of 8, and truncates at 512 tokens. The revision is pinned to `3216a57f2a0d9c45a2e6c20157c20c49fb4bf9c7`. Torch uses one thread by default. Rating never determines sentiment.
@@ -21,7 +21,7 @@ Missing Gemini credentials are rejected before API collection. Empty samples ski
 
 | Method | Path | Purpose |
 |---|---|---|
-| POST | `/api/analyze` | Complete analysis from app_id, country, review_count, optional seed |
+| POST | `/api/analyze` | Complete analysis from app_id, country, review_count; legacy seed accepted but ignored |
 | POST | `/api/reviews/collect` | Raw reviews plus collection metadata |
 | GET | `/api/health` | Readiness and credential availability, never credentials |
 | GET | `/docs` | OpenAPI documentation |
@@ -31,7 +31,7 @@ Missing Gemini credentials are rejected before API collection. Empty samples ski
 
 The unified response includes `app`, `collection`, `metrics`, `insights`, `reviews`, and `metadata`:
 
-- App information and actual/requested/available review counts, sampling pool, page outcomes, shortfall, seed, and collection time.
+- App information and actual/requested/retained review counts, source order, selection strategy, page outcomes, shortfall, legacy seed, and collection time.
 - Rating metrics and singular `metrics.sentiment`, with explicit independent denominators.
 - Issue frequencies/coverage computed locally from source labels and unique evidence IDs.
 - `insights.issues` with category, priority, review count, negative fraction, supporting IDs, original quotations, and keywords.
@@ -57,6 +57,6 @@ Structured logs record request latency/status, stage timings, review count, Gemi
 
 Settings come from validated environment variables. Defaults: one Torch thread, 100 reviews, 280 seconds, three analyses/minute, and the pinned revision. Python is pinned to 3.12 and constrained below 3.14 because Hydra's completion parser currently fails on 3.14.
 
-`experiments/analyze.py` and `conf/experiment.yaml` use Hydra overrides and save resolved configuration/report under ignored `hydra_outputs/`. Secrets remain environment-only. A fixed seed does not freeze changing Apple feeds or Gemini interpretation; exact sampling is tested against recorded responses.
+`experiments/analyze.py` and `conf/experiment.yaml` use Hydra overrides and save resolved configuration/report under ignored `hydra_outputs/`. Secrets remain environment-only. The legacy seed configuration is ignored for collection. Encounter order is tested against recorded responses; live Apple feeds and Gemini interpretation can change between runs.
 
 Pytest covers services plus FastAPI success/failure paths, classifier reuse, validation, evidence rejection, throttling, and removal of the metrics and export endpoints. Frontend Node tests cover API adaptation, URL parsing, denominators, evidence consistency, filters, empty reports, and escaping. Live 100-review HTTP and browser analyses verified the real providers. Local performance is not a Cloud Run benchmark; image build and deployment remain unverified because Docker was not running and deployment was not requested.

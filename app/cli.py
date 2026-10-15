@@ -14,7 +14,7 @@ def main():
     parser.add_argument("app_id")
     parser.add_argument("--country", default="us")
     parser.add_argument("--count", type=int, default=100)
-    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--seed", type=int, default=42, help="Deprecated compatibility option; ignored")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     try:

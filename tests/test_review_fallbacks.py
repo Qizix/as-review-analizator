@@ -32,11 +32,15 @@ def test_catalog_success_skips_all_fallbacks():
 
     def respond(request):
         requests.append(request)
-        return httpx.Response(200, json={"data": [catalog_entry(1), catalog_entry(2)]})
+        return httpx.Response(200, json={"data": [None, catalog_entry(1), catalog_entry(1), catalog_entry(2), catalog_entry(3)], "next": "?offset=10"})
 
     with httpx.Client(transport=httpx.MockTransport(respond)) as client:
         result = collect_reviews(client, "123", count=2)
     assert len(requests) == 1
+    assert [review["id"] for review in result["reviews"]] == ["1", "2"]
+    assert result["metadata"]["available_count"] == 2
+    assert result["metadata"]["invalid_records"] == 1
+    assert result["metadata"]["duplicate_records"] == 1
     assert [source["source"] for source in result["metadata"]["sources"]] == ["catalog"]
     assert result["metadata"]["failed_pages"] == []
 
@@ -71,12 +75,13 @@ def test_partial_results_merge_deduplicate_and_follow_rss_pages(sleep):
             return httpx.Response(200, json={"feed": {"entry": rss_entry(1), "link": [{"attributes": {"rel": "next", "href": "https://untrusted.example/"}}]}})
         assert "page=2" in request.url.path
         assert request.url.host == "itunes.apple.com"
-        return httpx.Response(200, json={"feed": {"entry": [rss_entry(2), rss_entry(3)]}})
+        return httpx.Response(200, json={"feed": {"entry": [rss_entry(2), rss_entry(3), rss_entry(4)]}})
 
     with httpx.Client(transport=httpx.MockTransport(respond)) as client:
         result = collect_reviews(client, "123", count=3)
     assert len(requests) == 3
-    assert {review["id"] for review in result["reviews"]} == {"1", "2", "3"}
+    assert [review["id"] for review in result["reviews"]] == ["1", "2", "3"]
+    assert result["metadata"]["available_count"] == 3
     assert result["metadata"]["duplicate_records"] == 1
     assert result["metadata"]["sources"][1]["fetched_pages"] == [1, 2]
 
@@ -96,13 +101,14 @@ def test_webpage_is_last_fallback_and_keeps_requested_country():
             assert request.url.params["country"] == "ua"
             return lookup("ua")
         assert str(request.url) == "https://apps.apple.com/ua/app/example/id123"
-        return webpage([{"$kind": "Review", "id": review_id, "title": "Title", "contents": "Original text\nwith lines", "rating": 2} for review_id in (1, 2, 3)])
+        return webpage([{"$kind": "Review", "id": review_id, "title": "Title", "contents": "Original text\nwith lines", "rating": 2} for review_id in (1, 2, 3, 4)])
 
     with httpx.Client(transport=httpx.MockTransport(respond)) as client:
         first = collect_reviews(client, "123", country="UA", count=3)
         second = collect_reviews(client, "123", country="ua", count=3)
     assert first["reviews"] == second["reviews"]
     assert len(first["reviews"]) == 3
+    assert [review["id"] for review in first["reviews"]] == ["1", "2", "3"]
     assert first["metadata"]["duplicate_records"] == 1
     assert first["metadata"]["sources"][2]["added_count"] == 2
     assert first["metadata"]["failed_pages"] == []

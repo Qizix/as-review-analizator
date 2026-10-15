@@ -1,5 +1,4 @@
 import json
-import random
 import re
 import time
 from datetime import datetime, timezone
@@ -119,7 +118,9 @@ def collect_catalog_reviews(client, app_id, country="us", count=100, seed=42, de
                 duplicate_records += 1
             else:
                 reviews[review["id"]] = review
-        if not entries or not payload.get("next"):
+                if len(reviews) >= count:
+                    break
+        if len(reviews) >= count or not entries or not payload.get("next"):
             break
         try:
             next_offset = int(parse_qs(urlsplit(payload["next"]).query)["offset"][0])
@@ -130,7 +131,7 @@ def collect_catalog_reviews(client, app_id, country="us", count=100, seed=42, de
             break
         offset = next_offset
     available = list(reviews.values())
-    selected = random.Random(seed).sample(available, min(count, len(available)))
+    selected = available
     return {
         "metadata": {
             "app_id": app_id,
@@ -140,9 +141,10 @@ def collect_catalog_reviews(client, app_id, country="us", count=100, seed=42, de
             "actual_count": len(selected),
             "shortfall": max(0, count - len(selected)),
             "seed": seed,
+            "selection": "first_unique",
             "collected_at": datetime.now(timezone.utc).isoformat(),
             "source": "Apple App Store catalog reviews JSON",
-            "sampling_pool": "Unique valid reviews from up to 10 catalog pages in Apple response order",
+            "sampling_pool": "First unique valid reviews in Apple catalog response order, stopping at the requested count or 10 pages",
             "language": "en-US",
             "fetched_pages": fetched_pages,
             "fetched_offsets": fetched_offsets,
@@ -301,6 +303,8 @@ def collect_reviews(client, app_id, country="us", count=100, seed=42, deadline=N
                 else:
                     reviews[review["id"]] = review
                     added += 1
+                    if len(reviews) >= count:
+                        break
             stats["added_count"] += added
             if len(reviews) >= count or not payload["next"] or not payload["data"]:
                 break
@@ -309,9 +313,9 @@ def collect_reviews(client, app_id, country="us", count=100, seed=42, deadline=N
         metadata["duplicate_records"] += stats["duplicate_records"]
         metadata["available_count"] = len(reviews)
     if len(metadata["sources"]) > 1:
-        result["reviews"] = random.Random(seed).sample(list(reviews.values()), min(count, len(reviews)))
+        result["reviews"] = list(reviews.values())
         metadata.update(actual_count=len(result["reviews"]), shortfall=max(0, count - len(result["reviews"])))
         metadata["source"] = "Apple App Store " + " → ".join(item["source"] for item in metadata["sources"])
-        metadata["sampling_pool"] = "Unique valid reviews from attempted catalog, recent RSS, and most-helpful webpage sources in the requested storefront; not all historical reviews"
+        metadata["sampling_pool"] = "First unique valid reviews in catalog, RSS, then webpage response order in the requested storefront; not a random sample or all historical reviews"
     return result
 

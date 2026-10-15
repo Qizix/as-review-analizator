@@ -4,7 +4,7 @@
 
 ## CLI contract
 
-`uv run scripts/fetch_reviews.py APP_ID --country us --count 100 --seed 42 --output PATH`
+`uv run scripts/fetch_reviews.py APP_ID --country us --count 100 --output PATH`
 
 App IDs must be positive ASCII digit strings. Country codes are normalized to lowercase and checked against ISO alpha-2 codes; acceptance does not guarantee Apple provides that storefront. Count must be positive. The compatibility CLI requires an output path, creates parent directories, and overwrites an existing file.
 
@@ -18,7 +18,7 @@ Collection uses `https://apps.apple.com/api/apps/v1/catalog/{country}/apps/{app_
 
 Responses must contain a `data` list. Records have a string `id` and an `attributes` object containing `title`, `review`, and integer `rating`. The collector emits `{id, title, text, rating}`, preserves source text, skips malformed records, and accepts ratings only from 1 through 5. Boolean and string ratings are invalid.
 
-The collector starts at offset zero and fetches up to ten pages sequentially. Apple's observed page size is ten. It reads the offset from the response's `next` link and reconstructs the request against the configured Apple endpoint, retaining the storefront, language, and platform parameters. It never requests an arbitrary host from a pagination link. Missing `next` or an empty data list ends collection. A missing, noninteger, or nonincreasing next offset records a pagination error and stops with the valid records already collected.
+The collector starts at offset zero and fetches up to ten pages sequentially, stopping as soon as the requested number of unique valid reviews is found. Apple's observed page size is ten. It reads the offset from the response's `next` link and reconstructs the request against the configured Apple endpoint, retaining the storefront, language, and platform parameters. It never requests an arbitrary host from a pagination link. Missing `next` or an empty data list ends collection. A missing, noninteger, or nonincreasing next offset records a pagination error and stops with the valid records already collected, unless the requested count was already reached.
 
 The first failed page ends this source so fallback can start. Later failed pages advance by the observed default page size of ten. Remaining catalog pages are marked failed once the source deadline expires.
 
@@ -42,15 +42,19 @@ Subsequent pages pause 0.5 seconds. `fetch_page` handles all requests, including
 
 Each source has at most 60 seconds. With a caller's monotonic deadline, each source is additionally limited to an equal share of the remaining time among itself and the remaining fallbacks, reserving time for later attempts. Timeouts and delays shrink with that budget. Expired deadlines prevent further HTTP requests and record failures. HTTPX timeouts apply per network operation; this remains a cooperative budget rather than forced cancellation.
 
-## Sampling
+## Selection order
 
-Records are deduplicated by ID across all attempted sources, retaining the first valid occurrence. Original text, including line breaks, is preserved. `random.Random(seed).sample(pool, min(count, len(pool)))` samples uniformly without replacement. The catalog pool includes up to ten pages; RSS stops after the page supplying enough unique records; the webpage contributes its embedded set. Sampling covers only this accessible union, not all historical reviews. Combining catalog response order, recent RSS, and most-helpful webpage selections creates source selection bias. Apple can change data during pagination, so results are not a transactional snapshot. `l=en-US` controls the catalog UI locale; review language is not filtered.
+Records are deduplicated by ID across all attempted sources, retaining the first valid occurrence in encounter order: catalog, then RSS, then webpage. Original text, including line breaks, is preserved. Processing stops immediately at the requested count, including in the middle of a response page. No additional pages or fallback sources are requested once the count is reached. If source/page limits, failures, empty responses, or deadlines prevent reaching the count, all collected reviews are returned with an explicit shortfall.
+
+The default is the first 100 unique valid reviews. This is a deliberate user-approved change from the original assignment's random-sampling requirement; `TEST_TASK.md` retains the original brief. The legacy `seed` API field, CLI option, collector argument, and metadata field remain accepted/echoed for compatibility but have no effect. Metadata marks the strategy as `selection: first_unique`; `available_count` counts retained reviews, not an estimate of all reviews available from Apple.
+
+This collection is not a random or representative sample of all historical reviews. Catalog response order, recent RSS, and most-helpful webpage selections create selection bias. Apple can change data between requests, so results are not a transactional snapshot. `l=en-US` controls the catalog UI locale; review language is not filtered.
 
 ## JSON metadata and shortfalls
 
 Metadata includes app ID, country, requested/available/actual counts, shortfall, seed, collection timestamp, source, sampling scope, language, successful page numbers and offsets, failed pages with errors, and invalid/duplicate counts. The output review structure remains compatible with sentiment, insights, metrics, and dashboard consumers.
 
-`sources` lists only attempted sources, in order, with `source`, `added_count`, `fetched_pages`, `failed_pages`, `invalid_records`, and `duplicate_records`. Contributions are counted before final sampling. Top-level `fetched_pages` and `fetched_offsets` remain catalog-only. Top-level `failed_pages` aggregates failures tagged with their source; invalid and duplicate counts aggregate all sources. `source` and `sampling_pool` describe fallback use when applicable. Failures remain visible even when a later source recovers enough reviews, preserving existing CLI exit semantics and consumer warnings.
+`sources` lists only attempted sources, in order, with `source`, `added_count`, `fetched_pages`, `failed_pages`, `invalid_records`, and `duplicate_records`. Contributions count retained unique reviews. Invalid/duplicate counts include only records examined before reaching the requested count. Top-level `fetched_pages` and `fetched_offsets` remain catalog-only. Top-level `failed_pages` aggregates failures tagged with their source; invalid and duplicate counts aggregate all sources. `source` and the legacy `sampling_pool` field describe source order and fallback use. Failures remain visible even when a later source recovers enough reviews, preserving existing CLI exit semantics and consumer warnings.
 
 A shortfall never causes padding, duplicate selection, or fabricated reviews. Zero accessible entries do not prove the app has no reviews. Failed HTTP requests remain distinguishable from successful empty responses through `failed_pages`.
 
@@ -58,6 +62,6 @@ The compatibility CLI prints shortfalls explicitly. Shortfall alone returns stat
 
 ## Verification
 
-`tests/test_fetch_reviews.py` replays the real catalog fixture for pagination and seeded sampling. `tests/test_review_fallbacks.py` covers source order, skipped fallbacks, recovery, partial top-ups, duplicate-only RSS pages followed by new reviews, cross-source deduplication, real RSS fixture parsing, nested server state, malformed records, unexpected lookup URLs, all-source failures, and expired deadlines.
+`tests/test_fetch_reviews.py` replays the real catalog fixture for pagination, source order, seed independence, and stopping mid-page at the requested count. `tests/test_review_fallbacks.py` covers source order, skipped fallbacks, recovery, partial top-ups, duplicate-only RSS pages followed by new reviews, cross-source deduplication, real RSS fixture parsing, nested server state, malformed records, unexpected lookup URLs, all-source failures, and expired deadlines. Oversized catalog, RSS, and webpage responses verify ordered truncation at the requested count.
 
 Run `uv run --locked pytest -q`. Live collection depends on Apple's availability and rate limits; production requests never fall back to recorded fixtures.
