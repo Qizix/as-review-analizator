@@ -8,6 +8,7 @@ spec:
       annotations:
         autoscaling.knative.dev/minScale: "0"
         autoscaling.knative.dev/maxScale: "1"
+        run.googleapis.com/cpu-throttling: "false"
     spec:
       containerConcurrency: 1
       timeoutSeconds: 300
@@ -21,6 +22,16 @@ spec:
               cpu: "1"
               memory: 4Gi
           env:
+            - name: OTEL_ENABLED
+              value: "true"
+            - name: OTEL_SERVICE_NAME
+              value: appstore-review-analyzer
+            - name: OTEL_EXPORTER
+              value: google
+            - name: GOOGLE_CLOUD_PROJECT
+              value: PROJECT_ID
+            - name: LOG_LEVEL
+              value: INFO
             - name: GEMINI_API_KEY
               valueFrom:
                 secretKeyRef:

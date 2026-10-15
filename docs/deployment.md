@@ -49,3 +49,7 @@ The startup probe checks `/api/health` after the classifier loads. Cloud Run pro
 Cloud Logging receives structured application events. Verify cold-start time, end-to-end latency at 100 reviews, actual container memory, retries, and deadline behavior under the configured resources. Local Mac RSS measurements are not a Cloud Run guarantee.
 
 The in-memory rate limit resets on restart and is not a distributed quota system. The private deployment supplies an access boundary. Making it public requires an explicitly chosen access policy and suitable server-side limits. Free allowances do not guarantee zero charges for builds, images, runtime, logs, or Gemini.
+
+## Observability deployment
+
+The prepared Cloud Run files enable ADC-authenticated Google OTLP tracing and set `GOOGLE_CLOUD_PROJECT`. They also select instance-based CPU allocation (`--no-cpu-throttling`) so the batch exporter can export HTTP server spans after responses finish. This changes billing behavior; minimum instances remain zero. Enable the Telemetry/Trace APIs and grant the runtime service account the trace-write/quota-consumer roles documented in [observability.md](observability.md). Native stdout JSON logs and Cloud Run's built-in metrics require no collector. These files have not been deployed; Cloud Trace ingestion, IAM, correlation, and CPU behavior must be verified in the target environment.

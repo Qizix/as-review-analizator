@@ -60,3 +60,7 @@ Settings come from validated environment variables. Defaults: one Torch thread, 
 `experiments/analyze.py` and `conf/experiment.yaml` use Hydra overrides and save resolved configuration/report under ignored `hydra_outputs/`. Secrets remain environment-only. The legacy seed configuration is ignored for collection. Encounter order is tested against recorded responses; live Apple feeds and Gemini interpretation can change between runs.
 
 Pytest covers services plus FastAPI success/failure paths, classifier reuse, validation, evidence rejection, throttling, and removal of the metrics and export endpoints. Frontend Node tests cover API adaptation, URL parsing, denominators, evidence consistency, filters, empty reports, and escaping. Live 100-review HTTP and browser analyses verified the real providers. Local performance is not a Cloud Run benchmark; image build and deployment remain unverified because Docker was not running and deployment was not requested.
+
+## Observability
+
+`app/observability.py` supplies request-local correlation, bounded JSON summaries, and monotonic stage measurements. `app/telemetry.py` supplies the per-app OpenTelemetry provider, local console or ADC-authenticated Google OTLP export, sanitization, and shutdown. Official FastAPI instrumentation supplies HTTP server spans; services add only spans for existing operations. No metric exporter or separate telemetry service is introduced. See `docs/observability.md` for configuration, error diagnosis, and the prepared Cloud Run CPU/export strategy.

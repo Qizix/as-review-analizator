@@ -6,6 +6,9 @@ from html.parser import HTMLParser
 from urllib.parse import parse_qs, urlsplit
 
 import httpx
+from opentelemetry import trace
+
+from app.observability import increment, operation, warning
 
 
 COUNTRIES = set(
@@ -39,30 +42,43 @@ def validate_inputs(app_id, country, count):
 
 
 def fetch_page(client, url, deadline=None, parser=None):
-    for attempt in range(3):
-        try:
-            remaining = 20.0 if deadline is None else min(20.0, deadline - time.monotonic())
-            if remaining <= 0:
-                raise httpx.TimeoutException("Collection deadline exceeded")
-            response = client.get(url, timeout=remaining)
-            response.raise_for_status()
-            if parser is not None:
-                return parser(response)
-            payload = response.json()
-            if not isinstance(payload, dict) or not isinstance(payload.get("data"), list):
-                raise ValueError("response must contain a review data list")
-            if payload.get("next") is not None and not isinstance(payload["next"], str):
-                raise ValueError("next page must be a URL string")
-            return payload
-        except httpx.HTTPStatusError as exc:
-            if exc.response.status_code != 429 and exc.response.status_code < 500:
-                raise
-            if attempt == 2:
-                raise
-        except (httpx.RequestError, ValueError):
-            if attempt == 2:
-                raise
-        time.sleep(2**attempt if deadline is None else min(2**attempt, max(0, deadline - time.monotonic())))
+    path = urlsplit(str(url)).path
+    source = "catalog" if "/api/apps/" in path else "rss" if "/rss/" in path else "lookup" if path == "/lookup" else "webpage"
+    with operation("appstore.request", {"http.request.method": "GET", "app.provider": "apple", "app.collection.source": source}, trace.SpanKind.CLIENT) as span:
+        for attempt in range(3):
+            span.set_attribute("app.retry_count", attempt)
+            status_code = None
+            try:
+                remaining = 20.0 if deadline is None else min(20.0, deadline - time.monotonic())
+                if remaining <= 0:
+                    raise httpx.TimeoutException("Collection deadline exceeded")
+                response = client.get(url, timeout=remaining)
+                status_code = response.status_code
+                span.set_attribute("http.response.status_code", status_code)
+                response.raise_for_status()
+                if parser is not None:
+                    return parser(response)
+                payload = response.json()
+                if not isinstance(payload, dict) or not isinstance(payload.get("data"), list):
+                    raise ValueError("response must contain a review data list")
+                if payload.get("next") is not None and not isinstance(payload["next"], str):
+                    raise ValueError("next page must be a URL string")
+                return payload
+            except httpx.HTTPStatusError as exc:
+                error_type = type(exc).__name__
+                if exc.response.status_code != 429 and exc.response.status_code < 500:
+                    raise
+                if attempt == 2:
+                    raise
+            except (httpx.RequestError, ValueError) as exc:
+                error_type = type(exc).__name__
+                if attempt == 2:
+                    raise
+            delay = 2**attempt if deadline is None else min(2**attempt, max(0, deadline - time.monotonic()))
+            span.add_event("retry.scheduled", {"app.retry.attempt": attempt + 1, "app.retry.delay_ms": delay * 1000})
+            increment("collection_retry_count")
+            warning("UPSTREAM_RETRY", provider="apple", attempt=attempt + 1, status=status_code, error_type=error_type, delay_ms=delay * 1000)
+            time.sleep(delay)
 
 
 def extract_review(entry):

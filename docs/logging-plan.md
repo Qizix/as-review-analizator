@@ -1,6 +1,6 @@
 # Logging redesign plan
 
-Status: proposed; runtime logging has not changed. Scope: FastAPI, the shared analysis/collection services, model startup, and the full-pipeline CLI. The existing API routes and analysis behavior remain unchanged unless explicitly noted below.
+Status: historical design proposal. The implemented OpenTelemetry and standard-library JSON logging design is documented in [observability.md](observability.md). Its JSON request summary keeps related stages and diagnostics together; the console panel, Rich/structlog dependencies, and proposed API error-schema changes below were not implemented.
 
 ## Confirmed problems
 

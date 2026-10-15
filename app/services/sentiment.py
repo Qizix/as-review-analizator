@@ -10,8 +10,14 @@ MODEL = "cardiffnlp/twitter-roberta-base-sentiment-latest"
 
 def load_classifier(settings=None):
     import torch
+    from huggingface_hub.utils import disable_progress_bars
+    from transformers.utils import logging as transformers_logging
     from app.settings import Settings
 
+    disable_progress_bars()
+    transformers_logging.disable_progress_bar()
+    transformers_logging.disable_default_handler()
+    transformers_logging.enable_propagation()
     settings = settings or Settings.from_env()
     torch.set_num_threads(settings.sentiment_threads)
     return pipeline(

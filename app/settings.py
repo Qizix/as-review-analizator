@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -18,6 +19,12 @@ class Settings(BaseModel):
     sentiment_revision: str = Field(default=SENTIMENT_REVISION, pattern=r"^[a-f0-9]{40}$")
     max_review_count: int = Field(default=100, ge=1, le=500)
     gemini_model: str = GEMINI_MODEL
+    otel_enabled: bool = True
+    otel_service_name: str = "appstore-review-analyzer"
+    otel_exporter: Literal["console", "google", "none"] = "console"
+    otel_export_timeout_seconds: float = Field(default=3, ge=0.1, le=10)
+    google_cloud_project: str | None = None
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
 
     @classmethod
     def from_env(cls):
