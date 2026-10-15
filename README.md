@@ -16,7 +16,7 @@ Open the [dashboard](http://127.0.0.1:8000/) or [interactive API docs](http://12
 ```bash
 curl -X POST http://127.0.0.1:8000/api/analyze \
   -H 'Content-Type: application/json' \
-  -d '{"app_id":"389801252","country":"us","review_count":100}'
+  -d '{"app_id":"1459969523","country":"us","review_count":100}'
 ```
 
 | Endpoint | Result |
@@ -30,30 +30,27 @@ Responses are JSON. The dashboard visualizes distributions, issue frequency/cove
 ## Approach and design
 
 - **One service:** FastAPI serves the API and a vanilla JavaScript dashboard, with no frontend build step, database, or queue.
-- **Bounded collection:** Apple catalog, RSS, then webpage fallback; retain the first unique reviews in source order and report shortfalls. Collection is not random or representative of all historical feedback.
+- **Bounded collection:** Apple catalog, RSS, then webpage fallback; retain the first unique reviews in source order and report shortfalls.
 - **Independent sentiment:** Pinned CardiffNLP RoBERTa classifies text on CPU. Star ratings never determine sentiment. Emoji become words and oversized text is trimmed for models; original comments remain in the report.
 - **Evidence-linked insights:** Gemini groups negative complaints and proposes short actions by priority and recurrence. Positive/neutral reviews provide context. Invalid evidence is rejected, with one bounded repair attempt; an empty issue list is valid.
 - **Local metrics:** Python calculates averages, distributions, unique issue frequencies, and coverage from review IDs. The API keeps reports in memory; one analysis or collection runs at a time, with busy responses and configurable usage limits.
 
 Sentiment and issue interpretation are model estimates. The classifier is English-oriented; selecting a storefront does not filter review language. Logs and traces contain timings and diagnostics, excluding review contents and credentials.
 
-## Sample report: Instagram
+## Application example: Nebula
 
-A live US-storefront run on **2026-10-15** analyzed **100 unique reviews**: average rating **3.21/5**, with **22 positive, 17 neutral, and 61 negative** classifications. Six issue groups cover **31 of 61 negative reviews (50.8%)**.
+![Nebula dashboard showing ratings, sentiment, prioritized improvements, and supporting reviews](examples/nebula-dashboard.png)
 
-| Priority | Example improvement | Reviews |
-|---|---|---:|
-| High | Improve suspension appeals and human review | 7 |
-| Medium | Reduce feed ads and prioritize followed accounts | 7 |
-| Low | Improve navigation and layout | 6 |
+The supplied US-storefront report for **Nebula: Spiritual Guidance** (app ID `1459969523`), collected on **2026-10-15**, contains **100 unique reviews** with an average rating of **2.86/5**. Sentiment is **35% positive, 16% neutral, and 49% negative**. Five issue groups cover **33 of 49 negative reviews (67.3%)**; 16 negative reviews remain unassigned.
 
-Read the [complete sample report](examples/instagram-report.md) or inspect its [full API-shaped JSON and source evidence](examples/instagram-report.json). This is a dated sample, not a measurement of all Instagram users.
+| Priority | Improvement | Reviews | Recurrence |
+|---|---|---:|---|
+| High | Clarify subscription terms and simplify cancellation | 15 | Repeated |
+| High | Improve billing and refund handling | 10 | Repeated |
+| Medium | Make core features more accessible | 8 | Repeated |
+| Medium | Review alarming or inaccurate horoscope content | 2 | Repeated |
+| Low | Reduce false positives in community content filtering | 1 | Single |
 
-## Tests and further details
+The screenshot shows the paywall issue selected, so its review panel displays **8 supporting reviews** from the full 100-review report. Issue counts can overlap because one review may mention several problems.
 
-```bash
-uv run --locked pytest -q
-npm test --prefix frontend
-```
-
-Node.js is needed only for frontend tests. See [architecture](docs/architecture.md), [pipeline and CLI tools](docs/pipeline.md), [observability](docs/observability.md), and [deployment/rollback](docs/deployment.md). Public single-request Cloud Run deployment files are prepared; container and cloud verification remain outstanding. Third-party attribution is in [NOTICE](NOTICE).
+Read the [sample report](examples/nebula-report.md) or inspect the [original exported JSON with source reviews and evidence](examples/nebula-report.json). These are reported experiences in this sample, not independently verified defects or a measurement of all Nebula users.

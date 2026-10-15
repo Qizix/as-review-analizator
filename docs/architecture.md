@@ -61,7 +61,7 @@ Settings come from validated environment variables. Defaults: one Torch thread, 
 
 `experiments/analyze.py` and `conf/experiment.yaml` use Hydra overrides and save resolved configuration/report under ignored `hydra_outputs/`. Secrets remain environment-only. The legacy seed configuration is ignored for collection. Encounter order is tested against recorded responses; live Apple feeds and Gemini interpretation can change between runs.
 
-Pytest covers services plus FastAPI success/failure paths, classifier reuse, validation, evidence rejection, throttling, and removal of the metrics and export endpoints. Frontend Node tests cover API adaptation, URL parsing, denominators, evidence consistency, filters, empty reports, and escaping. The checked-in Instagram example records a live pipeline run. Local performance is not a Cloud Run benchmark; image build and deployment require separate verification.
+Pytest covers services plus FastAPI success/failure paths, classifier reuse, validation, evidence rejection, throttling, and removal of the metrics and export endpoints. Frontend Node tests cover API adaptation, URL parsing, denominators, evidence consistency, filters, empty reports, and escaping. The checked-in Nebula example preserves a supplied live application export. Local performance is not a Cloud Run benchmark; image build and deployment require separate verification.
 
 ## Observability
 
