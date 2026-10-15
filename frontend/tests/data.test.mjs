@@ -5,159 +5,81 @@ import {
   filterIssues,
   prepareDashboard,
   normalizeAppInput,
-  dashboardSources,
 } from "../data.mjs";
 
 function fixture() {
-  const issue = {
-    category: "Crashes",
-    priority: "high",
-    frequency: 2,
-    evidence_ids: ["a", "b"],
-  };
-  const metrics = {
-    metadata: { app_id: "123", country: "us" },
-    total_reviews: 3,
-    ratings: {
-      rated_reviews: 3,
-      average: 3,
-      counts: { 1: 1, 2: 0, 3: 1, 4: 0, 5: 1 },
-    },
-    sentiments: {
-      classified_reviews: 3,
-      counts: { positive: 1, neutral: 0, negative: 2 },
-    },
-    issues: {
-      items: [issue],
-      covered_negative_reviews: 2,
-      negative_reviews: 2,
-    },
-  };
-  const report = {
-    metadata: { app_id: "123", country: "us" },
-    summary: {
+  const issue = { category: "Crashes", priority: "high", frequency: 2, evidence_ids: ["a", "b"] };
+  return {
+    app: { app_id: "123", country: "us", name: "Example" },
+    collection: { app_id: "123", country: "us" },
+    metrics: {
       total_reviews: 3,
-      sentiments: { positive: 1, neutral: 0, negative: 2 },
+      ratings: { rated_reviews: 3, average: 3, counts: { 1: 1, 2: 0, 3: 1, 4: 0, 5: 1 } },
+      sentiment: { classified_reviews: 3, counts: { positive: 1, neutral: 0, negative: 2 } },
+      issues: { items: [issue], covered_negative_reviews: 2, negative_reviews: 2 },
     },
     insights: {
-      high: {
-        repeated: [{ ...issue, action: "Investigate crashes." }],
-        single: [],
-      },
-      medium: { repeated: [], single: [] },
-      low: { repeated: [], single: [] },
+      issues: [{ ...issue, evidence_quotes: [] }],
+      recommendations: [{ ...issue, action: "Investigate crashes." }],
     },
-  };
-  const reviews = {
     reviews: [
-      {
-        id: "a",
-        title: "Good but crashes",
-        text: "Crashes sometimes",
-        rating: 5,
-        sentiment: { label: "negative" },
-      },
-      {
-        id: "b",
-        title: "Broken",
-        text: "Crashes constantly",
-        rating: 1,
-        sentiment: "negative",
-      },
-      {
-        id: "c",
-        title: "Useful",
-        text: "I like it",
-        rating: 3,
-        sentiment: "positive",
-      },
+      { id: "a", title: "Good but crashes", text: "Crashes sometimes\nPlease fix", rating: 5, sentiment: { label: "negative" } },
+      { id: "b", title: "Broken", text: "Crashes constantly", rating: 1, sentiment: "negative" },
+      { id: "c", title: "Useful", text: "I like it", rating: 3, sentiment: "positive" },
     ],
+    metadata: {},
   };
-  return { metrics, report, reviews };
 }
 
-test("joins real evidence and keeps ratings independent from sentiment", () => {
-  const { metrics, report, reviews } = fixture();
-  const before = JSON.stringify({ metrics, report, reviews });
-  const result = prepareDashboard(metrics, report, reviews);
+test("consumes canonical reports and keeps ratings independent from sentiment", () => {
+  const response = fixture();
+  const before = JSON.stringify(response);
+  const result = prepareDashboard(response);
   assert.equal(result.average, 3);
   assert.equal(result.coverage, 1);
   assert.equal(result.issues[0].action, "Investigate crashes.");
   assert.equal(result.reviewMap.get("a").rating, 5);
   assert.equal(result.reviewMap.get("a").label, "negative");
-  assert.equal(JSON.stringify({ metrics, report, reviews }), before);
+  assert.equal(result.reviewMap.get("a").text, "Crashes sometimes\nPlease fix");
+  assert.equal(result.metadata.app_name, "Example");
+  assert.equal(JSON.stringify(response), before);
 });
 
-test("supports reports without source text", () => {
-  const { metrics, report } = fixture();
-  const result = prepareDashboard(metrics, report);
-  assert.equal(result.reviewMap.size, 0);
-  assert.equal(result.issues[0].frequency, 2);
-});
-
-test("empty samples produce null values, not invented zero percentages", () => {
-  const { metrics, report } = fixture();
-  metrics.total_reviews = report.summary.total_reviews = 0;
-  metrics.ratings = {
-    average: null,
-    rated_reviews: 0,
-    counts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-  };
-  metrics.sentiments = {
-    classified_reviews: 0,
-    counts: { positive: 0, neutral: 0, negative: 0 },
-  };
-  report.summary.sentiments = { positive: 0, neutral: 0, negative: 0 };
-  metrics.issues = {
-    items: [],
-    covered_negative_reviews: 0,
-    negative_reviews: 0,
-  };
-  report.insights.high.repeated = [];
-  const result = prepareDashboard(metrics, report, { reviews: [] });
+test("empty reports produce null averages and coverage", () => {
+  const response = fixture();
+  response.metrics.total_reviews = 0;
+  response.metrics.ratings = { rated_reviews: 0, average: null, counts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } };
+  response.metrics.sentiment = { classified_reviews: 0, counts: { positive: 0, neutral: 0, negative: 0 } };
+  response.metrics.issues = { items: [], covered_negative_reviews: 0, negative_reviews: 0 };
+  response.insights = { issues: [], recommendations: [] };
+  response.reviews = [];
+  const result = prepareDashboard(response);
   assert.equal(result.average, null);
   assert.equal(result.coverage, null);
   assert.deepEqual(result.issues, []);
 });
 
-test("rejects stale counts, mixed samples, and mismatched evidence", () => {
+test("rejects inconsistent distributions, duplicate records, and invalid evidence", () => {
   const changes = [
-    (m, r) => {
-      m.ratings.average = 5;
-    },
-    (m, r) => {
-      m.ratings.counts[1] = -1;
-    },
-    (m, r) => {
-      r.summary.total_reviews = 4;
-    },
-    (m, r) => {
-      r.metadata.app_id = "456";
-    },
-    (m, r) => {
-      r.insights.high.repeated[0].evidence_ids = ["wrong", "b"];
-    },
-    (m, r) => {
-      m.issues.items[0].frequency = 8;
-    },
-    (m, r) => {
-      m.issues.covered_negative_reviews = 1;
-    },
+    (r) => { r.metrics.ratings.average = 5; },
+    (r) => { r.metrics.ratings.counts[1] = -1; },
+    (r) => { r.metrics.total_reviews = 4; },
+    (r) => { r.app.country = "gb"; },
+    (r) => { r.insights.recommendations[0].evidence_ids = ["wrong", "b"]; },
+    (r) => { r.metrics.issues.items[0].frequency = 8; },
+    (r) => { r.metrics.issues.covered_negative_reviews = 1; },
+    (r) => { r.reviews[0].id = "b"; },
+    (r) => { r.reviews[0].sentiment = "positive"; },
+    (r) => { r.insights.recommendations.push(r.insights.recommendations[0]); },
+    (r) => { r.insights.issues.push(r.insights.issues[0]); },
+    (r) => { r.metrics.issues.items[0].priority = "urgent"; },
+    (r) => { r.reviews = null; },
   ];
   for (const change of changes) {
-    const { metrics, report } = fixture();
-    change(metrics, report);
-    assert.throws(() => prepareDashboard(metrics, report));
+    const response = fixture();
+    change(response);
+    assert.throws(() => prepareDashboard(response));
   }
-});
-
-test("rejects positive evidence and mixed review files", () => {
-  const { metrics, report, reviews } = fixture();
-  reviews.reviews[0].sentiment = "positive";
-  assert.throws(
-    () => prepareDashboard(metrics, report, reviews),
-    /negative reviews/,
-  );
 });
 
 test("priority and recurrence filters keep their intended subsets", () => {
@@ -205,35 +127,4 @@ test("normalizes Apple URLs and rejects unrelated URLs", () => {
     "http://apps.apple.com/us/app/id123",
   ])
     assert.throws(() => normalizeAppInput(value));
-});
-
-test("adapts the unified REST response without changing denominators or evidence", () => {
-  const { metrics, reviews } = fixture();
-  const response = {
-    app: { app_id: "123", country: "us", name: "Example" },
-    collection: metrics.metadata,
-    metrics: {
-      total_reviews: 3,
-      ratings: metrics.ratings,
-      sentiment: metrics.sentiments,
-      issues: metrics.issues,
-    },
-    insights: {
-      issues: [{ ...metrics.issues.items[0], evidence_quotes: [] }],
-      recommendations: [
-        { category: "Crashes", action: "Investigate crashes." },
-      ],
-    },
-    reviews: reviews.reviews,
-    metadata: {},
-  };
-  const sources = dashboardSources(response);
-  const data = prepareDashboard(
-    sources.metrics,
-    sources.report,
-    sources.reviews,
-  );
-  assert.equal(data.metadata.app_name, "Example");
-  assert.equal(data.coverage, 1);
-  assert.equal(data.issues[0].action, "Investigate crashes.");
 });

@@ -1,6 +1,6 @@
 # Dashboard
 
-Jinja2 serves buildless HTML, CSS, and vanilla JavaScript from the same FastAPI application. `/static/app.mjs` renders the page and holds browser state; `/static/data.mjs` validates reports and adapts the unified response. There is no chart library, bundler, or runtime CDN: bars and the sentiment line are CSS. System fonts only.
+Jinja2 serves buildless HTML, CSS, and vanilla JavaScript from the same FastAPI application. `/static/app.mjs` renders the page and holds browser state; `/static/data.mjs` validates the canonical response directly and prepares render state. There is no chart library, bundler, or runtime CDN: bars and the sentiment line are CSS. System fonts only.
 
 ## Layout
 

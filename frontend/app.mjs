@@ -3,7 +3,6 @@ import {
   filterIssues,
   prepareDashboard,
   PRIORITIES,
-  dashboardSources,
   normalizeAppInput,
 } from "/static/data.mjs";
 
@@ -95,8 +94,8 @@ function updateChip(next) {
     : `Collected ${date.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`;
 }
 
-function installReport(metrics, report, reviews) {
-  const next = prepareDashboard(metrics, report, reviews);
+function installReport(response) {
+  const next = prepareDashboard(response);
   dashboard = next;
   coveredIds = new Set(next.issues.flatMap((issue) => issue.evidence_ids));
   issueTags = new Map();
@@ -272,8 +271,7 @@ document.querySelector("#export").addEventListener("click", () => {
 });
 
 function installAnalysis(response) {
-  const { metrics, report, reviews } = dashboardSources(response);
-  installReport(metrics, report, reviews);
+  installReport(response);
   canonicalReport = response;
   const warnings = response.metadata?.warnings || [];
   if (warnings.length) {
