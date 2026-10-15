@@ -76,6 +76,7 @@ npm test --prefix frontend
 - [Architecture, API, and pipeline](docs/architecture.md)
 - [Dashboard and JSON contract](docs/dashboard.md)
 - [Docker and Cloud Run deployment](docs/deployment.md)
+- [Proposed logging redesign](docs/logging-plan.md)
 - [Assignment](TEST_TASK.md) and [research checklist](RESEARCH_TODO.md)
 
 Cloud deployment files are prepared; no cloud resources have been created or deployed.
