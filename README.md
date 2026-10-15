@@ -23,6 +23,69 @@ Open [the dashboard](http://127.0.0.1:8000/) or [API documentation](http://127.0
 
 The service keeps no reports in a database or on disk. The browser holds the current report and downloads JSON locally. Negative reviews support improvement recommendations; positive and neutral reviews provide context. Shortfalls and incomplete collections are reported explicitly.
 
+## Test the API
+
+With the server running, check readiness:
+
+```bash
+curl http://127.0.0.1:8000/api/health
+```
+
+Collect up to 100 reviews without model analysis. Change `country` to `ua` for Ukraine or use another two-letter country code:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/reviews/collect \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "app_id": "1459969523",
+    "country": "us",
+    "review_count": 100,
+    "seed": 42
+  }'
+```
+
+Run the complete analysis, including sentiment, Gemini insights, and metrics:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/analyze \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "app_id": "389801252",
+    "country": "us",
+    "review_count": 100,
+    "seed": 42
+  }'
+```
+
+Calculate metrics from supplied reviews without calling either model:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/metrics \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "reviews": [
+      {
+        "id": "example-1",
+        "title": "Freezes",
+        "text": "The app freezes when opening photos.",
+        "rating": 2,
+        "sentiment": "negative"
+      }
+    ],
+    "insights": {
+      "issues": [
+        {
+          "category": "Freezing when opening photos",
+          "priority": "high",
+          "evidence_ids": ["example-1"]
+        }
+      ]
+    }
+  }'
+```
+
+The metrics request uses illustrative data. Omit `insights` for rating and sentiment metrics only. All API responses are JSON; routes have no `/v1` prefix.
+
 ## Run the pipeline without the dashboard
 
 ```bash
