@@ -18,7 +18,7 @@ A single `lens` drives everything: `{type: "issue" | "star" | "sentiment" | "gap
 
 ## Workflow
 
-Users supply an app ID or HTTPS Apple URL, country, and count. URL normalization accepts `apps.apple.com` and `itunes.apple.com`; a URL change populates country, and the country field at submission overrides that value. Server-side validation remains authoritative.
+Users supply an app ID or HTTPS Apple URL, country, and count. URL normalization accepts `apps.apple.com` and `itunes.apple.com`. The app input's `input` event suggests the URL country immediately when the URL parses, only while `countrySelected` is false. A user `change` event on the country dropdown sets that flag for the page session; subsequent app-input edits cannot overwrite the selection. Submission always passes the dropdown value to `normalizeAppInput`, overriding the URL country. A Polish URL followed by a United States selection therefore posts `country: "us"`. Server-side validation remains authoritative.
 
 The page sends `POST /api/analyze`, shows an honest busy state, and validates the returned report before replacing current browser state. Failures show an error while retaining a previous report. Browser analysis requests abort after 290 seconds. Gemini credentials never enter frontend code.
 
@@ -34,4 +34,4 @@ Validation checks totals and distributions, averages, app/country consistency, i
 
 Browser state is transient. Reloading does not restore server-stored reports; export JSON to retain a result. No separate frontend deployment, background jobs, or polling is required. `npm test --prefix frontend` (no install needed) verifies the data contract and filters; browser QA verifies live rendering and selection.
 
-The country dropdown uses the API collector’s accepted ISO codes and displays full English region names with browser `Intl.DisplayNames`, sorted alphabetically. United States is selected initially. App Store URLs select their country when the code is supported; requests still send lowercase two-letter codes.
+The country dropdown uses the API collector’s accepted ISO codes and displays full English region names with browser `Intl.DisplayNames`, sorted alphabetically. United States is selected initially. App Store URLs suggest supported countries until the user chooses one; requests send lowercase two-letter codes from the dropdown.

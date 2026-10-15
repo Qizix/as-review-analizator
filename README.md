@@ -21,6 +21,8 @@ Open [the dashboard](http://127.0.0.1:8000/) or [API documentation](http://127.0
 
 The service keeps no reports in a database or on disk. The browser holds the current report and downloads JSON locally. Review cards show full original comments, including line breaks. Negative reviews support improvement recommendations; positive and neutral reviews provide context. Shortfalls and incomplete collections are reported explicitly.
 
+An App Store link suggests its country until you choose a country yourself. Your selected country always controls which reviews are collected.
+
 ## Test the API
 
 With the server running, check readiness:

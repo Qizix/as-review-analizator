@@ -30,6 +30,7 @@ let lens = null;
 let priorityFilter = "all";
 let repeatedOnly = false;
 let analyzing = false;
+let countrySelected = false;
 const SIGNAL = { high: 3, medium: 2, low: 1 };
 const pct = (value) => (value == null ? "—" : `${Math.round(value * 100)}%`);
 const plural = (count, word) => `${count} ${word}${count === 1 ? "" : "s"}`;
@@ -316,8 +317,11 @@ async function postJSON(url, body, timeout = 290000) {
   }
 }
 
-document.querySelector("#app-input").addEventListener("change", (event) => {
-  if (event.target.value.trim().startsWith("https://")) {
+countrySelect.addEventListener("change", () => {
+  countrySelected = true;
+});
+document.querySelector("#app-input").addEventListener("input", (event) => {
+  if (!countrySelected && event.target.value.trim().startsWith("https://")) {
     try {
       const country = normalizeAppInput(event.target.value).country;
       if (countryOptions.some((option) => option.value === country)) {
