@@ -129,7 +129,7 @@ Flushing inside a route would miss the still-open HTTP server span. This impleme
 
 Cloud Run automatically supplies W3C `traceparent`. Logs use the active trace ID and `logging.googleapis.com/trace` with the configured project to join request/application logs in Cloud Logging. If only the legacy `X-Cloud-Trace-Context` is supplied by another proxy, convert it to W3C trace context upstream; this app does not install an additional propagator.
 
-After deployment, execute one analysis and confirm the root/custom spans in Cloud Trace, matching log trace references, token attributes, and native Cloud Monitoring request/error/latency/CPU/memory/instance/startup metrics. Cloud deployment and live ADC/IAM/Trace ingestion remain manual verification; preparing files or mocking export does not prove them.
+After deployment, execute one analysis and confirm the root/custom spans in Cloud Trace, matching log trace references, token attributes, and native Cloud Monitoring request/error/latency/CPU/memory/instance/startup metrics. The first Warsaw deployment verified live ADC/IAM export, trace hierarchy, log correlation, Gemini usage, and native request metrics. See [release verification](deployment.md#initial-release-verification--2026-10-15); repeat these checks after each deployment.
 
 ## Admission diagnostics
 

@@ -1,6 +1,6 @@
 # Public single-request deployment
 
-The prepared target is a public Cloud Run service with no sign-in, one Uvicorn worker, and one active processing request. No cloud deployment has been performed. Container execution requires a working Docker daemon; local Python tests do not establish Linux/container or Cloud Run readiness.
+The deployed service is public, with no sign-in, one Uvicorn worker, and one active processing request. The initial deployment was verified on 2026-10-15; see release verification below. Local container checks require a working Docker daemon; Cloud Build executes the same smoke checks remotely.
 
 ## Processing policy
 
@@ -98,10 +98,26 @@ Select the earlier working revision, not the maintenance-paused revision. Old re
 
 After deployment, verify public dashboard/health without an identity token, then run one real 100-review analysis. While it runs, send a second processing request: expect 409/Retry-After and responsive health. Confirm the original response and browser JSON export. Exercise a small test allowance and maintenance pause in a non-production configuration, then restore defaults.
 
-Inspect actual memory, cold-start time, end-to-end latency, provider failures, and deadline handling under the configured resources. Confirm Cloud Trace spans, correlated JSON logs, Gemini token usage, and native Cloud Run metrics. These checks remain environment-dependent and have not been executed here. The sentiment classifier is English-oriented; country selection does not guarantee equal sentiment accuracy across languages.
+Inspect actual memory, cold-start time, end-to-end latency, provider failures, and deadline handling under the configured resources. Confirm Cloud Trace spans, correlated JSON logs, Gemini token usage, and native Cloud Run metrics. Repeat these environment-dependent checks after each release; the initial results are recorded below. The sentiment classifier is English-oriented; country selection does not guarantee equal sentiment accuracy across languages.
 
 Official references: [public access](https://docs.cloud.google.com/run/docs/authenticating/public), [deploy flags](https://docs.cloud.google.com/sdk/gcloud/reference/run/deploy), [instance limits](https://docs.cloud.google.com/run/docs/configuring/max-instances), [uv CI integration](https://docs.astral.sh/uv/guides/integration/github/).
 
 ## Current deployment target
 
-Project: `obrio-test-task-api`. Runtime region: `europe-central2` (Warsaw). Cloud Build runs in `europe-west1` with Cloud Logging-only build logs. The runtime service account is `review-analyzer@obrio-test-task-api.iam.gserviceaccount.com`; Gemini credentials are supplied by Secret Manager, pinned to a numeric version. Build and Docker contexts exclude checked-in report examples and local secrets. Actual release verification is recorded after deployment.
+Project: `obrio-test-task-api`. Runtime region: `europe-central2` (Warsaw). Cloud Build runs in `europe-west1` with Cloud Logging-only build logs. The runtime service account is `review-analyzer@obrio-test-task-api.iam.gserviceaccount.com`; Gemini credentials are supplied by Secret Manager, pinned to a numeric version. Build and Docker contexts exclude checked-in report examples and local secrets. Release verification follows below.
+
+## Initial release verification — 2026-10-15
+
+- Public URL: https://app-store-review-analyzer-795908196054.europe-central2.run.app
+- Serving revision: `app-store-review-analyzer-00001-h68`, 100% traffic.
+- Image: `europe-central2-docker.pkg.dev/obrio-test-task-api/review-analyzer/app:866c202c789867997e15f250be80a1ad38f1cff8`.
+- Cloud Build: `0d2182ab-b725-4fc0-b39b-6369eee67c33` in europe-west1; build, offline CPU inference, non-root execution, HTTP readiness/assets/docs, and missing-credential failure checks passed.
+- Release preflight: 134 Python tests, 62 subtests, and six frontend tests passed.
+- Public dashboard, API docs, and JavaScript returned 200 without authentication.
+- Real Nebula analysis: 100 unique valid reviews, average rating 2.86, sentiment 35 positive/16 neutral/49 negative, seven validated issues. One bounded Gemini evidence repair succeeded; its warnings and both calls' usage are visible in telemetry. No collection/truncation warnings were reported.
+- During analysis, a concurrent collection returned 409 with Retry-After 5; health returned 200 with sentiment ready and credentials configured.
+- HTTP duration: 159.6 seconds; collection 6.0, sentiment 140.1, Gemini generation/repair 12.8. Peak process RSS was about 1,038 MiB. This is one measured run, not a latency guarantee. The single CPU is the observed inference bottleneck; capacity tuning remains separate work.
+- Request ID: `deployment-smoke-66baf074e35b`; trace ID: `b5dcac06f7ef4db381397917ff0c368d`. Cloud Trace returned 25 spans with verified parent-child relationships and both calls' token attributes. Cloud Logging contained the matching trace reference and request summary; no telemetry-export failure events were found during verification.
+- Native Cloud Monitoring returned Cloud Run request-count series. CPU/memory/latency dashboards remain the standard Cloud Run monitoring views; no custom metrics service was added.
+
+The service-account key was never created; runtime ADC is supplied by Cloud Run. Secret Manager version 1 supplies the Gemini credential. The real report was inspected locally for verification and was not persisted by the HTTP application. There is no earlier known-good revision yet; for a first-release incident, pause processing rather than selecting an unverified rollback target.
