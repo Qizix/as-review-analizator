@@ -60,10 +60,4 @@ sequenceDiagram
         User->>UI: Export JSON
         UI-->>User: Download complete report
     end
-    opt Download reviews as CSV
-        User->>UI: Export CSV
-        UI->>API: POST /api/v1/reviews/export
-        API-->>UI: CSV attachment
-        UI-->>User: Download CSV
-    end
     Note over UI,API: Reports stay in memory, no database or server-side report storage

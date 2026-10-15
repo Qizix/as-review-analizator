@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f5f6f8" />
+    <title>Review Atlas · App review intelligence</title>
+    <link rel="icon" href="/static/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script defer src="/static/vendor/chart.umd.js"></script>
+    <script type="module" src="/static/app.mjs"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to report</a>
+    <header class="header">
+      <a class="brand" href="/" aria-label="Review Atlas home"
+        ><span class="brand-mark">a<span>•</span></span
+        >review<span class="brand-light">atlas</span></a
+      >
+      <nav aria-label="Report sections">
+        <a href="#overview">Overview</a><a href="#issues">Issues & actions</a>
+      </nav>
+      <div class="header-actions">
+        <button class="button" id="open-report">
+          Open report <span aria-hidden="true">↗</span></button
+        ><button class="button dark" id="export" disabled>
+          Export JSON <span aria-hidden="true">↓</span>
+        </button>
+      </div>
+    </header>
+    <main id="main">
+      <section class="analysis-entry panel" aria-labelledby="analyze-title">
+        <h2 id="analyze-title">Analyze an app</h2>
+        <p class="panel-sub">
+          Collect reviews, understand sentiment, and surface improvements in one
+          report.
+        </p>
+        <form id="analyze-form">
+          <label class="app-input"
+            >App Store ID or URL<input
+              id="app-input"
+              placeholder="389801252 or https://apps.apple.com/…"
+              required
+              autocomplete="off"
+          /></label>
+          <label
+            >Country<input
+              id="country-input"
+              value="us"
+              minlength="2"
+              maxlength="2"
+              pattern="[A-Za-z]{2}"
+              required
+          /></label>
+          <label
+            >Reviews<input
+              id="count-input"
+              type="number"
+              value="100"
+              min="1"
+              max="{{ max_review_count }}"
+              step="1"
+              required
+          /></label>
+          <button class="button dark" type="submit" id="analyze-button">
+            Analyze reviews →
+          </button>
+        </form>
+      </section>
+      <div class="notice" id="status" role="status">
+        Enter an app above to generate a report, or open a saved analysis.
+      </div>
+      <section id="report" hidden></section>
+    </main>
+    <footer>
+      <span>Review Atlas</span
+      ><span>A clearer picture of your app’s feedback.</span>
+    </footer>
+    <dialog id="import-dialog" aria-labelledby="import-title">
+      <div class="dialog-heading">
+        <h2 id="import-title">Open a review report</h2>
+        <button class="icon-button" data-close aria-label="Close import dialog">
+          ×
+        </button>
+      </div>
+      <p class="muted">
+        Open a saved full analysis, or choose matching metrics and insights
+        files. Add the review file to explore the evidence.
+      </p>
+      <form id="import-form">
+        <label
+          >Metrics or exported report JSON
+          <input
+            type="file"
+            id="metrics-file"
+            accept=".json,application/json"
+            required
+        /></label>
+        <label
+          >Insights JSON
+          <span class="muted">not needed for an exported report</span
+          ><input
+            type="file"
+            id="insights-file"
+            accept=".json,application/json"
+        /></label>
+        <label
+          >Reviews JSON <span class="muted">optional</span
+          ><input type="file" id="reviews-file" accept=".json,application/json"
+        /></label>
+        <p id="import-error" role="alert" class="error"></p>
+        <button class="button dark" type="submit">
+          View report <span aria-hidden="true">→</span>
+        </button>
+      </form>
+    </dialog>
+    <dialog id="evidence-dialog" aria-labelledby="evidence-title">
+      <div class="dialog-heading">
+        <h2 id="evidence-title">Review evidence</h2>
+        <button
+          class="icon-button"
+          data-close
+          aria-label="Close evidence dialog"
+        >
+          ×
+        </button>
+      </div>
+      <div id="evidence-content"></div>
+    </dialog>
+  </body>
+</html>

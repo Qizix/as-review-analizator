@@ -11,7 +11,7 @@ from scripts.analyze_sentiment import MODEL, analyze_sentiment, main
 
 
 class AnalyzeSentimentTests(unittest.TestCase):
-    @patch("scripts.analyze_sentiment.pipeline")
+    @patch("app.services.sentiment.pipeline")
     def test_predictions_preserve_review_order_and_collection_metadata(self, pipeline):
         data = {
             "metadata": {"app_id": "123", "seed": 42},
@@ -28,7 +28,8 @@ class AnalyzeSentimentTests(unittest.TestCase):
             {"label": "Neutral", "score": 0.8},
         ])
         result = analyze_sentiment(data)
-        pipeline.assert_called_once_with(task="text-classification", model=MODEL, device="cpu")
+        from app.settings import SENTIMENT_REVISION
+        pipeline.assert_called_once_with(task="text-classification", model=MODEL, revision=SENTIMENT_REVISION, device="cpu")
         pipeline.return_value.assert_called_once_with([review["text"] for review in data["reviews"]], batch_size=8, truncation=True, max_length=512)
         self.assertEqual(data, original)
         self.assertEqual([review["id"] for review in result["reviews"]], ["a", "b", "c"])
@@ -39,7 +40,7 @@ class AnalyzeSentimentTests(unittest.TestCase):
         self.assertEqual(result["metadata"]["app_id"], "123")
         self.assertEqual(result["metadata"]["sentiment_analysis"]["analyzed_count"], 3)
 
-    @patch("scripts.analyze_sentiment.pipeline")
+    @patch("app.services.sentiment.pipeline")
     def test_invalid_inputs_fail_before_loading_model(self, pipeline):
         for data in [[], {}, {"reviews": {}}, {"reviews": [None]}, {"reviews": [{"text": " "}]}, {"reviews": [{"text": 3}]}, {"metadata": None, "reviews": []}]:
             with self.subTest(data=data):
@@ -47,7 +48,7 @@ class AnalyzeSentimentTests(unittest.TestCase):
                     analyze_sentiment(data)
         pipeline.assert_not_called()
 
-    @patch("scripts.analyze_sentiment.pipeline")
+    @patch("app.services.sentiment.pipeline")
     def test_empty_collection_does_not_load_model(self, pipeline):
         result = analyze_sentiment({"metadata": {"shortfall": 100}, "reviews": []})
         self.assertEqual(result["reviews"], [])
@@ -55,7 +56,7 @@ class AnalyzeSentimentTests(unittest.TestCase):
         self.assertEqual(result["metadata"]["sentiment_analysis"]["analyzed_count"], 0)
         pipeline.assert_not_called()
 
-    @patch("scripts.analyze_sentiment.pipeline")
+    @patch("app.services.sentiment.pipeline")
     def test_invalid_predictions_fail(self, pipeline):
         for predictions in [[], [{"label": "unknown", "score": 0.5}], [{"label": "positive", "score": float("nan")}]]:
             with self.subTest(predictions=predictions):
@@ -63,7 +64,7 @@ class AnalyzeSentimentTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     analyze_sentiment({"reviews": [{"text": "Review"}]})
 
-    @patch("scripts.analyze_sentiment.pipeline")
+    @patch("app.services.sentiment.pipeline")
     def test_cli_default_output_preserves_input(self, pipeline):
         pipeline.return_value.return_value = [{"label": "positive", "score": 0.9}]
         with tempfile.TemporaryDirectory() as directory:
@@ -76,7 +77,7 @@ class AnalyzeSentimentTests(unittest.TestCase):
             self.assertEqual(input_path.read_text(), content)
         self.assertEqual(saved["reviews"][0]["sentiment"], {"label": "positive", "score": 0.9})
 
-    @patch("scripts.analyze_sentiment.pipeline")
+    @patch("app.services.sentiment.pipeline")
     def test_cli_malformed_json_does_not_write_output(self, pipeline):
         with tempfile.TemporaryDirectory() as directory:
             input_path = Path(directory) / "reviews.json"

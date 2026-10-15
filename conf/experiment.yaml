@@ -1,0 +1,14 @@
+app_id: "389801252"
+country: us
+review_count: 100
+seed: 42
+sentiment_threads: 1
+
+hydra:
+  run:
+    dir: hydra_outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: hydra_outputs/multirun/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.num}
+  job:
+    chdir: false

@@ -75,7 +75,7 @@ class GenerateInsightsTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     prepare_reviews(data)
 
-    @patch("scripts.generate_insights.genai.Client")
+    @patch("app.services.insights.genai.Client")
     @patch.dict(os.environ, {"GEMINI_API_KEY": "test-only"}, clear=True)
     def test_request_passes_compact_groups_system_prompt_and_schema(self, client):
         groups = prepare_reviews(collection())
@@ -120,7 +120,7 @@ class GenerateInsightsTests(unittest.TestCase):
             kwargs["http_options"].retry_options.initial_delay = 0.01
             return client_type(**kwargs)
 
-        with patch("scripts.generate_insights.genai.Client", side_effect=make_client):
+        with patch("app.services.insights.genai.Client", side_effect=make_client):
             report = request_insights(prepare_reviews(collection()), "System prompt")
         self.assertEqual(report, response())
         self.assertEqual(len(requests), 2)
@@ -137,7 +137,7 @@ class GenerateInsightsTests(unittest.TestCase):
         groups = json.loads(payload["contents"][0]["parts"][0]["text"])
         self.assertEqual(set(groups), {"negative", "positive", "neutral"})
 
-    @patch("scripts.generate_insights.genai.Client")
+    @patch("app.services.insights.genai.Client")
     @patch.dict(os.environ, {"GEMINI_API_KEY": "test-only"}, clear=True)
     def test_missing_or_malformed_model_text_fails(self, client):
         fake = client.return_value.__enter__.return_value

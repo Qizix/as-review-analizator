@@ -18,6 +18,9 @@ Start with separate scripts that perform each task independently, then connect t
   Replace phrase-frequency extraction with Gemini grouping of equivalent complaints into evidence-linked issue categories. Recurrence is calculated locally from unique supporting negative-review IDs.
 - [x] How to provide actionable insights, such as areas of improvement based on review sentiment?
   Use Gemini 3.5 Flash-Lite with grouped negative/positive/neutral JSON and a system prompt. Negative reviews are evidence; other sentiments provide context. Validate structured output and evidence IDs, then generate short actions grouped by priority and recurrence. Empty issue lists are valid. Implemented in `scripts/generate_insights.py`.
-- [ ] What is the API design schema?
-- [ ] How to visualize insights (e.g., sentiment distribution, rating distribution)?
+- [x] What is the API design schema?
+  FastAPI exposes analysis, collection, metrics, and health routes. Unified reports contain app/collection details, independent metrics, evidence-linked issues/recommendations, source reviews, and processing metadata. See `docs/architecture.md`.
+- [x] How to visualize insights (e.g., sentiment distribution, rating distribution)?
+  Jinja2 and vanilla JavaScript use bundled Chart.js to render API JSON, with distributions, issue frequencies/coverage, evidence drilldowns, raw reviews, and browser-local JSON downloads.
 - [ ] How to deploy the API on a cloud platform (e.g., AWS, Heroku, or Google Cloud)?
+  Docker and private Cloud Run files are prepared. Actual image build/deployment remain unverified; the user requested deployment files only. See `docs/deployment.md`.

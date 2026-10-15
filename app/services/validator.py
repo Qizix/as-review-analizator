@@ -1,0 +1,61 @@
+import hashlib
+from datetime import datetime, timezone
+
+from app.settings import GEMINI_MODEL as MODEL
+from app.services.preprocessor import SENTIMENTS
+
+PRIORITIES = ("high", "medium", "low")
+
+
+def build_report(data, groups, response, prompt):
+    negative_ids = {review["id"] for review in groups["negative"]}
+    categorized = set()
+    categories = set()
+    source_reviews = {review["id"]: review for review in data["reviews"]}
+    insights = {priority: {"repeated": [], "single": []} for priority in PRIORITIES}
+    for issue in response.issues:
+        ids = set(issue.evidence_ids)
+        if len(ids) != len(issue.evidence_ids) or not ids <= negative_ids:
+            raise ValueError("issue evidence must contain unique IDs of negative input reviews")
+        category = " ".join(issue.category.split())
+        action = " ".join(issue.action.split())
+        if not category or not action or category.casefold() in categories:
+            raise ValueError("issues must have nonempty actions and unique categories")
+        categories.add(category.casefold())
+        categorized.update(ids)
+        count = len(ids)
+        insights[issue.priority]["repeated" if count > 1 else "single"].append({
+            "category": category,
+            "action": action,
+            "review_count": count,
+            "negative_review_fraction": count / len(negative_ids),
+            "evidence_ids": sorted(ids),
+            "keywords": list(dict.fromkeys(word.strip() for word in issue.keywords if word.strip())),
+            "evidence_quotes": [{"review_id": review_id, "quote": source_reviews[review_id]["text"]} for review_id in sorted(ids)],
+        })
+    for buckets in insights.values():
+        for items in buckets.values():
+            items.sort(key=lambda item: (-item["review_count"], item["category"].casefold()))
+    return {
+        "metadata": {
+            **data.get("metadata", {}),
+            "insight_generation": {
+                "model": MODEL,
+                "model_called": any(groups.values()),
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "prompt_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
+                "preprocessing": {"emoji": "descriptive words", "title_limit": 200, "text_limit": 4000},
+                "truncated_review_ids": [review["id"] for reviews in groups.values() for review in reviews if "truncated_fields" in review],
+            },
+        },
+        "summary": {
+            "total_reviews": sum(len(reviews) for reviews in groups.values()),
+            "sentiments": {sentiment: len(groups[sentiment]) for sentiment in SENTIMENTS},
+            "categorized_negative_reviews": len(categorized),
+            "uncategorized_negative_reviews": len(negative_ids - categorized),
+            "issue_count": len(response.issues),
+        },
+        "insights": insights,
+    }
+
+

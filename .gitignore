@@ -2,3 +2,8 @@
 __pycache__/
 output/
 .env
+.DS_Store
+frontend/node_modules/
+models/
+.pytest_cache/
+hydra_outputs/

@@ -21,7 +21,7 @@ uv run --env-file .env uvicorn app.main:app --host 127.0.0.1 --port 8000 --worke
 
 Open [the dashboard](http://127.0.0.1:8000/) or [API documentation](http://127.0.0.1:8000/docs). Enter an app ID or App Store URL, country, and review count. Charts render in the browser with bundled Chart.js; the backend returns JSON. The first local startup may download the pinned sentiment model. Docker bundles its weights instead.
 
-The service keeps no reports in a database or on disk. The browser holds the current report and downloads JSON/CSV. Negative reviews support improvement recommendations; positive and neutral reviews provide context. Shortfalls and incomplete collections are reported explicitly.
+The service keeps no reports in a database or on disk. The browser holds the current report and downloads JSON locally. Negative reviews support improvement recommendations; positive and neutral reviews provide context. Shortfalls and incomplete collections are reported explicitly.
 
 ## Run the pipeline without the dashboard
 

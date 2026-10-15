@@ -79,7 +79,7 @@ class FetchReviewsTests(unittest.TestCase):
         self.assertEqual(saved["metadata"]["shortfall"], 100)
         self.assertIn("Shortfall: 100 reviews", stderr.getvalue())
 
-    @patch("scripts.fetch_reviews.time.sleep")
+    @patch("app.services.collector.time.sleep")
     def test_partial_page_failure(self, sleep):
         fixture = json.loads((FIXTURES / "apple_reviews.json").read_text())
 
@@ -96,14 +96,14 @@ class FetchReviewsTests(unittest.TestCase):
         self.assertEqual([page["page"] for page in result["metadata"]["failed_pages"]], [1])
         sleep.assert_not_called()
 
-    @patch("scripts.fetch_reviews.time.sleep")
+    @patch("app.services.collector.time.sleep")
     def test_retry_then_success(self, sleep):
         responses = [httpx.Response(429), httpx.Response(503), httpx.Response(200, json={"feed": {}})]
         with httpx.Client(transport=httpx.MockTransport(lambda request: responses.pop(0))) as client:
             self.assertEqual(fetch_page(client, "https://example.com"), [])
         self.assertEqual(sleep.call_args_list, [unittest.mock.call(1), unittest.mock.call(2)])
 
-    @patch("scripts.fetch_reviews.time.sleep")
+    @patch("app.services.collector.time.sleep")
     def test_bounded_retries_and_failed_pages(self, sleep):
         requests = []
 
@@ -119,14 +119,14 @@ class FetchReviewsTests(unittest.TestCase):
         self.assertEqual(result["metadata"]["shortfall"], 100)
         self.assertEqual(result["reviews"], [])
 
-    @patch("scripts.fetch_reviews.time.sleep")
+    @patch("app.services.collector.time.sleep")
     def test_non_retryable_status(self, sleep):
         with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(404))) as client:
             with self.assertRaises(httpx.HTTPStatusError):
                 fetch_page(client, "https://example.com")
         sleep.assert_not_called()
 
-    @patch("scripts.fetch_reviews.time.sleep")
+    @patch("app.services.collector.time.sleep")
     def test_timeout_and_malformed_json(self, sleep):
         requests = []
 

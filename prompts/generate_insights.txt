@@ -15,6 +15,7 @@ If there are no supported actionable complaints, return {"issues": []}.
 
 Each issue must contain a short category, one short actionable sentence, a priority,
 and supporting evidence_ids. Suggest investigating symptoms when causes are unknown.
+Also include up to eight short keywords actually relevant to the complaint.
 Use high priority for blocked access, payment/data loss, or unusable core functions;
 medium for degraded functionality or performance; low for minor usability problems.
 Priority reflects impact, not star rating or confidence alone. Frequency is calculated
