@@ -43,13 +43,24 @@ h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
 .chip svg { margin-left: auto; flex: none; }
 .appico { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 26px; height: 26px; border-radius: 7px; background: #e9ecf2; color: var(--ink2); font-size: 13px; font-weight: 600; }
 .pop { position: absolute; left: 0; top: calc(100% + 8px); z-index: 5; width: min(420px, calc(100vw - 32px)); padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; box-shadow: 0 16px 48px rgba(20, 22, 27, 0.16); }
-.app-switch.static .pop { position: static; margin-top: 8px; width: min(420px, 100%); box-shadow: none; }
+.start { max-width: 760px; margin: 0 auto; padding: clamp(24px, 12vh, 120px) 0 24px; display: flex; flex-direction: column; gap: 20px; }
+.start h1 { margin: 0; font-size: clamp(28px, 4vw, 36px); line-height: 1.1; font-weight: 600; letter-spacing: -0.025em; }
+.start-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; padding: 24px; box-shadow: 0 8px 32px rgba(20, 22, 27, 0.06); }
+.start-form .field.wide { flex: 1 1 100%; }
+.start-form .country { flex: 1 1 180px; }
+.start-form .amount { flex: 0 0 120px; }
+.start-form .input { height: 48px; font-size: 15px; }
+.start-form .submit { flex: 1 1 160px; justify-content: center; min-height: 48px; }
+#open-report { margin-left: auto; }
 .field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 500; color: var(--ink2); }
-.field.wide, .btn.wide { grid-column: 1 / -1; }
+.field.wide, .pop .submit { grid-column: 1 / -1; }
+.pop .submit { justify-content: center; }
 .input { height: 42px; width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; font-size: 14px; color: var(--ink); background: #fff; }
 input[type="file"].input { padding: 9px 12px; height: auto; }
 
 .notice { margin: 0 0 16px; padding: 12px 16px; border-radius: 12px; background: #fff; border: 1px solid var(--line); color: var(--ink2); }
+.notice:empty { display: none; }
+main:has(#report[hidden]) .notice { max-width: 760px; margin-left: auto; margin-right: auto; }
 .notice[role="alert"] { border-color: #f0a877; color: #8a3a0b; }
 main { padding-bottom: 48px; }
 

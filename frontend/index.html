@@ -12,15 +12,15 @@
   <body>
     <a class="skip-link" href="#main">Skip to report</a>
     <header class="header">
-      <div class="app-switch static">
+      <div class="app-switch" hidden>
         <button
           class="btn chip"
           id="app-chip"
-          aria-expanded="true"
+          aria-expanded="false"
           aria-controls="analyze-form"
         >
-          <span class="appico" id="app-icon" aria-hidden="true">+</span>
-          <span class="chip-label" id="app-label">Analyze an app</span>
+          <span class="appico" id="app-icon" aria-hidden="true">A</span>
+          <span class="chip-label" id="app-label"></span>
           <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
             <path
               d="M4 6l4 4 4-4"
@@ -32,40 +32,9 @@
             />
           </svg>
         </button>
-        <form class="card pop" id="analyze-form">
-          <label class="field wide"
-            >App Store ID or URL<input
-              class="input"
-              id="app-input"
-              placeholder="389801252 or https://apps.apple.com/…"
-              required
-              autocomplete="off"
-          /></label>
-          <label class="field"
-            >Country<select class="input" id="country-input" required>
-              {% for country in countries %}
-              <option value="{{ country }}"{% if country == 'us' %} selected{% endif %}>{{ country | upper }}</option>
-              {% endfor %}
-            </select></label
-          >
-          <label class="field"
-            >Reviews<input
-              class="input"
-              id="count-input"
-              type="number"
-              value="100"
-              min="1"
-              max="{{ max_review_count }}"
-              step="1"
-              required
-          /></label>
-          <button class="btn dark wide" type="submit" id="analyze-button">
-            Analyze reviews
-          </button>
-        </form>
       </div>
       <button class="btn" id="open-report">Open report</button>
-      <button class="btn dark" id="export" disabled>
+      <button class="btn dark" id="export" hidden>
         <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
           <path
             d="M8 2.5v8M4.8 7.6L8 10.8l3.2-3.2M3 13h10"
@@ -80,9 +49,41 @@
       </button>
     </header>
     <main id="main">
-      <div class="notice" id="status" role="status">
-        Enter an app above to generate a report, or open a saved analysis.
-      </div>
+      <section class="start" id="start">
+        <h1>Analyze an app</h1>
+        <form class="card start-form" id="analyze-form">
+          <label class="field wide"
+            >App Store ID or URL<input
+              class="input"
+              id="app-input"
+              placeholder="389801252 or https://apps.apple.com/…"
+              required
+              autocomplete="off"
+          /></label>
+          <label class="field country"
+            >Country<select class="input" id="country-input" required>
+              {% for country in countries %}
+              <option value="{{ country }}"{% if country == 'us' %} selected{% endif %}>{{ country | upper }}</option>
+              {% endfor %}
+            </select></label
+          >
+          <label class="field amount"
+            >Reviews<input
+              class="input"
+              id="count-input"
+              type="number"
+              value="100"
+              min="1"
+              max="{{ max_review_count }}"
+              step="1"
+              required
+          /></label>
+          <button class="btn dark submit" type="submit" id="analyze-button">
+            Analyze reviews
+          </button>
+        </form>
+      </section>
+      <div class="notice" id="status" role="status"></div>
       <section id="report" hidden></section>
     </main>
     <dialog id="import-dialog" aria-labelledby="import-title">

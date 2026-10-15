@@ -6,7 +6,8 @@ Jinja2 serves buildless HTML, CSS, and vanilla JavaScript from the same FastAPI 
 
 One screen, insight first:
 
-- **Header**: the app chip (app, country, review count) opens the analyze form as a popover; before any report the form is shown inline. Open report and Export JSON sit beside it.
+- **Start screen**: before any report the page shows only a centered Analyze an app title and the form (ID or URL, country, review count, Analyze), plus Open report in the header. When a report installs, the same form element moves into the header popover and the start section and the hidden Export JSON button swap in.
+- **Header**: the app chip (app, country, review count) opens the analyze form as a popover. Open report and Export JSON sit beside it.
 - **Snapshot card**: ratings (average plus 1–5 star bars) and sentiment (one thin line plus three rows). Bars are scaled to the largest star count; sentiment percentages use classified reviews as the denominator.
 - **What to fix**: issues sorted by priority, then frequency. Priority is a three-step signal plus a word, frequency a bar plus count. Filters: priority tabs and Repeated only (`filterIssues`). A final row, Not assigned to an issue, shows negative reviews outside every issue (`negative - covered`) and is hidden while filters are active.
 - **Reviews pane**: sticky on wide screens, stacked below on narrow ones. It lists reviews for the current selection, with issue tags and source ID.

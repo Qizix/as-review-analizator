@@ -114,11 +114,16 @@ function installReport(metrics, report, reviews) {
     <aside class="card reviews" id="reviews" aria-label="Reviews"></aside></div>`;
   renderAll();
   updateChip(next);
-  switcher.classList.remove("static");
+  if (!switcher.contains(analyzeForm)) {
+    switcher.append(analyzeForm);
+    analyzeForm.classList.replace("start-form", "pop");
+    document.querySelector("#start").hidden = true;
+    switcher.hidden = false;
+    document.querySelector("#export").hidden = false;
+  }
   setSwitcher(false);
   reportElement.hidden = false;
   status.hidden = true;
-  document.querySelector("#export").disabled = false;
 }
 
 function renderSnapshot() {
