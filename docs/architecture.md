@@ -4,7 +4,7 @@
 
 ## Services and lifecycle
 
-- `collector.py`: validates ID/country/count, fetches up to 10 App Store catalog review pages sequentially using `next` offsets, with a 0.5-second pause between pages and bounded retries, deduplicates reviews, and samples with a local seeded RNG. It accepts a monotonic deadline; request timeouts and retry delays shrink with the remaining budget. Unfetched pages are recorded as failed rather than padded.
+- `collector.py`: validates ID/country/count and tries catalog JSON, RSS JSON, then embedded webpage JSON until enough unique reviews are available. It keeps the requested storefront, deduplicates across sources, and samples with a local seeded RNG. Each source has a bounded time budget; metadata preserves partial results, source attempts, and failures. See [review collection](fetch_reviews.md) for pagination, parsing, and deadline details.
 - `app_info.py`: best-effort Apple lookup for name, developer, store/icon URLs, and current version. Failure retains ID/country without fabricating metadata.
 - `preprocessor.py`: converts Unicode emoji to bracketed words, collapses whitespace, caps titles at 200 characters and texts at 4,000 with head/tail preservation, and records truncated IDs. Original source text is retained for the final report.
 - `sentiment.py`: loads CardiffNLP RoBERTa on CPU, classifies preprocessed text in batches of 8, and truncates at 512 tokens. The revision is pinned to `3216a57f2a0d9c45a2e6c20157c20c49fb4bf9c7`. Torch uses one thread by default. Rating never determines sentiment.

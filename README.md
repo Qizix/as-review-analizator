@@ -29,7 +29,7 @@ With the server running, check readiness:
 curl http://127.0.0.1:8000/api/health
 ```
 
-Collect up to 100 reviews from Apple’s catalog reviews endpoint without model analysis. Change `country` to `ua` for Ukraine or use another two-letter country code:
+Collect up to 100 reviews without model analysis. Collection tries catalog JSON, then RSS JSON, then embedded App Store webpage JSON when earlier sources fail or leave a shortfall. Reviews stay within the requested country and are deduplicated across sources; metadata records attempts and failures. Change `country` to `ua` for Ukraine or use another two-letter country code:
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/reviews/collect \
@@ -74,6 +74,7 @@ npm test --prefix frontend
 
 - [Infrastructure plan](INFRASTRUCTURE.md)
 - [Architecture, API, and pipeline](docs/architecture.md)
+- [Review sources and fallback behavior](docs/fetch_reviews.md)
 - [Dashboard and JSON contract](docs/dashboard.md)
 - [Docker and Cloud Run deployment](docs/deployment.md)
 - [Proposed logging redesign: one block per request](docs/logging-plan.md)

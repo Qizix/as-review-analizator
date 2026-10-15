@@ -1,7 +1,9 @@
+import json
 import random
 import re
 import time
 from datetime import datetime, timezone
+from html.parser import HTMLParser
 from urllib.parse import parse_qs, urlsplit
 
 import httpx
@@ -37,7 +39,7 @@ def validate_inputs(app_id, country, count):
     return country
 
 
-def fetch_page(client, url, deadline=None):
+def fetch_page(client, url, deadline=None, parser=None):
     for attempt in range(3):
         try:
             remaining = 20.0 if deadline is None else min(20.0, deadline - time.monotonic())
@@ -45,6 +47,8 @@ def fetch_page(client, url, deadline=None):
                 raise httpx.TimeoutException("Collection deadline exceeded")
             response = client.get(url, timeout=remaining)
             response.raise_for_status()
+            if parser is not None:
+                return parser(response)
             payload = response.json()
             if not isinstance(payload, dict) or not isinstance(payload.get("data"), list):
                 raise ValueError("response must contain a review data list")
@@ -80,7 +84,7 @@ def extract_review(entry):
     return {"id": review_id, "title": title, "text": text, "rating": rating}
 
 
-def collect_reviews(client, app_id, country="us", count=100, seed=42, deadline=None):
+def collect_catalog_reviews(client, app_id, country="us", count=100, seed=42, deadline=None):
     country = validate_inputs(app_id, country, count)
     reviews = {}
     fetched_pages = []
@@ -100,6 +104,8 @@ def collect_reviews(client, app_id, country="us", count=100, seed=42, deadline=N
             payload = fetch_page(client, url, deadline)
         except (httpx.HTTPError, ValueError) as exc:
             failed_pages.append({"page": page, "offset": offset, "error": str(exc)})
+            if page == 1:
+                break
             offset += PAGE_SIZE
             continue
         fetched_pages.append(page)
@@ -146,4 +152,166 @@ def collect_reviews(client, app_id, country="us", count=100, seed=42, deadline=N
         },
         "reviews": selected,
     }
+
+
+def parse_rss_page(response):
+    payload = response.json()
+    if not isinstance(payload, dict) or not isinstance(payload.get("feed"), dict):
+        raise ValueError("response must contain an RSS feed object")
+    feed = payload["feed"]
+    entries = feed.get("entry", [])
+    if isinstance(entries, dict):
+        entries = [entries]
+    if not isinstance(entries, list):
+        raise ValueError("RSS entries must be a list or object")
+    data = []
+    for entry in entries:
+        try:
+            rating = entry["im:rating"]["label"]
+            if not isinstance(rating, str) or rating not in {"1", "2", "3", "4", "5"}:
+                raise ValueError("invalid RSS rating")
+            data.append({"id": entry["id"]["label"], "attributes": {
+                "title": entry["title"]["label"], "review": entry["content"]["label"], "rating": int(rating),
+            }})
+        except (KeyError, TypeError, ValueError):
+            data.append(None)
+    links = feed.get("link", [])
+    if not isinstance(links, list):
+        raise ValueError("RSS links must be a list")
+    has_next = any(isinstance(link, dict) and isinstance(link.get("attributes"), dict)
+                   and link["attributes"].get("rel") == "next" for link in links)
+    return {"data": data, "next": has_next}
+
+
+class ServerDataParser(HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=False)
+        self.active = False
+        self.found = False
+        self.parts = []
+
+    def handle_starttag(self, tag, attrs):
+        attributes = dict(attrs)
+        if tag == "script" and attributes.get("id") == "serialized-server-data" and attributes.get("type") == "application/json":
+            self.active = True
+            self.found = True
+
+    def handle_endtag(self, tag):
+        if tag == "script":
+            self.active = False
+
+    def handle_data(self, data):
+        if self.active:
+            self.parts.append(data)
+
+
+def parse_web_page(response):
+    parser = ServerDataParser()
+    parser.feed(response.text)
+    if not parser.found:
+        raise ValueError("App Store page is missing serialized-server-data")
+    state = json.loads("".join(parser.parts))
+    if not isinstance(state, (dict, list)):
+        raise ValueError("App Store server state must be an object or list")
+    reviews = []
+
+    def walk(obj):
+        if isinstance(obj, dict):
+            if obj.get("$kind") == "Review":
+                review_id = obj.get("id")
+                if type(review_id) is int and review_id > 0:
+                    review_id = str(review_id)
+                reviews.append({"id": review_id, "attributes": {
+                    "title": obj.get("title"), "review": obj.get("contents"), "rating": obj.get("rating"),
+                }})
+                return
+            for value in obj.values():
+                walk(value)
+        elif isinstance(obj, list):
+            for value in obj:
+                walk(value)
+
+    walk(state)
+    return {"data": reviews, "next": False}
+
+
+def fetch_web_reviews(client, app_id, country, deadline):
+    def parse_slug(response):
+        payload = response.json()
+        results = payload.get("results") if isinstance(payload, dict) else None
+        if not isinstance(results, list) or not results or not isinstance(results[0], dict):
+            raise ValueError("App lookup returned no app for this storefront")
+        item = results[0]
+        url = item.get("trackViewUrl")
+        if str(item.get("trackId")) != app_id or not isinstance(url, str):
+            raise ValueError("App lookup did not return the requested app URL")
+        parsed = urlsplit(url)
+        match = re.fullmatch(rf"/{country}/app/([^/]+)/id{app_id}", parsed.path)
+        if parsed.scheme != "https" or parsed.netloc != "apps.apple.com" or not match:
+            raise ValueError("App lookup returned an unexpected storefront URL")
+        return match[1]
+
+    slug = fetch_page(client, f"https://itunes.apple.com/lookup?id={app_id}&country={country}", deadline, parse_slug)
+    return fetch_page(client, f"https://apps.apple.com/{country}/app/{slug}/id{app_id}", deadline, parse_web_page)
+
+
+def collect_reviews(client, app_id, country="us", count=100, seed=42, deadline=None):
+    country = validate_inputs(app_id, country, count)
+    started = time.monotonic()
+    catalog_deadline = started + 60 if deadline is None else min(started + 60, started + max(0, deadline - started) / 3)
+    result = collect_catalog_reviews(client, app_id, country, count, seed, catalog_deadline)
+    metadata = result["metadata"]
+    reviews = {review["id"]: review for review in result["reviews"]}
+    metadata["sources"] = [{
+        "source": "catalog", "added_count": metadata["available_count"],
+        "fetched_pages": list(metadata["fetched_pages"]),
+        "failed_pages": [{**failure, "source": "catalog"} for failure in metadata["failed_pages"]],
+        "invalid_records": metadata["invalid_records"], "duplicate_records": metadata["duplicate_records"],
+    }]
+    metadata["failed_pages"] = list(metadata["sources"][0]["failed_pages"])
+    for index, source in enumerate(("rss", "webpage")):
+        if metadata["available_count"] >= count:
+            break
+        now = time.monotonic()
+        source_deadline = now + 60 if deadline is None else min(now + 60, now + max(0, deadline - now) / (2 - index))
+        stats = {"source": source, "added_count": 0, "fetched_pages": [], "failed_pages": [], "invalid_records": 0, "duplicate_records": 0}
+        metadata["sources"].append(stats)
+        for page in range(1, 11 if source == "rss" else 2):
+            if page > 1:
+                time.sleep(min(0.5, max(0, source_deadline - time.monotonic())))
+            try:
+                if time.monotonic() >= source_deadline:
+                    raise httpx.TimeoutException("Collection deadline exceeded")
+                if source == "rss":
+                    url = f"https://itunes.apple.com/{country}/rss/customerreviews/page={page}/id={app_id}/sortby=mostrecent/json"
+                    payload = fetch_page(client, url, source_deadline, parse_rss_page)
+                else:
+                    payload = fetch_web_reviews(client, app_id, country, source_deadline)
+            except (httpx.HTTPError, ValueError) as exc:
+                stats["failed_pages"].append({"source": source, "page": page, "error": str(exc)})
+                break
+            stats["fetched_pages"].append(page)
+            added = 0
+            for entry in payload["data"]:
+                review = extract_review(entry)
+                if review is None:
+                    stats["invalid_records"] += 1
+                elif review["id"] in reviews:
+                    stats["duplicate_records"] += 1
+                else:
+                    reviews[review["id"]] = review
+                    added += 1
+            stats["added_count"] += added
+            if len(reviews) >= count or not payload["next"] or not payload["data"]:
+                break
+        metadata["failed_pages"].extend(stats["failed_pages"])
+        metadata["invalid_records"] += stats["invalid_records"]
+        metadata["duplicate_records"] += stats["duplicate_records"]
+        metadata["available_count"] = len(reviews)
+    if len(metadata["sources"]) > 1:
+        result["reviews"] = random.Random(seed).sample(list(reviews.values()), min(count, len(reviews)))
+        metadata.update(actual_count=len(result["reviews"]), shortfall=max(0, count - len(result["reviews"])))
+        metadata["source"] = "Apple App Store " + " → ".join(item["source"] for item in metadata["sources"])
+        metadata["sampling_pool"] = "Unique valid reviews from attempted catalog, recent RSS, and most-helpful webpage sources in the requested storefront; not all historical reviews"
+    return result
 

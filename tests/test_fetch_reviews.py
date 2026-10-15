@@ -9,7 +9,8 @@ from unittest.mock import patch
 
 import httpx
 
-from scripts.fetch_reviews import collect_reviews, extract_review, fetch_page, main, validate_inputs
+from scripts.fetch_reviews import extract_review, fetch_page, main, validate_inputs
+from app.services.collector import collect_catalog_reviews as collect_reviews
 
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -74,7 +75,16 @@ class FetchReviewsTests(unittest.TestCase):
         self.assertEqual(result["metadata"]["invalid_records"], 50)
 
     def test_cli_saves_shortfall(self):
-        client = httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(200, json={"data": []})))
+        def respond(request):
+            if request.url.path == "/lookup":
+                return httpx.Response(200, json={"results": [{"trackId": 123, "trackViewUrl": "https://apps.apple.com/us/app/example/id123"}]})
+            if "/rss/" in request.url.path:
+                return httpx.Response(200, json={"feed": {}})
+            if "/api/" in request.url.path:
+                return httpx.Response(200, json={"data": []})
+            return httpx.Response(200, text='<script id="serialized-server-data" type="application/json">[]</script>')
+
+        client = httpx.Client(transport=httpx.MockTransport(respond))
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "nested/reviews.json"
             stderr = io.StringIO()
@@ -92,15 +102,15 @@ class FetchReviewsTests(unittest.TestCase):
 
         def respond(request):
             offset = request.url.params["offset"]
-            if offset == "0":
+            if offset == "10":
                 return httpx.Response(404)
             return httpx.Response(200, json=fixture["pages"][offset])
 
         with httpx.Client(transport=httpx.MockTransport(respond)) as client:
             result = collect_reviews(client, fixture["app_id"])
         self.assertEqual(len(result["reviews"]), 90)
-        self.assertEqual(result["metadata"]["fetched_pages"], list(range(2, 11)))
-        self.assertEqual([page["page"] for page in result["metadata"]["failed_pages"]], [1])
+        self.assertEqual(result["metadata"]["fetched_pages"], [1, *range(3, 11)])
+        self.assertEqual([page["page"] for page in result["metadata"]["failed_pages"]], [2])
         self.assertEqual(sleep.call_args_list, [unittest.mock.call(0.5)] * 9)
 
     @patch("app.services.collector.time.sleep")
@@ -120,8 +130,8 @@ class FetchReviewsTests(unittest.TestCase):
 
         with httpx.Client(transport=httpx.MockTransport(fail)) as client:
             result = collect_reviews(client, "123")
-        self.assertEqual(len(requests), 30)
-        self.assertEqual(len(result["metadata"]["failed_pages"]), 10)
+        self.assertEqual(len(requests), 3)
+        self.assertEqual(len(result["metadata"]["failed_pages"]), 1)
         self.assertEqual(result["metadata"]["fetched_pages"], [])
         self.assertEqual(result["metadata"]["shortfall"], 100)
         self.assertEqual(result["reviews"], [])
