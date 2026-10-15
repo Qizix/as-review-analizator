@@ -9,6 +9,16 @@ import {
 
 const reportElement = document.querySelector("#report");
 const status = document.querySelector("#status");
+const countrySelect = document.querySelector("#country-input");
+const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+const countryOptions = [...countrySelect.options];
+for (const option of countryOptions) {
+  option.textContent = regionNames.of(option.value.toUpperCase());
+}
+countrySelect.replaceChildren(
+  ...countryOptions.sort((a, b) => a.textContent.localeCompare(b.textContent, "en")),
+);
+countrySelect.value = "us";
 let dashboard;
 let sources;
 let canonicalReport = null;
@@ -495,9 +505,10 @@ async function postJSON(url, body, timeout = 290000) {
 document.querySelector("#app-input").addEventListener("change", (event) => {
   if (event.target.value.trim().startsWith("https://")) {
     try {
-      document.querySelector("#country-input").value = normalizeAppInput(
-        event.target.value,
-      ).country;
+      const country = normalizeAppInput(event.target.value).country;
+      if (countryOptions.some((option) => option.value === country)) {
+        countrySelect.value = country;
+      }
     } catch {}
   }
 });

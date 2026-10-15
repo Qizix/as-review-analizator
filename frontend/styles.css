@@ -960,11 +960,12 @@ canvas {
 }
 #analyze-form {
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) 80px 95px auto;
+  grid-template-columns: minmax(180px, 1fr) minmax(160px, 220px) 95px auto;
   gap: 14px;
   align-items: end;
 }
 #analyze-form input,
+#analyze-form select,
 .review-controls input,
 .review-controls select {
   display: block;
@@ -976,9 +977,6 @@ canvas {
   background: white;
   color: var(--ink);
   min-width: 0;
-}
-#country-input {
-  text-transform: uppercase;
 }
 #analyze-button {
   height: 43px;

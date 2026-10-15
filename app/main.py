@@ -13,6 +13,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.schemas import AnalysisResponse, AnalyzeRequest, MetricsRequest
 from app.services.analyzer import AnalysisError, Analyzer, empty_insights
+from app.services.collector import COUNTRIES
 from app.services.metrics import calculate_metrics
 from app.services.sentiment import load_classifier
 from app.settings import ROOT, Settings
@@ -69,7 +70,7 @@ def create_app(settings=None, classifier_factory=load_classifier):
 
     @app.get("/", include_in_schema=False)
     def dashboard(request: Request):
-        return templates.TemplateResponse(request=request, name="index.html", context={"max_review_count": settings.max_review_count})
+        return templates.TemplateResponse(request=request, name="index.html", context={"max_review_count": settings.max_review_count, "countries": sorted(COUNTRIES)})
 
     @app.get("/api/health")
     def health():

@@ -44,14 +44,11 @@
               autocomplete="off"
           /></label>
           <label
-            >Country<input
-              id="country-input"
-              value="us"
-              minlength="2"
-              maxlength="2"
-              pattern="[A-Za-z]{2}"
-              required
-          /></label>
+            >Country<select id="country-input" required>
+              {% for country in countries %}
+              <option value="{{ country }}"{% if country == 'us' %} selected{% endif %}>{{ country | upper }}</option>
+              {% endfor %}
+            </select></label>
           <label
             >Reviews<input
               id="count-input"

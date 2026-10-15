@@ -21,3 +21,5 @@ Open report accepts the unified exported JSON. Compatibility inputs include sepa
 Validation checks totals and distributions, averages, app/country consistency, issue/evidence agreement, union coverage, and optional raw review ratings/labels/counts. Undefined values display as an em dash. Empty issue lists and filters have explicit states. Untrusted strings are escaped before HTML insertion; chart labels are canvas text.
 
 Browser state is transient. Reloading does not restore server-stored reports; export JSON to retain a result. No separate frontend deployment, background jobs, or polling is required. `npm test --prefix frontend` verifies the data contract and filters; browser QA verifies live rendering and drilldowns.
+
+The country dropdown uses the API collector’s accepted ISO codes and displays full English region names with browser `Intl.DisplayNames`, sorted alphabetically. United States is selected initially. App Store URLs select their country when the code is supported; requests still send lowercase two-letter codes.
