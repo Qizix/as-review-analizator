@@ -9,8 +9,9 @@
 - `preprocessor.py`: converts Unicode emoji to bracketed words, collapses whitespace, caps titles at 200 characters and texts at 4,000 with head/tail preservation, and records truncated IDs. Original source text is retained for the final report.
 - `sentiment.py`: loads CardiffNLP RoBERTa on CPU, classifies preprocessed text in batches of 8, and truncates at 512 tokens. The revision is pinned to `3216a57f2a0d9c45a2e6c20157c20c49fb4bf9c7`. Torch uses one thread by default. Rating never determines sentiment.
 - `metrics.py`: calculates independent distributions and denominators, unique issue frequencies, negative fractions, and union-based coverage. Undefined ratios are null.
-- `insights.py`: sends compact negative/positive/neutral arrays and a versioned system prompt to Gemini 3.5 Flash-Lite, using `response_json_schema` and capturing provider usage.
+- `insights.py`: sends compact negative/positive/neutral arrays and a versioned system prompt to Gemini 3.5 Flash-Lite, using `response_json_schema`, capturing provider usage, and owning bounded evidence repair.
 - `validator.py`: rejects unknown/nonnegative/duplicate evidence and duplicate categories. Quotations are taken directly from original reviews. Keywords come from semantic grouping.
+- `execution.py`: owns request-local stage identity, actual stage durations, usage, and the cooperative deadline.
 - `analyzer.py`: orchestrates all stages and assembles the unified response. Original titles/text are restored after sentiment classification, so model preprocessing does not replace raw source reviews.
 
 FastAPI lifespan loads one classifier per worker before accepting traffic. A nonblocking per-worker analysis lock returns 409 for parallel inference instead of queuing it. The synchronous route runs through FastAPI's thread pool and returns the complete JSON report. There are no background jobs, persistent reports, databases, or brokers.

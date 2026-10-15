@@ -35,7 +35,7 @@ def api(monkeypatch):
         usage.update({"prompt_token_count": 100, "candidates_token_count": 20})
         return report
 
-    monkeypatch.setattr("app.services.analyzer.request_insights", insights)
+    monkeypatch.setattr("app.services.insights.request_insights", insights)
     with TestClient(create_app(Settings(analyze_requests_per_minute=10), factory)) as client:
         yield client, classifier, factory
 
@@ -58,6 +58,30 @@ def test_complete_analysis_reuses_model_and_returns_grounded_report(api):
     assert client.post("/api/analyze", json={"app_id": "123", "review_count": 3}).status_code == 200
     factory.assert_called_once()
     assert classifier.call_count == 2
+
+
+def test_analysis_normalizes_once_and_computes_metrics_once(api, monkeypatch):
+    from app.services.metrics import calculate_metrics
+    from app.services.preprocessor import preprocess_text
+
+    client, _, _ = api
+    normalize = Mock(wraps=preprocess_text)
+    metrics = Mock(wraps=calculate_metrics)
+    monkeypatch.setattr("app.services.preprocessor.preprocess_text", normalize)
+    monkeypatch.setattr("app.services.analyzer.calculate_metrics", metrics)
+    response = client.post("/api/analyze", json={"app_id": "123", "review_count": 3})
+    assert response.status_code == 200
+    assert normalize.call_count == 6
+    metrics.assert_called_once()
+    assert all("truncated_fields" not in review for review in response.json()["reviews"])
+
+
+def test_sentiment_value_error_is_not_misreported_as_model_evidence(api):
+    client, classifier, _ = api
+    classifier.side_effect = ValueError("Invalid inference input")
+    response = client.post("/api/analyze", json={"app_id": "123", "review_count": 3})
+    assert response.status_code == 502
+    assert "evidence validation" not in response.json()["detail"]
 
 
 def test_dashboard_assets_health_and_openapi(api):
@@ -94,7 +118,7 @@ def test_untrusted_model_evidence_is_rejected_without_a_report(api, monkeypatch)
     client, _, _ = api
     invalid = ModelReport.model_validate({"issues": [{"category": "Fake", "action": "Fix a fabricated problem.", "priority": "high", "evidence_ids": ["p1"]}]})
     generate = Mock(return_value=invalid)
-    monkeypatch.setattr("app.services.analyzer.request_insights", generate)
+    monkeypatch.setattr("app.services.insights.request_insights", generate)
     response = client.post("/api/analyze", json={"app_id": "123", "review_count": 3})
     assert response.status_code == 502
     assert "evidence validation" in response.json()["detail"]
@@ -109,7 +133,7 @@ def test_invalid_evidence_is_regenerated_and_validated(api, monkeypatch, evidenc
     valid = invalid.model_copy(deep=True)
     valid.issues[0].evidence_ids = ["n1", "n2"]
     generate = Mock(side_effect=[invalid, valid])
-    monkeypatch.setattr("app.services.analyzer.request_insights", generate)
+    monkeypatch.setattr("app.services.insights.request_insights", generate)
     response = client.post("/api/analyze", json={"app_id": "123", "review_count": 3})
     assert response.status_code == 200, response.text
     assert response.json()["insights"]["issues"][0]["evidence_ids"] == ["n1", "n2"]
@@ -127,12 +151,12 @@ def test_repair_respects_analysis_deadline(api, monkeypatch):
     client, _, _ = api
     invalid = ModelReport.model_validate({"issues": [{"category": "Startup", "action": "Investigate startup failures.", "priority": "high", "evidence_ids": ["unknown"]}]})
     generate = Mock(return_value=invalid)
-    monkeypatch.setattr("app.services.analyzer.request_insights", generate)
+    monkeypatch.setattr("app.services.insights.request_insights", generate)
     def expired(*args):
         client.app.state.analyzer.settings.analysis_timeout_seconds = 0
         return build_report(*args)
 
-    monkeypatch.setattr("app.services.analyzer.build_report", expired)
+    monkeypatch.setattr("app.services.insights.build_report", expired)
     response = client.post("/api/analyze", json={"app_id": "123", "review_count": 3})
     assert response.status_code == 504
     assert generate.call_count == 1

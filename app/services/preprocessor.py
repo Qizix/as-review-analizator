@@ -10,7 +10,9 @@ def preprocess_collection(data):
         title, title_cut = preprocess_text(review["title"], 200)
         text, text_cut = preprocess_text(review["text"], 4000)
         reviews.append({**review, "title": title, "text": text})
-        if title_cut or text_cut:
+        truncated = [name for name, cut in (("title", title_cut), ("text", text_cut)) if cut]
+        if truncated:
+            reviews[-1]["truncated_fields"] = truncated
             truncated_ids.append(review["id"])
     return {
         **data, "reviews": reviews,
@@ -31,7 +33,7 @@ def preprocess_text(text, limit):
     return text[:head] + marker + text[-tail:], True
 
 
-def prepare_reviews(data):
+def group_reviews(data):
     if not isinstance(data, dict) or not isinstance(data.get("reviews"), list):
         raise ValueError("input must be a JSON object containing a reviews list")
     if not isinstance(data.get("metadata", {}), dict):
@@ -54,13 +56,14 @@ def prepare_reviews(data):
         if label not in SENTIMENTS:
             raise ValueError(f"review {review_id} must have a valid sentiment; run analyze_sentiment.py first")
         seen.add(review_id)
-        title, title_cut = preprocess_text(title, 200)
-        text, text_cut = preprocess_text(text, 4000)
         prepared = {"id": review_id, "title": title, "text": text, "rating": rating}
-        truncated = [field for field, cut in (("title", title_cut), ("text", text_cut)) if cut]
-        if truncated:
-            prepared["truncated_fields"] = truncated
+        if review.get("truncated_fields"):
+            prepared["truncated_fields"] = review["truncated_fields"]
         groups[label].append(prepared)
     return groups
 
 
+
+def prepare_reviews(data):
+    group_reviews(data)
+    return group_reviews(preprocess_collection({**data, "metadata": data.get("metadata", {})}))

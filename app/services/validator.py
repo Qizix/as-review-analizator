@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 
 from app.settings import GEMINI_MODEL as MODEL
 from app.services.preprocessor import SENTIMENTS
-from app.observability import observe, warning
 
 PRIORITIES = ("high", "medium", "low")
 
@@ -11,12 +10,10 @@ PRIORITIES = ("high", "medium", "low")
 class InsightValidationError(ValueError):
     def __init__(self, reason):
         self.reason = reason
-        observe(insight_validation_reason=reason)
-        warning("INSIGHTS_INVALID", reason=reason)
         super().__init__(reason)
 
 
-def build_report(data, groups, response, prompt):
+def build_report(data, groups, response, prompt, model=MODEL):
     negative_ids = {review["id"] for review in groups["negative"]}
     categorized = set()
     categories = set()
@@ -51,7 +48,7 @@ def build_report(data, groups, response, prompt):
         "metadata": {
             **data.get("metadata", {}),
             "insight_generation": {
-                "model": MODEL,
+                "model": model,
                 "model_called": any(groups.values()),
                 "generated_at": datetime.now(timezone.utc).isoformat(),
                 "prompt_sha256": hashlib.sha256(prompt.encode()).hexdigest(),

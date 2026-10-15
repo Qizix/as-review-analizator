@@ -235,7 +235,7 @@ class GenerateInsightsTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             build_report(positive_only, prepare_reviews(positive_only), response(["p1"]), "Prompt")
 
-    @patch("scripts.generate_insights.request_insights", return_value=response())
+    @patch("app.services.insights.request_insights", return_value=response())
     def test_cli_writes_json_and_markdown_without_modifying_input(self, request):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "reviews_sentiment.json"
@@ -250,7 +250,7 @@ class GenerateInsightsTests(unittest.TestCase):
         self.assertEqual(report["summary"]["issue_count"], 1)
         self.assertEqual(request.call_args.args[1], PROMPT_PATH.read_text())
 
-    @patch("scripts.generate_insights.request_insights", return_value=response(["unknown"]))
+    @patch("app.services.insights.request_insights", return_value=response(["unknown"]))
     def test_invalid_model_output_does_not_write_reports(self, request):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "reviews.json"

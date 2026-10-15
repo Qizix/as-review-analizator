@@ -14,7 +14,7 @@ The input is required. Default outputs are `INPUT_STEM_insights.json` and a sibl
 
 Configure `GEMINI_API_KEY` or `GOOGLE_API_KEY` externally. The script prefers the former when both are present and never persists either key. Nonempty input requires a key. Empty input produces an empty report without credentials or an API request. Reviews are sent to Google's API; inference is not local.
 
-The fixed model ID is [`gemini-3.5-flash-lite`](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite). The script uses the Google GenAI SDK's `models.generate_content`, a 60,000 ms HTTP timeout, and retry options allowing three attempts including the original request, with initial delay 1 second and maximum delay 8 seconds. The SDK decides which transport/status failures are retryable; invalid model JSON or evidence is rejected without a repair call. Timeout/retry settings do not constitute a total-run deadline.
+The fixed model ID is [`gemini-3.5-flash-lite`](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite). The script uses the Google GenAI SDK's `models.generate_content`, a 60,000 ms HTTP timeout, and retry options allowing three attempts including the original request, with initial delay 1 second and maximum delay 8 seconds. The SDK decides which transport/status failures are retryable; invalid model JSON is rejected; invalid evidence receives at most one regeneration through the shared insight lifecycle. Timeout/retry settings do not constitute a total-run deadline.
 
 ## Input and preprocessing
 

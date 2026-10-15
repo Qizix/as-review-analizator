@@ -1,19 +1,14 @@
 import argparse
-import hashlib
 import json
-import os
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal
 
-import emoji
 import httpx
-from google import genai
-from google.genai import errors, types
-from pydantic import BaseModel, ConfigDict, Field
+from google.genai import errors
 
-from app.services.insights import MODEL, PROMPT_PATH, ModelReport, prepare_reviews, preprocess_text, request_insights, build_report, render_report
+from app.services.execution import AnalysisError, AnalysisRun
+from app.services.insights import MODEL, PROMPT_PATH, ModelReport, prepare_reviews, preprocess_text, request_insights, build_report, render_report, generate_insights
+from app.settings import Settings
 
 def main():
     parser = argparse.ArgumentParser(description="Generate evidence-based app review insights with Gemini")
@@ -27,13 +22,12 @@ def main():
     try:
         data = json.loads(args.input.read_text(encoding="utf-8"))
         groups = prepare_reviews(data)
-        prompt = PROMPT_PATH.read_text(encoding="utf-8")
-        response = request_insights(groups, prompt)
-        report = build_report(data, groups, response, prompt)
+        settings = Settings.from_env()
+        report = generate_insights(data, groups, AnalysisRun(settings), settings.gemini_model)
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         markdown.write_text(render_report(report), encoding="utf-8")
-    except (OSError, ValueError, errors.APIError, httpx.HTTPError) as exc:
+    except (OSError, ValueError, AnalysisError, errors.APIError, httpx.HTTPError) as exc:
         print(f"Unable to generate insights: {exc}", file=sys.stderr)
         return 1
     print(f"Saved {report['summary']['issue_count']} issues to {output} and {markdown}")

@@ -9,11 +9,11 @@ from google.genai import types
 from pydantic import BaseModel, ConfigDict, Field
 from opentelemetry import trace
 
-from app.observability import observe, operation, record_usage
+from app.observability import observe, operation, record_usage, warning
 
 from app.settings import GEMINI_MODEL as MODEL
 from app.services.preprocessor import prepare_reviews, preprocess_text
-from app.services.validator import build_report
+from app.services.validator import InsightValidationError, build_report
 
 
 PROMPT_PATH = Path(__file__).resolve().parents[2] / "prompts/generate_insights.txt"
@@ -33,6 +33,37 @@ class Issue(BaseModel):
 class ModelReport(BaseModel):
     model_config = ConfigDict(extra="forbid")
     issues: list[Issue]
+
+
+class InsightDecodeError(ValueError):
+    pass
+
+
+def generate_insights(data, groups, run, model=MODEL):
+    prompt = PROMPT_PATH.read_text(encoding="utf-8")
+    for attempt in range(2):
+        with run.stage("gemini", "insights.repair" if attempt else "insights.generate", {
+            "gen_ai.request.model": model, "app.prompt.version": hashlib.sha256(prompt.encode()).hexdigest(),
+        }):
+            observe(gemini_model=model, prompt_version=hashlib.sha256(prompt.encode()).hexdigest())
+            response = request_insights(groups, prompt, run.usage, model)
+        try:
+            with run.stage("validation", "insights.validate") as span:
+                report = build_report(data, groups, response, prompt, model)
+                span.set_attribute("app.issues.count", report["summary"]["issue_count"])
+                span.set_attribute("app.validation.failures", 0)
+            return report
+        except InsightValidationError as exc:
+            observe(insight_validation_reason=exc.reason)
+            warning("INSIGHTS_INVALID", reason=exc.reason)
+            if attempt:
+                raise
+            observe(insight_repair_count=1)
+            warning("INSIGHTS_RETRY", reason=exc.reason)
+            prompt += "\nRegenerate the report. Previous validation failed: " + exc.reason
+            prompt += ". Use each evidence ID at most once per issue and only IDs from this list: "
+            prompt += json.dumps([review["id"] for review in groups["negative"]])
+            prompt += ". Keep categories unique and actions nonempty."
 
 
 
@@ -99,8 +130,11 @@ def request_insights(groups, prompt, usage=None, model=MODEL):
             observe(gemini_retry_count=attempts - 1 if attempts else None, gemini_retry_count_available=attempts > 0)
     with operation("insights.decode"):
         if not response.text:
-            raise ValueError("Gemini returned no report; no insights were saved")
-        return ModelReport.model_validate_json(response.text)
+            raise InsightDecodeError("Gemini returned no report; no insights were saved")
+        try:
+            return ModelReport.model_validate_json(response.text)
+        except ValueError as exc:
+            raise InsightDecodeError("Gemini returned an invalid report") from exc
 
 
 
