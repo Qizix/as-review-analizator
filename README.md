@@ -29,6 +29,8 @@ Insight generation and evidence repair are shared by the analysis and standalone
 
 Collection tries catalog, RSS, then webpage reviews, retaining the first unique records and reporting source failures and shortfalls.
 
+Follow-up bugs from the strict review are tracked in [review fixes](docs/review-fixes.md).
+
 ## Test the API
 
 With the server running, check readiness:
