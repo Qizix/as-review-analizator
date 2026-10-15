@@ -8,7 +8,7 @@ Run `npm ci --prefix frontend` and `npm run --prefix frontend build`. The helper
 
 Users supply an app ID or HTTPS Apple URL, country, and count. URL normalization accepts `apps.apple.com` and `itunes.apple.com`; a URL change populates country, and the country field at submission overrides that value. Server-side validation remains authoritative.
 
-The page sends `POST /api/v1/analyze`, shows an honest busy state, and validates the returned report before replacing current browser state. Failures show an error while retaining a previous report. Browser analysis requests abort after 290 seconds. Gemini credentials never enter frontend code.
+The page sends `POST /api/analyze`, shows an honest busy state, and validates the returned report before replacing current browser state. Failures show an error while retaining a previous report. Browser analysis requests abort after 290 seconds. Gemini credentials never enter frontend code.
 
 The page includes summary cards, rating bars, a sentiment doughnut, issue-frequency bars with hover tooltips, coverage/unassigned feedback, prioritized actions with recurrence filters, evidence dialogs, and a searchable/paginated source-review table. JSON saves the full report locally in the browser without an export API call. Star ratings and textual sentiment are shown independently.
 

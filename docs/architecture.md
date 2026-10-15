@@ -21,10 +21,10 @@ Missing Gemini credentials are rejected before API collection. Empty samples ski
 
 | Method | Path | Purpose |
 |---|---|---|
-| POST | `/api/v1/analyze` | Complete analysis from app_id, country, review_count, optional seed |
-| POST | `/api/v1/reviews/collect` | Raw reviews plus collection metadata |
-| POST | `/api/v1/metrics` | Metrics from supplied reviews and optional issue grouping |
-| GET | `/api/v1/health` | Readiness and credential availability, never credentials |
+| POST | `/api/analyze` | Complete analysis from app_id, country, review_count, optional seed |
+| POST | `/api/reviews/collect` | Raw reviews plus collection metadata |
+| POST | `/api/metrics` | Metrics from supplied reviews and optional issue grouping |
+| GET | `/api/health` | Readiness and credential availability, never credentials |
 | GET | `/docs` | OpenAPI documentation |
 | GET | `/` | Jinja2 dashboard |
 

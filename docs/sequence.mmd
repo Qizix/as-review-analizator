@@ -12,7 +12,7 @@ sequenceDiagram
 
     Note over API,Sentiment: Startup: load sentiment model once and reuse it
     User->>UI: Enter app ID or URL, country, review count
-    UI->>API: POST /api/v1/analyze
+    UI->>API: POST /api/analyze
     API->>API: Validate input, credentials, and rate limit
     API->>Pipeline: Start analysis
     Pipeline->>Pipeline: Acquire single-analysis lock

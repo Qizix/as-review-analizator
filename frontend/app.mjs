@@ -520,7 +520,7 @@ document
       status.setAttribute("role", "status");
       status.textContent =
         "Collecting reviews and analyzing feedback. This can take a few minutes.";
-      const response = await postJSON("/api/v1/analyze", {
+      const response = await postJSON("/api/analyze", {
         ...normalized,
         review_count: Number(document.querySelector("#count-input").value),
       });
@@ -537,7 +537,7 @@ document
     }
   });
 
-fetchJSON("/api/v1/health")
+fetchJSON("/api/health")
   .then((health) => {
     if (!health.gemini_configured)
       status.textContent =

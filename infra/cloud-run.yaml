@@ -36,7 +36,7 @@ spec:
               value: "280"
           startupProbe:
             httpGet:
-              path: /api/v1/health
+              path: /api/health
               port: 8080
             periodSeconds: 5
             timeoutSeconds: 3

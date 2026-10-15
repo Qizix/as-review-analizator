@@ -71,11 +71,11 @@ def create_app(settings=None, classifier_factory=load_classifier):
     def dashboard(request: Request):
         return templates.TemplateResponse(request=request, name="index.html", context={"max_review_count": settings.max_review_count})
 
-    @app.get("/api/v1/health")
+    @app.get("/api/health")
     def health():
         return {"status": "ok", "sentiment_ready": app.state.analyzer is not None, "gemini_configured": bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))}
 
-    @app.post("/api/v1/analyze", response_model=AnalysisResponse)
+    @app.post("/api/analyze", response_model=AnalysisResponse)
     def analyze(payload: AnalyzeRequest):
         if not (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")):
             raise HTTPException(503, "Gemini credentials are not configured on the server")
@@ -88,11 +88,11 @@ def create_app(settings=None, classifier_factory=load_classifier):
             requests.append(now)
         return app.state.analyzer.analyze(payload)
 
-    @app.post("/api/v1/reviews/collect")
+    @app.post("/api/reviews/collect")
     def collect(payload: AnalyzeRequest):
         return app.state.analyzer.collect(payload, time.monotonic() + settings.analysis_timeout_seconds)
 
-    @app.post("/api/v1/metrics")
+    @app.post("/api/metrics")
     def metrics(payload: MetricsRequest):
         data = {"metadata": payload.metadata, "reviews": [review.model_dump() for review in payload.reviews]}
         try:

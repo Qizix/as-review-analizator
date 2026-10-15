@@ -44,7 +44,7 @@ The script builds/pushes through Cloud Build and deploys a private service. It c
 | Torch threads | 1 |
 | Paid endpoint limit | 3 attempts/minute per worker |
 
-The startup probe checks `/api/v1/health` after the classifier loads. Cloud Run provides HTTPS and scale-to-zero. Private access requires IAM invocation. For a private service, use `gcloud run services proxy app-store-review-analyzer --project PROJECT_ID --region REGION --port 8080` to test through a local browser without placing credentials in frontend code.
+The startup probe checks `/api/health` after the classifier loads. Cloud Run provides HTTPS and scale-to-zero. Private access requires IAM invocation. For a private service, use `gcloud run services proxy app-store-review-analyzer --project PROJECT_ID --region REGION --port 8080` to test through a local browser without placing credentials in frontend code.
 
 Cloud Logging receives structured application events. Verify cold-start time, end-to-end latency at 100 reviews, actual container memory, retries, and deadline behavior under the configured resources. Local Mac RSS measurements are not a Cloud Run guarantee.
 

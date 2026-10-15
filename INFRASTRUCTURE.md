@@ -66,10 +66,10 @@ Execution
 - No background jobs or task queues.
 4. REST API
 Method	Endpoint	Purpose
-POST	/api/v1/analyze	Complete review analysis
-POST	/api/v1/reviews/collect	Collect raw reviews
-POST	/api/v1/metrics	Calculate metrics from supplied reviews
-GET	/api/v1/health	Health check
+POST	/api/analyze	Complete review analysis
+POST	/api/reviews/collect	Collect raw reviews
+POST	/api/metrics	Calculate metrics from supplied reviews
+GET	/api/health	Health check
 GET	/docs	OpenAPI documentation
 GET	/	Web dashboard
 
