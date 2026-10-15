@@ -125,8 +125,6 @@ def operation(name, attributes=None, kind=trace.SpanKind.INTERNAL):
             yield span
         except Exception as exc:
             failed = True
-            if name == "insights.validate":
-                span.set_attribute("app.validation.failures", 1)
             record_exception(span, exc)
             if observation is not None and not observation.finished:
                 observation.failure = {"stage": name, **error_details(exc)}

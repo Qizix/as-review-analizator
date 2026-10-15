@@ -55,9 +55,13 @@ def generate_insights(batch: ReviewBatch, run, model=MODEL):
             response = request_insights(groups, prompt, run.usage, model, deadline=run.deadline)
         try:
             with run.stage("validation", "insights.validate") as span:
-                report = build_report(data, groups, response, prompt, model)
-                span.set_attribute("app.issues.count", report["summary"]["issue_count"])
                 span.set_attribute("app.validation.failures", 0)
+                try:
+                    report = build_report(data, groups, response, prompt, model)
+                except InsightValidationError:
+                    span.set_attribute("app.validation.failures", 1)
+                    raise
+                span.set_attribute("app.issues.count", report["summary"]["issue_count"])
             return report
         except InsightValidationError as exc:
             observe(insight_validation_reason=exc.reason)

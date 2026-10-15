@@ -2,7 +2,7 @@
 
 - [x] 1. Bind original reviews, prepared text, and sentiment in one review batch; remove independently supplied groups from insight generation. Verify mismatched evidence cannot enter a report and originals remain intact.
 - [x] 2. Preserve sanitized startup and telemetry failure details in console logs. Share record preparation between output formats without serializing JSON as an intermediate representation.
-- [ ] 3. Count only actual evidence validation failures. Remove insight-specific counting from generic tracing and verify timeout and unexpected-error attribution.
+- [x] 3. Count only actual evidence validation failures. Remove insight-specific counting from generic tracing and verify timeout and unexpected-error attribution.
 
 Each fix receives regression coverage, a README update, and its own commit. Public report shapes, provider retry limits, and deployment scope remain unchanged.
 
@@ -19,3 +19,13 @@ The preprocessor centralizes record validation in `validated_reviews`, reused by
 `prepare_record` builds the shared structured record directly for JSON and console output. The console formatter no longer serializes a JSON record and parses it back. Both request and process events render sanitized error types and bounded stack locations; telemetry diagnostics with only `error_type` retain that field too. Raw LogRecord messages and exception text remain withheld when a dependency does not supply application event data. JSON output stays one physical line.
 
 Formatter tests cover application and telemetry failures, retained safe fields, non-mutation of event data, and suppression of raw dependency exception text. An application-lifespan test verifies a failed model factory remains diagnosable in console output without revealing the exception message.
+
+## 3. Evidence failure accounting
+
+Generic `operation` tracing records exceptions and failed durations without inspecting insight span names. The insight module initializes `app.validation.failures` to zero and changes it to one only when `build_report` raises `InsightValidationError`, before the span closes. Retry handling remains outside the failed span, preserving both failed-attempt traces and bounded repair behavior.
+
+A deadline reached after otherwise successful validation leaves the evidence counter at zero and retains the HTTP 504 stage attribution. Unexpected validation exceptions also remain failed spans with exception events but do not become invalid-evidence counts or trigger a repair. Tests cover these two paths alongside the existing rejected-evidence and successful-validation cases.
+
+## Final verification
+
+All three fixes are complete. The full Python suite passed with 120 tests and 62 subtests; all six frontend tests passed. No real Gemini calls, cloud telemetry transmission, deployment, or persistent report storage were needed for these regressions.

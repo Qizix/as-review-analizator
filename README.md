@@ -29,7 +29,7 @@ Insight generation and evidence repair are shared by the analysis and standalone
 
 Collection tries catalog, RSS, then webpage reviews, retaining the first unique records and reporting source failures and shortfalls.
 
-Follow-up bugs from the strict review are tracked in [review fixes](docs/review-fixes.md).
+The three follow-up bugs from the strict review are resolved in [review fixes](docs/review-fixes.md), including separate timeout and evidence-failure diagnostics.
 
 ## Test the API
 

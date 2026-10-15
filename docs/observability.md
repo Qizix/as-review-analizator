@@ -43,7 +43,7 @@ POST /api/analyze
 
 Collection-only requests use the same collection and Apple spans. The root HTTP span uses the official FastAPI instrumentor. Custom spans obtain its active context in the synchronous worker, preserving parent-child relationships. Standard W3C `traceparent` headers are honored. The application uses `ALWAYS_ON` sampling so enabled analysis requests are recorded even when their incoming parent is unsampled; Cloud Run's separately managed request-span sampling is independent.
 
-Attributes include counts, country, model identifier, batch size, prompt version, upstream HTTP status, and retries. Prompt version is the SHA-256 of the actual system instructions, matching the existing report provenance; the prompt is never attached. Local operation spans use `app.*` attributes, while applicable HTTP and GenAI fields use their OpenTelemetry names. GenAI semantic conventions are evolving; changing their names requires updating the export allowlist and tests.
+Attributes include counts, country, model identifier, batch size, prompt version, upstream HTTP status, and retries. `app.validation.failures` counts only `InsightValidationError`; timeouts and unexpected validation errors retain failed span status without counting as invalid evidence. Prompt version is the SHA-256 of the actual system instructions, matching the existing report provenance; the prompt is never attached. Local operation spans use `app.*` attributes, while applicable HTTP and GenAI fields use their OpenTelemetry names. GenAI semantic conventions are evolving; changing their names requires updating the export allowlist and tests.
 
 ## One JSON summary per request
 
