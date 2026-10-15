@@ -12,3 +12,4 @@ hydra_outputs
 frontend/node_modules
 tests
 docs
+examples

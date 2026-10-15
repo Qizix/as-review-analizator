@@ -21,7 +21,7 @@ SECRET_NAME="${GEMINI_SECRET_NAME:-gemini-api-key}"
 uv run --locked pytest -q
 npm test --prefix frontend
 
-gcloud builds submit --project "$GCP_PROJECT" --tag "$IMAGE" .
+gcloud builds submit --project "$GCP_PROJECT" --region europe-west1 --config infra/cloudbuild.yaml --substitutions "_IMAGE=${IMAGE}" .
 gcloud run deploy app-store-review-analyzer \
   --project "$GCP_PROJECT" \
   --region "$GCP_REGION" \

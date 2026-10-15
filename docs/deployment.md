@@ -45,7 +45,7 @@ docker build --platform linux/amd64 -t review-analyzer .
 bash infra/smoke.sh review-analyzer
 ```
 
-The smoke check runs offline CPU sentiment inference under 1 CPU/4 GiB, checks the non-root user, starts HTTP, checks readiness/dashboard/docs, and confirms analysis fails cleanly without credentials. It makes no paid Gemini calls. Set SMOKE_PORT to change the default 18080 host port. GitHub Actions runs tests followed by these container checks on Linux; it does not deploy, push images, or require cloud secrets. Initial model downloads during builds need network access.
+The smoke check runs offline CPU sentiment inference under 1 CPU/4 GiB, checks the non-root user, starts HTTP, checks readiness/dashboard/docs, and confirms analysis fails cleanly without credentials. It makes no paid Gemini calls. HTTP checks run inside the isolated container; no host ports or host Python/curl are needed. GitHub Actions runs tests followed by these container checks on Linux; it does not deploy, push images, or require cloud secrets. Initial model downloads during builds need network access.
 
 ## Cloud prerequisites
 
@@ -57,7 +57,7 @@ The deploying identity needs build, repository push, Cloud Run deploy/public-acc
 
 ## Deployment
 
-First pass container checks and commit the release. The script refuses a dirty working tree, runs Python/frontend tests, tags the Cloud Build image with the full commit SHA, deploys the public resource profile, routes 100% of service traffic to the latest revision, and polls readiness with Gemini configuration required. The health check confirms presence of credentials, not their validity. Use a numeric secret version for reproducible releases.
+First pass container checks and commit the release. The script refuses a dirty working tree, runs Python/frontend tests, tags the Cloud Build image with the full commit SHA, runs offline inference and HTTP smoke checks before publishing it, deploys the public resource profile, routes 100% of service traffic to the latest revision, and polls readiness with Gemini configuration required. The health check confirms presence of credentials, not their validity. Use a numeric secret version for reproducible releases.
 
 ```bash
 GEMINI_SECRET_VERSION=1 bash infra/deploy.sh PROJECT_ID REGION SERVICE_ACCOUNT_EMAIL
@@ -101,3 +101,7 @@ After deployment, verify public dashboard/health without an identity token, then
 Inspect actual memory, cold-start time, end-to-end latency, provider failures, and deadline handling under the configured resources. Confirm Cloud Trace spans, correlated JSON logs, Gemini token usage, and native Cloud Run metrics. These checks remain environment-dependent and have not been executed here. The sentiment classifier is English-oriented; country selection does not guarantee equal sentiment accuracy across languages.
 
 Official references: [public access](https://docs.cloud.google.com/run/docs/authenticating/public), [deploy flags](https://docs.cloud.google.com/sdk/gcloud/reference/run/deploy), [instance limits](https://docs.cloud.google.com/run/docs/configuring/max-instances), [uv CI integration](https://docs.astral.sh/uv/guides/integration/github/).
+
+## Current deployment target
+
+Project: `obrio-test-task-api`. Runtime region: `europe-central2` (Warsaw). Cloud Build runs in `europe-west1` with Cloud Logging-only build logs. The runtime service account is `review-analyzer@obrio-test-task-api.iam.gserviceaccount.com`; Gemini credentials are supplied by Secret Manager, pinned to a numeric version. Build and Docker contexts exclude checked-in report examples and local secrets. Actual release verification is recorded after deployment.
