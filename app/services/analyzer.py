@@ -9,8 +9,7 @@ from app.services.collector import collect_reviews
 from app.services.app_info import lookup_app_info
 from app.services.insights import generate_insights, InsightDecodeError
 from app.services.metrics import calculate_metrics
-from app.services.preprocessor import group_reviews, preprocess_collection
-from app.services.sentiment import analyze_sentiment
+from app.services.review_batch import ReviewBatch
 from app.services.validator import InsightValidationError
 from app.services.execution import AnalysisError, AnalysisRun
 from app.settings import SENTIMENT_MODEL
@@ -57,12 +56,12 @@ class Analyzer:
             with stage("app_info", "appstore.lookup"):
                 app_info = lookup_app_info(request.app_id, request.country, deadline=run.deadline)
             with stage("preprocessing", "reviews.preprocess"):
-                prepared = preprocess_collection(collected)
-            with stage("sentiment", "sentiment.classify", {"app.model": SENTIMENT_MODEL, "app.reviews.count": len(prepared["reviews"]), "app.batch_size": 8}):
-                normalized = analyze_sentiment(prepared, self.classifier, self.settings.sentiment_revision)
-                labels = {review["id"]: review["sentiment"] for review in normalized["reviews"]}
-                classified = {**normalized, "reviews": [{**review, "sentiment": labels[review["id"]]} for review in collected["reviews"]]}
-            insights = generate_insights(classified, group_reviews(normalized), run, self.settings.gemini_model)
+                batch = ReviewBatch(collected)
+                preprocessing = batch.preprocessing
+            with stage("sentiment", "sentiment.classify", {"app.model": SENTIMENT_MODEL, "app.reviews.count": len(collected["reviews"]), "app.batch_size": 8}):
+                batch.classify(self.classifier, self.settings.sentiment_revision)
+                classified = batch.source
+            insights = generate_insights(batch, run, self.settings.gemini_model)
             with stage("metrics", "metrics.calculate", {"app.reviews.count": len(classified["reviews"]), "app.metrics.phase": "issues"}):
                 metrics = calculate_metrics(classified, insights)
             with stage("report_assembly", "report.assemble"):
@@ -75,7 +74,7 @@ class Analyzer:
                     warnings.append(f"Only {collection['actual_count']} of {collection['requested_count']} requested reviews were available.")
                 if collection["failed_pages"]:
                     warnings.append("Some Apple review pages failed; the collection is incomplete.")
-                if prepared["metadata"]["preprocessing"]["truncated_review_ids"]:
+                if preprocessing["truncated_review_ids"]:
                     warnings.append("Oversized review text was truncated for model analysis; original text is preserved.")
                 elapsed = round(time.monotonic() - run.started, 4)
                 peak_bytes = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * (1 if sys.platform == "darwin" else 1024)
@@ -85,13 +84,13 @@ class Analyzer:
                     "gemini_usage": run.usage,
                     "prompt_sha256": insights["metadata"]["insight_generation"]["prompt_sha256"],
                     "peak_memory_mb": round(peak_bytes / 1024**2, 2),
-                    "preprocessing": prepared["metadata"]["preprocessing"],
+                    "preprocessing": preprocessing,
                     "warnings": warnings,
                 }
                 observe(issues_identified=len(issues), peak_process_rss_mb=metadata["peak_memory_mb"])
                 observe(sentiment_counts=metrics["sentiments"]["counts"])
-                if prepared["metadata"]["preprocessing"]["truncated_review_ids"]:
-                    warning("TEXT_TRUNCATED", count=len(prepared["metadata"]["preprocessing"]["truncated_review_ids"]))
+                if preprocessing["truncated_review_ids"]:
+                    warning("TEXT_TRUNCATED", count=len(preprocessing["truncated_review_ids"]))
                 return {
                     "app": app_info,
                     "collection": collection,

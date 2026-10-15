@@ -14,6 +14,7 @@ from opentelemetry import trace
 
 from app.observability import increment, observe, operation, record_usage, warning
 from app.services.execution import remaining_seconds
+from app.services.review_batch import ReviewBatch
 
 from app.settings import GEMINI_MODEL as MODEL
 from app.services.preprocessor import prepare_reviews, preprocess_text
@@ -43,7 +44,8 @@ class InsightDecodeError(ValueError):
     pass
 
 
-def generate_insights(data, groups, run, model=MODEL):
+def generate_insights(batch: ReviewBatch, run, model=MODEL):
+    data, groups = batch.source, batch.groups
     prompt = PROMPT_PATH.read_text(encoding="utf-8")
     for attempt in range(2):
         with run.stage("gemini", "insights.repair" if attempt else "insights.generate", {

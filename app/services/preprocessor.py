@@ -6,7 +6,7 @@ SENTIMENTS = ("negative", "positive", "neutral")
 def preprocess_collection(data):
     reviews = []
     truncated_ids = []
-    for review in data["reviews"]:
+    for review in validated_reviews(data):
         title, title_cut = preprocess_text(review["title"], 200)
         text, text_cut = preprocess_text(review["text"], 4000)
         reviews.append({**review, "title": title, "text": text})
@@ -16,7 +16,7 @@ def preprocess_collection(data):
             truncated_ids.append(review["id"])
     return {
         **data, "reviews": reviews,
-        "metadata": {**data["metadata"], "preprocessing": {"emoji": "descriptive words", "text_limit": 4000, "title_limit": 200, "truncated_review_ids": truncated_ids}},
+        "metadata": {**data.get("metadata", {}), "preprocessing": {"emoji": "descriptive words", "text_limit": 4000, "title_limit": 200, "truncated_review_ids": truncated_ids}},
     }
 
 
@@ -33,12 +33,11 @@ def preprocess_text(text, limit):
     return text[:head] + marker + text[-tail:], True
 
 
-def group_reviews(data):
+def validated_reviews(data):
     if not isinstance(data, dict) or not isinstance(data.get("reviews"), list):
         raise ValueError("input must be a JSON object containing a reviews list")
     if not isinstance(data.get("metadata", {}), dict):
         raise ValueError("metadata must be a JSON object")
-    groups = {sentiment: [] for sentiment in SENTIMENTS}
     seen = set()
     for index, review in enumerate(data["reviews"]):
         if not isinstance(review, dict):
@@ -51,12 +50,18 @@ def group_reviews(data):
             raise ValueError(f"review {review_id} must have a string title and nonempty text")
         if type(rating) is not int or not 1 <= rating <= 5:
             raise ValueError(f"review {review_id} must have an integer rating from 1 to 5")
+        seen.add(review_id)
+        yield review
+
+
+def group_reviews(data):
+    groups = {sentiment: [] for sentiment in SENTIMENTS}
+    for review in validated_reviews(data):
         sentiment = review.get("sentiment")
         label = sentiment.get("label") if isinstance(sentiment, dict) else sentiment
         if label not in SENTIMENTS:
-            raise ValueError(f"review {review_id} must have a valid sentiment; run analyze_sentiment.py first")
-        seen.add(review_id)
-        prepared = {"id": review_id, "title": title, "text": text, "rating": rating}
+            raise ValueError(f"review {review['id']} must have a valid sentiment; run analyze_sentiment.py first")
+        prepared = {key: review[key] for key in ("id", "title", "text", "rating")}
         if review.get("truncated_fields"):
             prepared["truncated_fields"] = review["truncated_fields"]
         groups[label].append(prepared)
@@ -65,5 +70,4 @@ def group_reviews(data):
 
 
 def prepare_reviews(data):
-    group_reviews(data)
-    return group_reviews(preprocess_collection({**data, "metadata": data.get("metadata", {})}))
+    return group_reviews(preprocess_collection(data))

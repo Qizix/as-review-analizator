@@ -2,7 +2,7 @@ import hashlib
 from datetime import datetime, timezone
 
 from app.settings import GEMINI_MODEL as MODEL
-from app.services.preprocessor import SENTIMENTS
+from app.services.preprocessor import SENTIMENTS, group_reviews
 
 PRIORITIES = ("high", "medium", "low")
 
@@ -14,7 +14,7 @@ class InsightValidationError(ValueError):
 
 
 def build_report(data, groups, response, prompt, model=MODEL):
-    negative_ids = {review["id"] for review in groups["negative"]}
+    negative_ids = {review["id"] for review in group_reviews(data)["negative"]}
     categorized = set()
     categories = set()
     source_reviews = {review["id"]: review for review in data["reviews"]}

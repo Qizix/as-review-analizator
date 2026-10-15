@@ -8,6 +8,7 @@ from google.genai import errors
 
 from app.services.execution import AnalysisError, AnalysisRun
 from app.services.insights import MODEL, PROMPT_PATH, ModelReport, prepare_reviews, preprocess_text, request_insights, build_report, render_report, generate_insights
+from app.services.review_batch import ReviewBatch
 from app.settings import Settings
 
 def main():
@@ -21,9 +22,9 @@ def main():
         parser.error("output must be a .json path distinct from the input")
     try:
         data = json.loads(args.input.read_text(encoding="utf-8"))
-        groups = prepare_reviews(data)
+        batch = ReviewBatch(data)
         settings = Settings.from_env()
-        report = generate_insights(data, groups, AnalysisRun(settings), settings.gemini_model)
+        report = generate_insights(batch, AnalysisRun(settings), settings.gemini_model)
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         markdown.write_text(render_report(report), encoding="utf-8")

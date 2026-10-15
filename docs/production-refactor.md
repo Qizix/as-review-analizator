@@ -14,7 +14,7 @@ Cloud Run deployment, live Cloud Trace ingestion, and target-machine resource si
 
 ## 1. Insight ownership
 
-`AnalysisRun` owns stage identity, cooperative deadline checks, timings, and token usage for one invocation. Both the complete analysis and standalone insight script use it. `generate_insights` owns the two-attempt generation/validation lifecycle, with transport behind `request_insights`. It accepts original classified reviews and their already-prepared sentiment groups: preprocessing remains owned by the preprocessor, while evidence quotations always use originals.
+`AnalysisRun` owns stage identity, cooperative deadline checks, timings, and token usage for one invocation. Both the complete analysis and standalone insight script use it. `generate_insights` owns the two-attempt generation/validation lifecycle, with transport behind `request_insights`. It accepts a `ReviewBatch` that owns original classified reviews and their prepared sentiment groups; evidence eligibility and quotations use original source records.
 
 The analysis normalizes each title/text once, classifies the prepared collection, groups that normalized result, and restores originals only in the public report. Truncation markers are carried internally and excluded from original reviews. Metrics are computed once after supported issues exist; the discarded preliminary calculations are gone. Processing-time metadata now records actual metrics work under `metrics`.
 

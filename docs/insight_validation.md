@@ -4,7 +4,7 @@
 
 This addresses repeated `nonnegative_or_unknown_evidence_ids` failures caused by unconstrained evidence strings. Schema constraints reduce invalid output; they do not establish semantic support. The local validator remains authoritative, including if the provider violates its schema. Invalid evidence is never filtered out to manufacture a successful report.
 
-`app/services/validator.py` validates evidence against the IDs in `groups["negative"]`. Duplicate evidence within an issue, unknown/nonnegative IDs, and empty actions or duplicate normalized categories raise `InsightValidationError`, a `ValueError` subclass. It records a fixed reason code in `insight_validation_reason` and an `INSIGHTS_INVALID` warning, without logging review text, model output, or evidence IDs.
+`app/services/validator.py` validates evidence against the negative IDs derived from original source reviews. Duplicate evidence within an issue, unknown/nonnegative IDs, and empty actions or duplicate normalized categories raise `InsightValidationError`, a `ValueError` subclass. It records a fixed reason code in `insight_validation_reason` and an `INSIGHTS_INVALID` warning, without logging review text, model output, or evidence IDs.
 
 `generate_insights` catches this error on the first validation attempt and makes one additional `request_insights` call. The correction appends the reason code, the permitted negative IDs, and uniqueness requirements to the original system prompt. It regenerates from the same review groups; collection and sentiment are not repeated. The retry does not send the rejected response back to the model. The accepted prompt hash is report provenance; each Gemini request span hashes its actual instructions.
 
@@ -15,3 +15,5 @@ Request logs include `insight_repair_count: 1` and `INSIGHTS_RETRY` when regener
 Regression coverage in `tests/test_api.py` exercises duplicate, fabricated, and positive-review evidence, successful correction, repeated rejection, and deadline exhaustion. `tests/test_generate_insights.py` verifies cumulative provider token usage.
 
 The schema regression tests inspect the real SDK's serialized HTTP payload and ensure allowed IDs are specific to each request, context groups remain present, and empty negative groups cannot generate issues. A live verification on 2026-10-15 analyzed 100 US reviews for app `373311252`: HTTP 200, 35 negative reviews, four validated issues, and no repair call, in 18.6 seconds. All issue evidence IDs belonged to the negative group. This verifies provider acceptance of the constrained schema on that sample; future model outputs still require local validation.
+
+`generate_insights` accepts one `ReviewBatch`; callers cannot separately supply source records and sentiment groups. The batch copies input data, derives grouped prepared text internally, and returns defensive copies. See [review fixes](review-fixes.md) for consistency regressions and tests.
