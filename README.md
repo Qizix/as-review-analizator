@@ -45,11 +45,20 @@ Measured on **2026-10-15**: one deployed Nebula analysis of **100 reviews**, usi
 
 | Processing stage | Measured time |
 |---|---:|
-| Review collection | 6.03 s |
-| Sentiment inference on CPU | 140.09 s |
-| Gemini generation and repair | 12.76 s |
-| App lookup, preprocessing, validation, and metrics | 0.66 s |
-| **Complete HTTP request** | **159.56 s** |
+| Review collection | 6.028 s |
+| App information lookup | 0.434 s |
+| Text preprocessing | 0.223 s |
+| Sentiment inference on CPU | 140.086 s |
+| Initial Gemini insight generation | 5.434 s |
+| Initial evidence validation (repair required) | 9.224 ms |
+| Gemini evidence repair | 7.331 s |
+| Final evidence validation | 1.368 ms |
+| Rating, sentiment, and issue metrics | 0.448 ms |
+| Report assembly | 0.145 ms |
+| **Complete analysis pipeline** | **159.554 s** |
+| **Complete HTTP request** | **159.561 s** |
+
+Stage timings come from the structured request log; totals include orchestration and HTTP response handling.
 
 | Cost component | Usage | Estimated cost (USD) |
 |---|---|---:|
