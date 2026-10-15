@@ -1,98 +1,59 @@
 # App Store Review Analyzer
 
-One FastAPI application collects App Store reviews, classifies sentiment on CPU, generates evidence-linked Gemini insights, and serves an interactive dashboard. Reports include independent rating/sentiment metrics, issue frequencies, coverage, and source reviews.
-
-## Analysis flow
-
-![Project sequence diagram: collection, sentiment, Gemini insights, validation, metrics, and dashboard](docs/sequence.svg)
-
-[PNG image](docs/sequence.png) · [Mermaid source](docs/sequence.mmd)
+Collect App Store reviews, measure ratings and sentiment, and turn recurring complaints into prioritized, evidence-linked actions. A FastAPI API and browser dashboard share one analysis pipeline.
 
 ## Run locally
 
-Python 3.12 is pinned for compatibility with Hydra and the container. Install [uv](https://docs.astral.sh/uv/) (Node.js is only needed for the frontend tests), then set `GEMINI_API_KEY` in `.env` using `.env.example` as a guide.
+Install [uv](https://docs.astral.sh/uv/). Python 3.12 is pinned and installed automatically by uv when needed. Copy `.env.example` to `.env` and set `GEMINI_API_KEY`.
 
 ```bash
 uv sync --locked
 uv run --env-file .env uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
 ```
 
-Open [the dashboard](http://127.0.0.1:8000/) or [API documentation](http://127.0.0.1:8000/docs). Enter an app ID or App Store URL, country from the full-name dropdown, and review count. API routes use `/api/analyze`, `/api/reviews/collect`, and `/api/health`. The dashboard header shows the app name, country, and review count. The dashboard renders the report JSON directly using plain HTML, CSS, and JavaScript with no build step. The first local startup may download the pinned sentiment model. Docker bundles its weights instead.
-
-The service keeps no reports in a database or on disk. The browser holds the current report and downloads JSON locally. Review cards show full original comments, including line breaks. Negative reviews support improvement recommendations; positive and neutral reviews provide context. Shortfalls and incomplete collections are reported explicitly.
-
-An App Store link suggests its country until you choose a country yourself. Your selected country always controls which reviews are collected.
-
-One review batch binds original comments to prepared text and sentiment. Gemini evidence IDs are constrained to negative source reviews and validated before a report is returned. See [evidence validation](docs/insight_validation.md).
-
-Insight generation and evidence repair are shared by the analysis and standalone tooling. The completed [production refactor](docs/production-refactor.md) documents module ownership and verification. Terminal logs retain safe failure diagnostics and show one block per request; Cloud Run and redirected output use JSON. External calls and retries share the analysis deadline.
-
-Collection tries catalog, RSS, then webpage reviews, retaining the first unique records and reporting source failures and shortfalls.
-
-The three follow-up bugs from the strict review are resolved in [review fixes](docs/review-fixes.md), including separate timeout and evidence-failure diagnostics.
-
-## Test the API
-
-With the server running, check readiness:
-
-```bash
-curl http://127.0.0.1:8000/api/health
-```
-
-Collect the first 100 unique valid reviews in source order without model analysis. Collection stops at the requested count, trying catalog JSON, then RSS JSON, then embedded App Store webpage JSON as needed. It returns fewer if all sources are exhausted. Reviews stay within the requested country; metadata records attempts and failures. Change `country` to `ua` for Ukraine or use another two-letter country code:
-
-```bash
-curl -X POST http://127.0.0.1:8000/api/reviews/collect \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "app_id": "1459969523",
-    "country": "us",
-    "review_count": 100
-  }'
-```
-
-Run the complete analysis, including sentiment, Gemini insights, and metrics:
+Open the [dashboard](http://127.0.0.1:8000/) or [interactive API docs](http://127.0.0.1:8000/docs). The first startup downloads the sentiment model. Analysis needs internet access to Apple and Gemini; collection alone needs no Gemini key. Prepared review text is sent to Google for insights.
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/analyze \
   -H 'Content-Type: application/json' \
-  -d '{
-    "app_id": "389801252",
-    "country": "us",
-    "review_count": 100
-  }'
+  -d '{"app_id":"389801252","country":"us","review_count":100}'
 ```
 
-All API responses are JSON; routes have no `/v1` prefix. Rating, sentiment, and issue metrics are included in the complete analysis response.
+| Endpoint | Result |
+|---|---|
+| `POST /api/analyze` | Reviews, metrics, prioritized insights, and evidence |
+| `POST /api/reviews/collect` | Raw reviews and collection metadata; same request body |
+| `GET /api/health` | Model readiness and credential availability |
 
-If Gemini returns invalid evidence, analysis retries generation once with corrective instructions. A report is returned only after validation succeeds.
+Responses are JSON. The dashboard visualizes distributions, issue frequency/coverage, and supporting reviews, and downloads the report locally.
 
-## Run the pipeline without the dashboard
+## Approach and design
 
-```bash
-uv run --env-file .env review-analyzer 389801252 --output output/report.json
-```
+- **One service:** FastAPI serves the API and a vanilla JavaScript dashboard, with no frontend build step, database, or queue.
+- **Bounded collection:** Apple catalog, RSS, then webpage fallback; retain the first unique reviews in source order and report shortfalls. Collection is not random or representative of all historical feedback.
+- **Independent sentiment:** Pinned CardiffNLP RoBERTa classifies text on CPU. Star ratings never determine sentiment. Emoji become words and oversized text is trimmed for models; original comments remain in the report.
+- **Evidence-linked insights:** Gemini groups negative complaints and proposes short actions by priority and recurrence. Positive/neutral reviews provide context. Invalid evidence is rejected, with one bounded repair attempt; an empty issue list is valid.
+- **Local metrics:** Python calculates averages, distributions, unique issue frequencies, and coverage from review IDs. The API keeps reports in memory; one analysis or collection runs at a time, with busy responses and configurable usage limits.
 
-This runs the same services as the API. The older per-step scripts remain optional compatibility tools. Reproducible experiments use `uv run --env-file .env python -m experiments.analyze` with Hydra overrides.
+Sentiment and issue interpretation are model estimates. The classifier is English-oriented; selecting a storefront does not filter review language. Logs and traces contain timings and diagnostics, excluding review contents and credentials.
 
-## Verify
+## Sample report: Instagram
+
+A live US-storefront run on **2026-10-15** analyzed **100 unique reviews**: average rating **3.21/5**, with **22 positive, 17 neutral, and 61 negative** classifications. Six issue groups cover **31 of 61 negative reviews (50.8%)**.
+
+| Priority | Example improvement | Reviews |
+|---|---|---:|
+| High | Improve suspension appeals and human review | 7 |
+| Medium | Reduce feed ads and prioritize followed accounts | 7 |
+| Low | Improve navigation and layout | 6 |
+
+Read the [complete sample report](examples/instagram-report.md) or inspect its [full API-shaped JSON and source evidence](examples/instagram-report.json). This is a dated sample, not a measurement of all Instagram users.
+
+## Tests and further details
 
 ```bash
 uv run --locked pytest -q
 npm test --prefix frontend
 ```
 
-- [Infrastructure plan](INFRASTRUCTURE.md)
-- [Architecture, API, and pipeline](docs/architecture.md)
-- [Insight validation and recovery](docs/insight_validation.md)
-- [Review sources and fallback behavior](docs/fetch_reviews.md)
-- [Dashboard and JSON contract](docs/dashboard.md)
-- [Docker and Cloud Run deployment](docs/deployment.md)
-- [Observability: tracing, correlated JSON logs, and troubleshooting](docs/observability.md)
-- [Assignment](TEST_TASK.md) and [research checklist](RESEARCH_TODO.md)
-
-## Public single-request deployment
-
-Deployment files allow public access without sign-in. One analysis or collection runs at a time; other processing requests receive HTTP 409 with `Retry-After`. The dashboard and health checks stay available. Configurable minute/day limits return 429, and `WORK_ENABLED=false` pauses processing.
-
-[Deployment instructions](docs/deployment.md) cover prerequisites, container checks, rollout, and rollback. GitHub Actions runs tests and an offline container smoke check. Cloud deployment and container execution still require verification; no cloud resources have been created or deployed.
+Node.js is needed only for frontend tests. See [architecture](docs/architecture.md), [pipeline and CLI tools](docs/pipeline.md), [observability](docs/observability.md), and [deployment/rollback](docs/deployment.md). Public single-request Cloud Run deployment files are prepared; container and cloud verification remain outstanding. Third-party attribution is in [NOTICE](NOTICE).

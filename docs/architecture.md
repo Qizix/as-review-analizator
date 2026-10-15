@@ -1,6 +1,6 @@
 # Modular analysis application
 
-`INFRASTRUCTURE.md` is the target architecture. `app/main.py` owns FastAPI routes, Jinja2 HTML, static assets, lifespan, request logging, and HTTP error handling. Business logic in `app/services/` does not import FastAPI.
+`app/main.py` owns FastAPI routes, Jinja2 HTML, static assets, lifespan, request logging, and HTTP error handling. Business logic in `app/services/` does not import FastAPI.
 
 ## Services and lifecycle
 
@@ -15,7 +15,7 @@
 - `execution.py`: owns request-local stage identity, actual stage durations, usage, and the cooperative deadline.
 - `analyzer.py`: orchestrates all stages and assembles the unified response. Original titles/text are restored after sentiment classification, so model preprocessing does not replace raw source reviews.
 
-FastAPI lifespan loads one classifier per worker before accepting traffic. A nonblocking per-worker analysis lock returns 409 for parallel inference instead of queuing it. The synchronous route runs through FastAPI's thread pool and returns the complete JSON report. There are no background jobs, persistent reports, databases, or brokers.
+FastAPI lifespan loads one classifier per worker before accepting traffic. One nonblocking processing gate per worker covers analysis and standalone collection, returning 409 instead of queuing concurrent work. The synchronous route runs through FastAPI's thread pool and returns the complete JSON report. There are no background jobs, persistent reports, databases, or brokers.
 
 Missing Gemini credentials are rejected before API collection. Empty samples skip inference/provider generation. If every collection page fails and no reviews are available, analysis fails. Empty accessible feeds and negative feedback without concrete actionable complaints can produce valid empty insight lists.
 
@@ -61,7 +61,7 @@ Settings come from validated environment variables. Defaults: one Torch thread, 
 
 `experiments/analyze.py` and `conf/experiment.yaml` use Hydra overrides and save resolved configuration/report under ignored `hydra_outputs/`. Secrets remain environment-only. The legacy seed configuration is ignored for collection. Encounter order is tested against recorded responses; live Apple feeds and Gemini interpretation can change between runs.
 
-Pytest covers services plus FastAPI success/failure paths, classifier reuse, validation, evidence rejection, throttling, and removal of the metrics and export endpoints. Frontend Node tests cover API adaptation, URL parsing, denominators, evidence consistency, filters, empty reports, and escaping. Live 100-review HTTP and browser analyses verified the real providers. Local performance is not a Cloud Run benchmark; image build and deployment remain unverified because Docker was not running and deployment was not requested.
+Pytest covers services plus FastAPI success/failure paths, classifier reuse, validation, evidence rejection, throttling, and removal of the metrics and export endpoints. Frontend Node tests cover API adaptation, URL parsing, denominators, evidence consistency, filters, empty reports, and escaping. The checked-in Instagram example records a live pipeline run. Local performance is not a Cloud Run benchmark; image build and deployment require separate verification.
 
 ## Observability
 

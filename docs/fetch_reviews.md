@@ -34,7 +34,7 @@ The last fallback resolves the real app slug through `https://itunes.apple.com/l
 
 `ServerDataParser` locates the `application/json` script with ID `serialized-server-data`, regardless of attribute order. `parse_web_page` recursively walks its JSON for `$kind: Review` objects and reads `id`, `title`, `contents`, and `rating`. Positive integer IDs are converted to strings; ratings are validated without coercing booleans or strings. Missing server state or malformed JSON is an error rather than an empty result. Only one page is fetched: Apple-selected reviews, generally most helpful, rather than a historical archive.
 
-The JSON walk is adapted from [aivars/app-store-review-scraper](https://github.com/aivars/app-store-review-scraper/tree/36d8e8f38563af35a21db9606e6cd672e3db0d5a). No package dependency, subprocess, or browser is added. The adaptation uses HTMLParser instead of the original attribute-order-dependent regular expression. The MIT license is retained in [third-party notices](third-party-notices.md).
+The JSON walk is adapted from [aivars/app-store-review-scraper](https://github.com/aivars/app-store-review-scraper/tree/36d8e8f38563af35a21db9606e6cd672e3db0d5a). No package dependency, subprocess, or browser is added. The adaptation uses HTMLParser instead of the original attribute-order-dependent regular expression. The MIT license is retained in [NOTICE](../NOTICE).
 
 ## Request budgets
 
