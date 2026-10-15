@@ -87,7 +87,6 @@ function updateChip(next) {
     next.metadata.country ? countryName(next.metadata.country) : null,
     plural(next.total, "review"),
   ].filter(Boolean);
-  document.querySelector("#app-icon").textContent = name.trim()[0]?.toUpperCase() || "A";
   document.querySelector("#app-label").innerHTML =
     `${h(name)} <span class="muted">· ${h(details.join(" · "))}</span>`;
   chip.title = Number.isNaN(date.getTime())

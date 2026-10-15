@@ -17,7 +17,7 @@ uv sync --locked
 uv run --env-file .env uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
 ```
 
-Open [the dashboard](http://127.0.0.1:8000/) or [API documentation](http://127.0.0.1:8000/docs). Enter an app ID or App Store URL, country from the full-name dropdown, and review count. API routes use `/api/analyze`, `/api/reviews/collect`, and `/api/health`. The dashboard is plain HTML, CSS, and JavaScript with no build step; the backend returns JSON. The first local startup may download the pinned sentiment model. Docker bundles its weights instead.
+Open [the dashboard](http://127.0.0.1:8000/) or [API documentation](http://127.0.0.1:8000/docs). Enter an app ID or App Store URL, country from the full-name dropdown, and review count. API routes use `/api/analyze`, `/api/reviews/collect`, and `/api/health`. The dashboard header shows the app name, country, and review count. The dashboard is plain HTML, CSS, and JavaScript with no build step; the backend returns JSON. The first local startup may download the pinned sentiment model. Docker bundles its weights instead.
 
 The service keeps no reports in a database or on disk. The browser holds the current report and downloads JSON locally. Negative reviews support improvement recommendations; positive and neutral reviews provide context. Shortfalls and incomplete collections are reported explicitly.
 
