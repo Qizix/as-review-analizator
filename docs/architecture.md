@@ -48,7 +48,7 @@ Rating, sentiment, and issue metrics are calculated inside the analysis pipeline
 
 The paid endpoint uses a global per-worker rolling limit of three attempted analyses/minute by default; 429 includes Retry-After. This volatile limit resets after restarts and is not distributed identity/quota infrastructure. Prepared Cloud Run deployment is private by default. Health and assets do not spend Gemini tokens.
 
-The 280-second application deadline is cooperative, below Cloud Run's 300-second timeout. Collection uses shrinking budgets, and stage boundaries check elapsed time. CPU inference and SDK calls cannot be forcibly cancelled mid-operation; disconnected clients can leave their current computation finishing. Validate resource sizing and timeout behavior on Cloud Run before production use.
+The 280-second application deadline is cooperative, below Cloud Run's 300-second timeout. Collection uses shrinking budgets, and stages check before and after work. Gemini and app lookup derive per-attempt timeouts from the same remaining deadline, and Gemini retry delays consume that budget. CPU inference and SDK calls cannot be forcibly cancelled mid-operation; disconnected clients can leave their current computation finishing. Validate resource sizing and timeout behavior on Cloud Run before production use.
 
 Structured logs record request latency/status, stage timings, review count, Gemini usage, model/prompt provenance, peak memory, and error type/stage. Credentials and review/model-response bodies are not logged. Peak RSS is a process-lifetime high-water mark, not a per-request allocation.
 

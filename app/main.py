@@ -18,7 +18,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.observability import RequestObservationMiddleware, configure_logging, emit, error_details, observe, record_exception
 from app.schemas import AnalysisResponse, AnalyzeRequest
-from app.services.analyzer import AnalysisError, Analyzer
+from app.services.analyzer import Analyzer
+from app.services.execution import AnalysisError
 from app.services.collector import COUNTRIES
 from app.services.sentiment import load_classifier
 from app.settings import ROOT, Settings

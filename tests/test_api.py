@@ -26,10 +26,10 @@ def api(monkeypatch):
     classifier = Mock(return_value=[{"label": "negative", "score": .9}, {"label": "positive", "score": .8}, {"label": "negative", "score": .9}])
     factory = Mock(return_value=classifier)
     monkeypatch.setattr("app.services.analyzer.collect_reviews", lambda *args: collected())
-    monkeypatch.setattr("app.services.analyzer.lookup_app_info", lambda app_id, country: {"app_id": app_id, "country": country, "name": "Example App"})
+    monkeypatch.setattr("app.services.analyzer.lookup_app_info", lambda app_id, country, **kwargs: {"app_id": app_id, "country": country, "name": "Example App"})
     report = ModelReport.model_validate({"issues": [{"category": "Startup failures", "action": "Investigate startup failures.", "priority": "high", "evidence_ids": ["n1", "n2"], "keywords": ["startup", "access"]}]})
 
-    def insights(groups, prompt, usage, model):
+    def insights(groups, prompt, usage, model, **kwargs):
         assert set(groups) == {"negative", "positive", "neutral"}
         assert groups["negative"][0]["text"] != collected()["reviews"][0]["text"]
         usage.update({"prompt_token_count": 100, "candidates_token_count": 20})
@@ -160,6 +160,19 @@ def test_repair_respects_analysis_deadline(api, monkeypatch):
     response = client.post("/api/analyze", json={"app_id": "123", "review_count": 3})
     assert response.status_code == 504
     assert generate.call_count == 1
+
+
+def test_external_deadline_exhaustion_returns_stage_specific_timeout(api, monkeypatch, caplog):
+    from app.services.execution import DeadlineExceeded
+
+    client, _, _ = api
+    monkeypatch.setattr("app.services.insights.request_insights", Mock(side_effect=DeadlineExceeded("Budget exhausted")))
+    response = client.post("/api/analyze", json={"app_id": "123", "review_count": 3})
+    assert response.status_code == 504
+    assert response.json() == {"detail": "Analysis exceeded its processing deadline"}
+    event = next(record.event_data for record in caplog.records if getattr(record, "event_data", {}).get("event") == "request.failed")
+    assert event["error_stage"] == "gemini"
+    assert event["error_type"] == "ANALYSIS_TIMEOUT"
 
 
 def test_missing_credentials_and_rate_limit(monkeypatch):

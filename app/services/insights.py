@@ -1,15 +1,19 @@
 import hashlib
 import json
+import math
 import os
+import time
 from pathlib import Path
 from typing import Literal
 
 from google import genai
-from google.genai import types
+import httpx
+from google.genai import errors, types
 from pydantic import BaseModel, ConfigDict, Field
 from opentelemetry import trace
 
-from app.observability import observe, operation, record_usage, warning
+from app.observability import increment, observe, operation, record_usage, warning
+from app.services.execution import remaining_seconds
 
 from app.settings import GEMINI_MODEL as MODEL
 from app.services.preprocessor import prepare_reviews, preprocess_text
@@ -46,7 +50,7 @@ def generate_insights(data, groups, run, model=MODEL):
             "gen_ai.request.model": model, "app.prompt.version": hashlib.sha256(prompt.encode()).hexdigest(),
         }):
             observe(gemini_model=model, prompt_version=hashlib.sha256(prompt.encode()).hexdigest())
-            response = request_insights(groups, prompt, run.usage, model)
+            response = request_insights(groups, prompt, run.usage, model, deadline=run.deadline)
         try:
             with run.stage("validation", "insights.validate") as span:
                 report = build_report(data, groups, response, prompt, model)
@@ -67,7 +71,7 @@ def generate_insights(data, groups, run, model=MODEL):
 
 
 
-def request_insights(groups, prompt, usage=None, model=MODEL):
+def request_insights(groups, prompt, usage=None, model=MODEL, *, deadline=None):
     if not any(groups.values()):
         return ModelReport(issues=[])
     schema = ModelReport.model_json_schema()
@@ -88,6 +92,9 @@ def request_insights(groups, prompt, usage=None, model=MODEL):
 
         def on_request(request):
             nonlocal attempts
+            timeout = remaining_seconds(deadline, 60)
+            request.extensions["timeout"] = httpx.Timeout(timeout).as_dict()
+            request.headers["X-Server-Timeout"] = str(math.ceil(timeout))
             attempts += 1
 
         def on_response(response):
@@ -95,24 +102,35 @@ def request_insights(groups, prompt, usage=None, model=MODEL):
             observe(gemini_http_status=response.status_code)
 
         try:
-            with genai.Client(
+            with httpx.Client(event_hooks={"request": [on_request], "response": [on_response]}) as transport, genai.Client(
                 api_key=api_key,
                 http_options=types.HttpOptions(
                     timeout=60000,
-                    retry_options=types.HttpRetryOptions(attempts=3, initial_delay=1, max_delay=8),
-                    client_args={"event_hooks": {"request": [on_request], "response": [on_response]}},
+                    retry_options=types.HttpRetryOptions(attempts=1),
+                    httpx_client=transport,
                 ),
             ) as client:
-                response = client.models.generate_content(
-                    model=model,
-                    contents=json.dumps(groups, ensure_ascii=False, separators=(",", ":")),
-                    config=types.GenerateContentConfig(
-                        system_instruction=prompt,
-                        response_mime_type="application/json",
-                        response_json_schema=schema,
-                        max_output_tokens=8192,
-                    ),
-                )
+                for attempt in range(3):
+                    timeout = remaining_seconds(deadline, 60)
+                    try:
+                        response = client.models.generate_content(
+                            model=model,
+                            contents=json.dumps(groups, ensure_ascii=False, separators=(",", ":")),
+                            config=types.GenerateContentConfig(
+                                system_instruction=prompt, response_mime_type="application/json",
+                                response_json_schema=schema, max_output_tokens=8192,
+                                http_options=types.HttpOptions(timeout=max(1, int(timeout * 1000))),
+                            ),
+                        )
+                        break
+                    except (errors.APIError, httpx.TimeoutException, httpx.ConnectError) as exc:
+                        remaining_seconds(deadline, 60)
+                        if attempt == 2 or (isinstance(exc, errors.APIError) and exc.code not in {408, 429, 500, 502, 503, 504}):
+                            raise
+                        delay = remaining_seconds(deadline, 2**attempt)
+                        span.add_event("retry.scheduled", {"app.retry.attempt": attempt + 1, "app.retry.delay_ms": delay * 1000})
+                        warning("UPSTREAM_RETRY", provider="gemini", attempt=attempt + 1, delay_ms=delay * 1000)
+                        time.sleep(delay)
             provider_usage = getattr(response, "usage_metadata", None)
             if provider_usage is not None:
                 metadata = provider_usage.model_dump(mode="json", exclude_none=True)
@@ -127,7 +145,12 @@ def request_insights(groups, prompt, usage=None, model=MODEL):
             span.set_attribute("app.retry_count_available", attempts > 0)
             if attempts:
                 span.set_attribute("app.retry_count", attempts - 1)
-            observe(gemini_retry_count=attempts - 1 if attempts else None, gemini_retry_count_available=attempts > 0)
+            observe(gemini_retry_count_available=attempts > 0)
+            if attempts:
+                increment("gemini_retry_count", attempts - 1)
+            else:
+                observe(gemini_retry_count=None)
+        remaining_seconds(deadline, 60)
     with operation("insights.decode"):
         if not response.text:
             raise InsightDecodeError("Gemini returned no report; no insights were saved")

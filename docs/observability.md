@@ -24,7 +24,7 @@ The API request and response bodies remain unchanged. Responses handled by reque
 
 ## Trace hierarchy
 
-The hierarchy follows the existing operations. App lookup is best-effort; the three metric calculations already existed and are identified by `app.metrics.phase`.
+The hierarchy follows the existing operations. App lookup is best-effort within the remaining deadline. Metrics are computed once after validated insights exist. Optional repair adds `insights.repair`, another Gemini request, and a second validation span.
 
 ```text
 POST /api/analyze
@@ -32,14 +32,12 @@ POST /api/analyze
 │   └── appstore.request (one per logical Apple request, including its retries)
 ├── appstore.lookup
 ├── reviews.preprocess
-├── metrics.calculate (ratings)
 ├── sentiment.classify
-├── metrics.calculate (sentiment)
 ├── insights.generate
 │   ├── gemini.request
 │   └── insights.decode
 ├── insights.validate
-│   └── metrics.calculate (issues)
+├── metrics.calculate (issues)
 └── report.assemble
 ```
 
@@ -89,7 +87,7 @@ Monotonic clocks measure operations. Span timestamps/durations are primary; requ
 
 Gemini span attributes record actual SDK usage: input, output, separately reported thinking, total, and cached input tokens. Missing counters remain absent. `gemini_usage_available=false` explicitly marks missing metadata. Request-summary counters sum generation and repair; individual spans retain per-call values. Missing metadata marks the request totals incomplete. No monetary cost is estimated.
 
-Gemini's configured retry policy is unchanged. HTTPX request/response hooks count observed network attempts and final HTTP status without inspecting bodies. Retry count is attempts minus one. If hooks do not observe a request, availability is false and the count is null/absent rather than assumed zero. Apple retries retain attempt numbers and delays as span events and bounded request-summary warnings.
+The insight adapter owns three bounded transport attempts; nested SDK retries are disabled so each attempt and delay uses the remaining analysis budget. HTTPX request/response hooks count observed network attempts and final HTTP status without inspecting bodies. Each Gemini span records attempts minus one; the request summary sums retries across generation and repair. If hooks do not observe a request, availability is false and the count is null/absent rather than assumed zero. Apple retries retain attempt numbers and delays as span events and bounded request-summary warnings.
 
 ## Errors and data boundaries
 

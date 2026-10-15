@@ -13,7 +13,7 @@ def test_repaired_report_records_actual_model_prompt_and_usage(monkeypatch):
     valid = invalid.model_copy(deep=True)
     valid.issues[0].evidence_ids = ["n1"]
 
-    def request(groups, prompt, usage, model):
+    def request(groups, prompt, usage, model, **kwargs):
         usage["total_token_count"] = usage.get("total_token_count", 0) + 20
         return invalid if "Regenerate" not in prompt else valid
 

@@ -45,12 +45,11 @@ def instrumented(monkeypatch):
             return collect_reviews(fixture_client, app_id, country, count, seed, deadline)
 
     monkeypatch.setattr("app.services.analyzer.collect_reviews", collect)
-    monkeypatch.setattr("app.services.analyzer.lookup_app_info", lambda app_id, country: {"app_id": app_id, "country": country})
+    monkeypatch.setattr("app.services.analyzer.lookup_app_info", lambda app_id, country, **kwargs: {"app_id": app_id, "country": country})
 
     def make(handler=None, exporter=None, **settings):
         def make_client(**kwargs):
-            kwargs["http_options"].client_args.update(transport=httpx.MockTransport(handler or (lambda request: httpx.Response(200, json=model_response()))))
-            kwargs["http_options"].retry_options.initial_delay = .001
+            kwargs["http_options"].httpx_client = httpx.Client(transport=httpx.MockTransport(handler or (lambda request: httpx.Response(200, json=model_response()))), event_hooks=kwargs["http_options"].httpx_client.event_hooks)
             return client_type(**kwargs)
 
         monkeypatch.setattr("app.services.insights.genai.Client", make_client)
@@ -265,6 +264,26 @@ def test_repair_usage_is_aggregated_in_logs_but_individual_in_spans(instrumented
     spans = [span for span in exporter.get_finished_spans() if span.name == "gemini.request"]
     assert len(spans) == 2
     assert all(span.attributes["app.gen_ai.total_tokens"] == 125 for span in spans)
+
+
+def test_missing_repair_usage_keeps_known_counts_and_marks_incomplete(instrumented, capsys):
+    calls = []
+
+    def respond(request):
+        calls.append(request)
+        payload = model_response("p1" if len(calls) == 1 else "n1")
+        if len(calls) == 2:
+            del payload["usageMetadata"]
+        return httpx.Response(200, json=payload)
+
+    app, _, _ = instrumented(respond)
+    with TestClient(app) as client:
+        response = client.post("/api/analyze", json={"app_id": "123", "review_count": 2})
+    assert response.status_code == 200
+    summary = request_logs(capsys)[0]
+    assert summary["gemini_usage_available"] is False
+    assert summary["gemini_usage"]["total_token_count"] == 125
+    assert summary["gemini_usage_missing_count"] == 1
 
 
 def test_initialization_is_idempotent_and_shutdown_flushes():

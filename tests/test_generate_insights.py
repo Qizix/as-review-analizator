@@ -92,7 +92,7 @@ class GenerateInsightsTests(unittest.TestCase):
         self.assertEqual(schema["$defs"]["Issue"]["properties"]["evidence_ids"]["items"], {"type": "string", "enum": ["n1", "n2"]})
         self.assertIsNone(kwargs["config"].response_schema)
         self.assertEqual(client.call_args.kwargs["http_options"].timeout, 60000)
-        self.assertEqual(client.call_args.kwargs["http_options"].retry_options.attempts, 3)
+        self.assertEqual(client.call_args.kwargs["http_options"].retry_options.attempts, 1)
         self.assertEqual(result, response())
 
     @patch.dict(os.environ, {}, clear=True)
@@ -130,8 +130,7 @@ class GenerateInsightsTests(unittest.TestCase):
             }]})
 
         def make_client(**kwargs):
-            kwargs["http_options"].client_args = {"transport": httpx.MockTransport(handle)}
-            kwargs["http_options"].retry_options.initial_delay = 0.01
+            kwargs["http_options"].httpx_client = httpx.Client(transport=httpx.MockTransport(handle), event_hooks=kwargs["http_options"].httpx_client.event_hooks)
             return client_type(**kwargs)
 
         with patch("app.services.insights.genai.Client", side_effect=make_client):

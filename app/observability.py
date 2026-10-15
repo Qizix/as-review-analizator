@@ -99,10 +99,10 @@ def observe(**fields):
         observation.update(**fields)
 
 
-def increment(name):
+def increment(name, amount=1):
     observation = current_observation.get()
     if observation is not None and not observation.finished:
-        observation.fields[name] = observation.fields.get(name, 0) + 1
+        observation.fields[name] = (observation.fields.get(name) or 0) + amount
 
 
 def warning(code, **fields):

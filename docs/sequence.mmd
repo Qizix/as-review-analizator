@@ -1,14 +1,14 @@
 sequenceDiagram
     actor User
-    participant UI as Dashboard / Chart.js
+    participant UI as Dashboard
     participant API as FastAPI
     participant Pipeline as Analyzer
-    participant Apple as Apple Catalog / Lookup
+    participant Apple as Apple Catalog / RSS / Web / Lookup
     participant Prep as Preprocessor
     participant Sentiment as Local RoBERTa (CPU)
     participant Gemini as Gemini Flash-Lite
     participant Validator as Report Validator
-    participant Metrics as Metrics Service
+    participant Metrics as Metrics
 
     Note over API,Sentiment: Startup: load sentiment model once and reuse it
     User->>UI: Enter app ID or URL, country, review count
@@ -22,20 +22,20 @@ sequenceDiagram
         Apple-->>Pipeline: Review records
         Note over Pipeline,Apple: Timeouts, pacing, and bounded retries
     end
-    Pipeline->>Pipeline: Validate records, deduplicate IDs, sample uniformly
-    Note over Pipeline: Report actual count and any shortfall
+    opt Catalog is incomplete
+        Pipeline->>Apple: Fetch RSS then webpage reviews until count reached
+        Apple-->>Pipeline: Additional accessible records
+    end
+    Pipeline->>Pipeline: Retain first valid unique reviews in source order
+    Note over Pipeline: Report actual count<br/>and any shortfall
     Pipeline->>Apple: Look up app details
     Apple-->>Pipeline: App name, developer, icon, store URL
 
     Pipeline->>Prep: Normalize text and emojis, crop oversized text
     Prep-->>Pipeline: Prepared reviews
-    Note over Pipeline: Preserve original review text
-    Pipeline->>Metrics: Calculate independent rating metrics
-    Metrics-->>Pipeline: Average and star distribution
+    Note over Pipeline: Preserve original<br/>review text
     Pipeline->>Sentiment: Classify reviews in batches
     Sentiment-->>Pipeline: Positive / neutral / negative + confidence
-    Pipeline->>Metrics: Calculate sentiment distribution
-    Metrics-->>Pipeline: Counts and percentages
 
     Pipeline->>Prep: Group reviews by sentiment for Gemini
     Prep-->>Pipeline: Negative, positive, and neutral groups
@@ -43,10 +43,16 @@ sequenceDiagram
     Note over Pipeline,Gemini: Negative reviews support actionable issues<br/>Positive and neutral reviews provide context
     Gemini-->>Pipeline: Issues, priorities, actions, evidence IDs
     Pipeline->>Validator: Validate schema and cited review IDs
-    Note over Validator: Only negative reviews support issues<br/>An empty issue list is valid
-    Validator-->>Pipeline: Validated insights with original evidence quotes
-    Pipeline->>Metrics: Calculate issue frequency, fractions, and coverage
-    Metrics-->>Pipeline: Issue metrics using unique review IDs
+    Note over Validator: Negative evidence only<br/>Empty issues are valid
+    Validator-->>Pipeline: Validated insights or evidence error
+    opt First evidence validation failed
+        Pipeline->>Gemini: Regenerate with constrained evidence instructions
+        Gemini-->>Pipeline: Corrected issues and evidence IDs
+        Pipeline->>Validator: Validate corrected report and reject if still invalid
+        Validator-->>Pipeline: Supported issues or failure
+    end
+    Pipeline->>Metrics: Calculate ratings, sentiment, issue frequency, and coverage
+    Metrics-->>Pipeline: Independent distributions and unique-evidence metrics
 
     Pipeline->>Pipeline: Attach timings, token usage, and warnings
     Pipeline->>Pipeline: Release analysis lock
@@ -60,4 +66,4 @@ sequenceDiagram
         User->>UI: Export JSON
         UI-->>User: Download complete report
     end
-    Note over UI,API: Reports stay in memory, no database or server-side report storage
+    Note over UI,API: Reports stay in memory<br/>No database or server-side<br/>report storage

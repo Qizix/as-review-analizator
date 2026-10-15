@@ -55,7 +55,7 @@ class Analyzer:
             with stage("collection"):
                 collected = self.collect(request, run.deadline)
             with stage("app_info", "appstore.lookup"):
-                app_info = lookup_app_info(request.app_id, request.country)
+                app_info = lookup_app_info(request.app_id, request.country, deadline=run.deadline)
             with stage("preprocessing", "reviews.preprocess"):
                 prepared = preprocess_collection(collected)
             with stage("sentiment", "sentiment.classify", {"app.model": SENTIMENT_MODEL, "app.reviews.count": len(prepared["reviews"]), "app.batch_size": 8}):
