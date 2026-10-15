@@ -1,4 +1,5 @@
 import hashlib
+import json
 import resource
 import sys
 import threading
@@ -15,7 +16,7 @@ from app.services.insights import PROMPT_PATH, request_insights
 from app.services.metrics import calculate_metrics
 from app.services.preprocessor import prepare_reviews, preprocess_collection
 from app.services.sentiment import analyze_sentiment
-from app.services.validator import build_report
+from app.services.validator import InsightValidationError, build_report
 from app.settings import SENTIMENT_MODEL
 
 
@@ -79,7 +80,7 @@ class Analyzer:
                 try:
                     yield span
                 finally:
-                    durations[name] = round(time.monotonic() - before, 4)
+                    durations[name] = round(durations.get(name, 0) + time.monotonic() - before, 4)
 
         try:
             with stage("collection"):
@@ -103,12 +104,26 @@ class Analyzer:
                 span.set_attribute("app.prompt.version", prompt_version)
                 observe(gemini_model=self.settings.gemini_model, prompt_version=prompt_version)
                 model_report = request_insights(groups, prompt, usage, self.settings.gemini_model)
-            with stage("validation", "insights.validate") as span:
-                insights = build_report(classified, groups, model_report, prompt)
-                span.set_attribute("app.issues.count", insights["summary"]["issue_count"])
-                span.set_attribute("app.validation.failures", 0)
-                with operation("metrics.calculate", {"app.reviews.count": len(classified["reviews"]), "app.metrics.phase": "issues"}):
-                    metrics = calculate_metrics(classified, insights)
+            for attempt in range(2):
+                try:
+                    with stage("validation", "insights.validate") as span:
+                        insights = build_report(classified, groups, model_report, prompt)
+                        span.set_attribute("app.issues.count", insights["summary"]["issue_count"])
+                        span.set_attribute("app.validation.failures", 0)
+                    break
+                except InsightValidationError as exc:
+                    if attempt:
+                        raise
+                    observe(insight_repair_count=1)
+                    warning("INSIGHTS_RETRY", reason=exc.reason)
+                    correction = "\nRegenerate the report. Previous validation failed: " + exc.reason
+                    correction += ". Use each evidence ID at most once per issue and only IDs from this list: "
+                    correction += json.dumps([review["id"] for review in groups["negative"]])
+                    correction += ". Keep categories unique and actions nonempty."
+                    with stage("gemini", "insights.repair"):
+                        model_report = request_insights(groups, prompt + correction, usage, self.settings.gemini_model)
+            with operation("metrics.calculate", {"app.reviews.count": len(classified["reviews"]), "app.metrics.phase": "issues"}):
+                metrics = calculate_metrics(classified, insights)
             active_stage = "report_assembly"
             with operation("report.assemble"):
                 issues = []

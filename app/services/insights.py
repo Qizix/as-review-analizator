@@ -80,7 +80,11 @@ def request_insights(groups, prompt, usage=None, model=MODEL):
             if provider_usage is not None:
                 metadata = provider_usage.model_dump(mode="json", exclude_none=True)
                 if usage is not None:
-                    usage.update(metadata)
+                    for key, value in metadata.items():
+                        if key.endswith("token_count") and type(value) is int:
+                            usage[key] = usage.get(key, 0) + value
+                        else:
+                            usage[key] = value
         finally:
             record_usage(span, metadata)
             span.set_attribute("app.retry_count_available", attempts > 0)

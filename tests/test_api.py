@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 
 from app.main import create_app
 from app.services.insights import ModelReport
+from app.services.validator import build_report
 from app.settings import Settings
 
 
@@ -92,11 +93,49 @@ def test_export_endpoint_is_removed(api):
 def test_untrusted_model_evidence_is_rejected_without_a_report(api, monkeypatch):
     client, _, _ = api
     invalid = ModelReport.model_validate({"issues": [{"category": "Fake", "action": "Fix a fabricated problem.", "priority": "high", "evidence_ids": ["p1"]}]})
-    monkeypatch.setattr("app.services.analyzer.request_insights", lambda *args: invalid)
+    generate = Mock(return_value=invalid)
+    monkeypatch.setattr("app.services.analyzer.request_insights", generate)
     response = client.post("/api/analyze", json={"app_id": "123", "review_count": 3})
     assert response.status_code == 502
     assert "evidence validation" in response.json()["detail"]
     assert "reviews" not in response.json()
+    assert generate.call_count == 2
+
+
+@pytest.mark.parametrize("evidence", [["p1"], ["unknown"], ["n1", "n1"]])
+def test_invalid_evidence_is_regenerated_and_validated(api, monkeypatch, evidence, caplog):
+    client, classifier, _ = api
+    invalid = ModelReport.model_validate({"issues": [{"category": "Startup", "action": "Investigate startup failures.", "priority": "high", "evidence_ids": evidence}]})
+    valid = invalid.model_copy(deep=True)
+    valid.issues[0].evidence_ids = ["n1", "n2"]
+    generate = Mock(side_effect=[invalid, valid])
+    monkeypatch.setattr("app.services.analyzer.request_insights", generate)
+    response = client.post("/api/analyze", json={"app_id": "123", "review_count": 3})
+    assert response.status_code == 200, response.text
+    assert response.json()["insights"]["issues"][0]["evidence_ids"] == ["n1", "n2"]
+    assert generate.call_count == 2
+    assert classifier.call_count == 1
+    prompt = generate.call_args.args[1]
+    assert 'only IDs from this list: ["n1", "n2"]' in prompt
+    event = next(record.event_data for record in caplog.records if getattr(record, "event_data", {}).get("event") == "request.completed")
+    assert event["insight_repair_count"] == 1
+    assert event["insight_validation_reason"] in {"duplicate_evidence_ids", "nonnegative_or_unknown_evidence_ids"}
+    assert "error" not in event
+
+
+def test_repair_respects_analysis_deadline(api, monkeypatch):
+    client, _, _ = api
+    invalid = ModelReport.model_validate({"issues": [{"category": "Startup", "action": "Investigate startup failures.", "priority": "high", "evidence_ids": ["unknown"]}]})
+    generate = Mock(return_value=invalid)
+    monkeypatch.setattr("app.services.analyzer.request_insights", generate)
+    def expired(*args):
+        client.app.state.analyzer.settings.analysis_timeout_seconds = 0
+        return build_report(*args)
+
+    monkeypatch.setattr("app.services.analyzer.build_report", expired)
+    response = client.post("/api/analyze", json={"app_id": "123", "review_count": 3})
+    assert response.status_code == 504
+    assert generate.call_count == 1
 
 
 def test_missing_credentials_and_rate_limit(monkeypatch):

@@ -55,6 +55,8 @@ curl -X POST http://127.0.0.1:8000/api/analyze \
 
 All API responses are JSON; routes have no `/v1` prefix. Rating, sentiment, and issue metrics are included in the complete analysis response.
 
+If Gemini returns invalid evidence, analysis retries generation once with corrective instructions. A report is returned only after validation succeeds.
+
 ## Run the pipeline without the dashboard
 
 ```bash
@@ -72,6 +74,7 @@ npm test --prefix frontend
 
 - [Infrastructure plan](INFRASTRUCTURE.md)
 - [Architecture, API, and pipeline](docs/architecture.md)
+- [Insight validation and recovery](docs/insight_validation.md)
 - [Review sources and fallback behavior](docs/fetch_reviews.md)
 - [Dashboard and JSON contract](docs/dashboard.md)
 - [Docker and Cloud Run deployment](docs/deployment.md)

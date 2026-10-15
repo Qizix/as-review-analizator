@@ -3,8 +3,17 @@ from datetime import datetime, timezone
 
 from app.settings import GEMINI_MODEL as MODEL
 from app.services.preprocessor import SENTIMENTS
+from app.observability import observe, warning
 
 PRIORITIES = ("high", "medium", "low")
+
+
+class InsightValidationError(ValueError):
+    def __init__(self, reason):
+        self.reason = reason
+        observe(insight_validation_reason=reason)
+        warning("INSIGHTS_INVALID", reason=reason)
+        super().__init__(reason)
 
 
 def build_report(data, groups, response, prompt):
@@ -15,12 +24,14 @@ def build_report(data, groups, response, prompt):
     insights = {priority: {"repeated": [], "single": []} for priority in PRIORITIES}
     for issue in response.issues:
         ids = set(issue.evidence_ids)
-        if len(ids) != len(issue.evidence_ids) or not ids <= negative_ids:
-            raise ValueError("issue evidence must contain unique IDs of negative input reviews")
+        if len(ids) != len(issue.evidence_ids):
+            raise InsightValidationError("duplicate_evidence_ids")
+        if not ids <= negative_ids:
+            raise InsightValidationError("nonnegative_or_unknown_evidence_ids")
         category = " ".join(issue.category.split())
         action = " ".join(issue.action.split())
         if not category or not action or category.casefold() in categories:
-            raise ValueError("issues must have nonempty actions and unique categories")
+            raise InsightValidationError("empty_action_or_duplicate_category")
         categories.add(category.casefold())
         categorized.update(ids)
         count = len(ids)

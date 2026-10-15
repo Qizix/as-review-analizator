@@ -101,6 +101,19 @@ class GenerateInsightsTests(unittest.TestCase):
             request_insights(groups, "Prompt")
         self.assertEqual(request_insights(prepare_reviews({"reviews": []}), "Prompt").issues, [])
 
+    @patch("app.services.insights.genai.Client")
+    @patch.dict(os.environ, {"GEMINI_API_KEY": "test-only"}, clear=True)
+    def test_token_usage_accumulates_across_generation_and_repair(self, client):
+        fake = client.return_value.__enter__.return_value
+        fake.models.generate_content.return_value = SimpleNamespace(
+            text=response().model_dump_json(),
+            usage_metadata=SimpleNamespace(model_dump=lambda **kwargs: {"prompt_token_count": 100, "candidates_token_count": 20, "total_token_count": 120}),
+        )
+        usage = {}
+        for prompt in ["Prompt", "Correction"]:
+            request_insights(prepare_reviews(collection()), prompt, usage)
+        self.assertEqual(usage, {"prompt_token_count": 200, "candidates_token_count": 40, "total_token_count": 240})
+
     @patch.dict(os.environ, {"GEMINI_API_KEY": "test-only"}, clear=True)
     def test_real_sdk_serialization_and_transient_retry(self):
         requests = []
