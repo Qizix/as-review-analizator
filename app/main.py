@@ -11,10 +11,9 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app.schemas import AnalysisResponse, AnalyzeRequest, MetricsRequest
-from app.services.analyzer import AnalysisError, Analyzer, empty_insights
+from app.schemas import AnalysisResponse, AnalyzeRequest
+from app.services.analyzer import AnalysisError, Analyzer
 from app.services.collector import COUNTRIES
-from app.services.metrics import calculate_metrics
 from app.services.sentiment import load_classifier
 from app.settings import ROOT, Settings
 
@@ -22,23 +21,6 @@ from app.settings import ROOT, Settings
 logger = logging.getLogger("review_analyzer")
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger.setLevel(logging.INFO)
-
-
-def normalize_insights(value, metadata):
-    if "insights" in value:
-        return value
-    result = empty_insights(metadata)
-    if not isinstance(value.get("issues"), list):
-        raise ValueError("insights must contain an issues list")
-    for issue in value["issues"]:
-        if not isinstance(issue, dict) or not isinstance(issue.get("evidence_ids"), list) or not all(isinstance(review_id, str) for review_id in issue["evidence_ids"]):
-            raise ValueError("each issue must contain a list of string evidence IDs")
-        priority = issue.get("priority")
-        ids = issue.get("evidence_ids", [])
-        if priority not in result["insights"]:
-            raise ValueError("issue priority must be high, medium, or low")
-        result["insights"][priority]["repeated" if len(set(ids)) > 1 else "single"].append(issue)
-    return result
 
 
 def create_app(settings=None, classifier_factory=load_classifier):
@@ -92,16 +74,6 @@ def create_app(settings=None, classifier_factory=load_classifier):
     @app.post("/api/reviews/collect")
     def collect(payload: AnalyzeRequest):
         return app.state.analyzer.collect(payload, time.monotonic() + settings.analysis_timeout_seconds)
-
-    @app.post("/api/metrics")
-    def metrics(payload: MetricsRequest):
-        data = {"metadata": payload.metadata, "reviews": [review.model_dump() for review in payload.reviews]}
-        try:
-            grouping = normalize_insights(payload.insights, payload.metadata) if payload.insights is not None else empty_insights(payload.metadata)
-            result = calculate_metrics(data, grouping)
-        except (ValueError, TypeError, KeyError, AttributeError) as exc:
-            raise HTTPException(422, str(exc)) from exc
-        return {"total_reviews": result["total_reviews"], "ratings": result["ratings"], "sentiment": result["sentiments"], "issues": result["issues"] if payload.insights is not None else None}
 
     return app
 

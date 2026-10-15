@@ -39,13 +39,6 @@ class Review(BaseModel):
     sentiment: Sentiment | Literal["positive", "neutral", "negative"] | None = None
 
 
-class MetricsRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    reviews: list[Review] = Field(max_length=500)
-    insights: dict | None = None
-    metadata: dict = Field(default_factory=dict)
-
-
 class AnalysisResponse(BaseModel):
     app: dict
     collection: dict

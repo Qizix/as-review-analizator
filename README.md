@@ -19,7 +19,7 @@ npm run --prefix frontend build
 uv run --env-file .env uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
 ```
 
-Open [the dashboard](http://127.0.0.1:8000/) or [API documentation](http://127.0.0.1:8000/docs). Enter an app ID or App Store URL, country from the full-name dropdown, and review count. API routes use `/api/analyze`, `/api/reviews/collect`, `/api/metrics`, and `/api/health`. Charts render in the browser with bundled Chart.js; the backend returns JSON. The first local startup may download the pinned sentiment model. Docker bundles its weights instead.
+Open [the dashboard](http://127.0.0.1:8000/) or [API documentation](http://127.0.0.1:8000/docs). Enter an app ID or App Store URL, country from the full-name dropdown, and review count. API routes use `/api/analyze`, `/api/reviews/collect`, and `/api/health`. Charts render in the browser with bundled Chart.js; the backend returns JSON. The first local startup may download the pinned sentiment model. Docker bundles its weights instead.
 
 The service keeps no reports in a database or on disk. The browser holds the current report and downloads JSON locally. Negative reviews support improvement recommendations; positive and neutral reviews provide context. Shortfalls and incomplete collections are reported explicitly.
 
@@ -57,34 +57,7 @@ curl -X POST http://127.0.0.1:8000/api/analyze \
   }'
 ```
 
-Calculate metrics from supplied reviews without calling either model:
-
-```bash
-curl -X POST http://127.0.0.1:8000/api/metrics \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "reviews": [
-      {
-        "id": "example-1",
-        "title": "Freezes",
-        "text": "The app freezes when opening photos.",
-        "rating": 2,
-        "sentiment": "negative"
-      }
-    ],
-    "insights": {
-      "issues": [
-        {
-          "category": "Freezing when opening photos",
-          "priority": "high",
-          "evidence_ids": ["example-1"]
-        }
-      ]
-    }
-  }'
-```
-
-The metrics request uses illustrative data. Omit `insights` for rating and sentiment metrics only. All API responses are JSON; routes have no `/v1` prefix.
+All API responses are JSON; routes have no `/v1` prefix. Rating, sentiment, and issue metrics are included in the complete analysis response.
 
 ## Run the pipeline without the dashboard
 

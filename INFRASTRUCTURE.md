@@ -68,7 +68,6 @@ Execution
 Method	Endpoint	Purpose
 POST	/api/analyze	Complete review analysis
 POST	/api/reviews/collect	Collect raw reviews
-POST	/api/metrics	Calculate metrics from supplied reviews
 GET	/api/health	Health check
 GET	/docs	OpenAPI documentation
 GET	/	Web dashboard

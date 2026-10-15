@@ -69,20 +69,19 @@ def test_dashboard_assets_health_and_openapi(api):
     assert client.get("/docs").status_code == 200
     assert client.get("/.env").status_code == 404
     paths = client.get("/openapi.json").json()["paths"]
-    assert set(paths) == {"/api/analyze", "/api/reviews/collect", "/api/metrics", "/api/health"}
+    assert set(paths) == {"/api/analyze", "/api/reviews/collect", "/api/health"}
 
 
-def test_validation_collection_and_independent_metrics(api):
+def test_validation_and_collection(api):
     client, _, _ = api
     for body in [{"app_id": "abc"}, {"app_id": "0"}, {"app_id": "123", "country": "xx"}, {"app_id": "123", "review_count": True}, {"app_id": "123", "review_count": 101}]:
         assert client.post("/api/reviews/collect", json=body).status_code == 422
     assert len(client.post("/api/reviews/collect", json={"app_id": "123", "review_count": 3}).json()["reviews"]) == 3
-    raw = collected()["reviews"]
-    result = client.post("/api/metrics", json={"reviews": raw}).json()
-    assert result["ratings"]["average"] == 3
-    assert result["sentiment"]["classified_reviews"] == 0
-    assert result["issues"] is None
-    assert client.post("/api/metrics", json={"reviews": raw, "insights": {"unknown": []}}).status_code == 422
+
+
+def test_metrics_endpoint_is_removed(api):
+    client, _, _ = api
+    assert client.post("/api/metrics", json={"reviews": []}).status_code == 404
 
 
 def test_export_endpoint_is_removed(api):

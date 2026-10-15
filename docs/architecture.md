@@ -23,12 +23,11 @@ Missing Gemini credentials are rejected before API collection. Empty samples ski
 |---|---|---|
 | POST | `/api/analyze` | Complete analysis from app_id, country, review_count, optional seed |
 | POST | `/api/reviews/collect` | Raw reviews plus collection metadata |
-| POST | `/api/metrics` | Metrics from supplied reviews and optional issue grouping |
 | GET | `/api/health` | Readiness and credential availability, never credentials |
 | GET | `/docs` | OpenAPI documentation |
 | GET | `/` | Jinja2 dashboard |
 
-`AnalyzeRequest` accepts positive numeric string IDs and normalized ISO countries. Count is a strict integer 1–500 at the schema boundary, limited to 100 by default operational settings. The dashboard receives the configured maximum. Seed defaults to 42. Metrics bodies accept at most 500 bounded review records.
+`AnalyzeRequest` accepts positive numeric string IDs and normalized ISO countries. Count is a strict integer 1–500 at the schema boundary, limited to 100 by default operational settings. The dashboard receives the configured maximum. Seed defaults to 42.
 
 The unified response includes `app`, `collection`, `metrics`, `insights`, `reviews`, and `metadata`:
 
@@ -40,13 +39,13 @@ The unified response includes `app`, `collection`, `metrics`, `insights`, `revie
 - Original source reviews plus sentiment labels/scores.
 - Model/revision identity, timings, token usage, prompt hash, peak process RSS, preprocessing details, and warnings.
 
-`POST /metrics` accepts unified insights or the old grouped report. Without supplied issue grouping it returns rating/sentiment metrics and null `issues`; missing analysis does not mean zero coverage. Coverage uses the union of evidence IDs, since a review can support several issues. The API returns JSON and has no export endpoint. The dashboard can download the JSON report directly from browser memory. No review or report file is stored server-side.
+Rating, sentiment, and issue metrics are calculated inside the analysis pipeline and returned by `POST /api/analyze`. There is no standalone metrics endpoint. Coverage uses the union of evidence IDs, since a review can support several issues. The API returns JSON and has no export endpoint. The dashboard can download the JSON report directly from browser memory. No review or report file is stored server-side.
 
 ## Errors, limits, and observability
 
 422 indicates request/data validation, 503 missing provider credentials, 409 concurrent analysis, 429 rate limiting, 502 provider/inference/evidence failure, and 504 an exceeded stage deadline. Failed evidence validation never produces a successful report.
 
-The paid endpoint uses a global per-worker rolling limit of three attempted analyses/minute by default; 429 includes Retry-After. This volatile limit resets after restarts and is not distributed identity/quota infrastructure. Prepared Cloud Run deployment is private by default. Health, metrics, and assets do not spend Gemini tokens.
+The paid endpoint uses a global per-worker rolling limit of three attempted analyses/minute by default; 429 includes Retry-After. This volatile limit resets after restarts and is not distributed identity/quota infrastructure. Prepared Cloud Run deployment is private by default. Health and assets do not spend Gemini tokens.
 
 The 280-second application deadline is cooperative, below Cloud Run's 300-second timeout. Collection uses shrinking budgets, and stage boundaries check elapsed time. CPU inference and SDK calls cannot be forcibly cancelled mid-operation; disconnected clients can leave their current computation finishing. Validate resource sizing and timeout behavior on Cloud Run before production use.
 
@@ -60,4 +59,4 @@ Settings come from validated environment variables. Defaults: one Torch thread, 
 
 `experiments/analyze.py` and `conf/experiment.yaml` use Hydra overrides and save resolved configuration/report under ignored `hydra_outputs/`. Secrets remain environment-only. A fixed seed does not freeze changing Apple feeds or Gemini interpretation; exact sampling is tested against recorded responses.
 
-Pytest covers services plus FastAPI success/failure paths, classifier reuse, validation, evidence rejection, throttling, and removal of the export endpoint. Frontend Node tests cover API adaptation, URL parsing, denominators, evidence consistency, filters, empty reports, and escaping. Live 100-review HTTP and browser analyses verified the real providers. Local performance is not a Cloud Run benchmark; image build and deployment remain unverified because Docker was not running and deployment was not requested.
+Pytest covers services plus FastAPI success/failure paths, classifier reuse, validation, evidence rejection, throttling, and removal of the metrics and export endpoints. Frontend Node tests cover API adaptation, URL parsing, denominators, evidence consistency, filters, empty reports, and escaping. Live 100-review HTTP and browser analyses verified the real providers. Local performance is not a Cloud Run benchmark; image build and deployment remain unverified because Docker was not running and deployment was not requested.

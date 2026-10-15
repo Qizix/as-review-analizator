@@ -19,7 +19,7 @@ Start with separate scripts that perform each task independently, then connect t
 - [x] How to provide actionable insights, such as areas of improvement based on review sentiment?
   Use Gemini 3.5 Flash-Lite with grouped negative/positive/neutral JSON and a system prompt. Negative reviews are evidence; other sentiments provide context. Validate structured output and evidence IDs, then generate short actions grouped by priority and recurrence. Empty issue lists are valid. Implemented in `scripts/generate_insights.py`.
 - [x] What is the API design schema?
-  FastAPI exposes analysis, collection, metrics, and health routes. Unified reports contain app/collection details, independent metrics, evidence-linked issues/recommendations, source reviews, and processing metadata. See `docs/architecture.md`.
+  FastAPI exposes analysis, collection, and health routes. Unified reports contain app/collection details, independent metrics, evidence-linked issues/recommendations, source reviews, and processing metadata. See `docs/architecture.md`.
 - [x] How to visualize insights (e.g., sentiment distribution, rating distribution)?
   Jinja2 and vanilla JavaScript use bundled Chart.js to render API JSON, with distributions, issue frequencies/coverage, evidence drilldowns, raw reviews, and browser-local JSON downloads.
 - [ ] How to deploy the API on a cloud platform (e.g., AWS, Heroku, or Google Cloud)?
