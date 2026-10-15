@@ -113,6 +113,11 @@ def test_webpage_is_last_fallback_and_keeps_requested_country():
     assert first["metadata"]["sources"][2]["added_count"] == 2
     assert first["metadata"]["failed_pages"] == []
     assert len(requests) == 8
+    sources = first["metadata"]["sources"]
+    assert sum(source["added_count"] for source in sources) == len(first["reviews"])
+    for field in ("invalid_records", "duplicate_records"):
+        assert first["metadata"][field] == sum(source[field] for source in sources)
+    assert first["metadata"]["fetched_pages"] == sources[0]["fetched_pages"]
 
 
 @pytest.mark.parametrize("url", ["https://evil.example/us/app/example/id123", "https://apps.apple.com/gb/app/example/id123", "https://apps.apple.com/us/app/example/id456"])

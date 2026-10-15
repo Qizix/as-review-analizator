@@ -27,6 +27,8 @@ Gemini evidence IDs are constrained to negative reviews and validated before a r
 
 Insight generation and evidence repair are shared by the analysis and standalone tooling. Production cleanup is tracked in the [refactor todo](docs/production-refactor.md).
 
+Collection tries catalog, RSS, then webpage reviews, retaining the first unique records and reporting source failures and shortfalls.
+
 ## Test the API
 
 With the server running, check readiness:

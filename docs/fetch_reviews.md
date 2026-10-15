@@ -65,3 +65,7 @@ The compatibility CLI prints shortfalls explicitly. Shortfall alone returns stat
 `tests/test_fetch_reviews.py` replays the real catalog fixture for pagination, source order, seed independence, and stopping mid-page at the requested count. `tests/test_review_fallbacks.py` covers source order, skipped fallbacks, recovery, partial top-ups, duplicate-only RSS pages followed by new reviews, cross-source deduplication, real RSS fixture parsing, nested server state, malformed records, unexpected lookup URLs, all-source failures, and expired deadlines. Oversized catalog, RSS, and webpage responses verify ordered truncation at the requested count.
 
 Run `uv run --locked pytest -q`. Live collection depends on Apple's availability and rate limits; production requests never fall back to recorded fixtures.
+
+## Implementation ownership
+
+`catalog_pages`, `rss_pages`, and `web_pages` adapt the real sources to `SourcePage` results. Source-specific pagination and failures remain internal to each adapter. `ReviewCollection` retains unique reviews, counts examined invalid/duplicate records, stops exactly at the requested count, and derives metadata once from source attempts. `collect_catalog_reviews` preserves the catalog-only tooling contract using the same accumulator.

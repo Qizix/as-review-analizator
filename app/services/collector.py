@@ -1,6 +1,7 @@
 import json
 import re
 import time
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from html.parser import HTMLParser
 from urllib.parse import parse_qs, urlsplit
@@ -99,77 +100,112 @@ def extract_review(entry):
     return {"id": review_id, "title": title, "text": text, "rating": rating}
 
 
-def collect_catalog_reviews(client, app_id, country="us", count=100, seed=42, deadline=None):
-    country = validate_inputs(app_id, country, count)
-    reviews = {}
-    fetched_pages = []
-    failed_pages = []
-    invalid_records = 0
-    duplicate_records = 0
+@dataclass
+class SourcePage:
+    number: int
+    entries: list = field(default_factory=list)
+    offset: int | None = None
+    error: str | None = None
+
+
+def catalog_pages(client, app_id, country, deadline):
     offset = 0
-    fetched_offsets = []
     for page in range(1, 11):
         if page > 1:
             time.sleep(0.5 if deadline is None else min(0.5, max(0, deadline - time.monotonic())))
         if deadline is not None and time.monotonic() >= deadline:
-            failed_pages.extend({"page": skipped, "error": "Collection deadline exceeded"} for skipped in range(page, 11))
-            break
-        url = URL_TEMPLATE.format(country=country, app_id=app_id, offset=offset)
+            for skipped in range(page, 11):
+                yield SourcePage(skipped, error="Collection deadline exceeded")
+            return
         try:
-            payload = fetch_page(client, url, deadline)
+            payload = fetch_page(client, URL_TEMPLATE.format(country=country, app_id=app_id, offset=offset), deadline)
         except (httpx.HTTPError, ValueError) as exc:
-            failed_pages.append({"page": page, "offset": offset, "error": str(exc)})
+            yield SourcePage(page, offset=offset, error=str(exc))
             if page == 1:
-                break
+                return
             offset += PAGE_SIZE
             continue
-        fetched_pages.append(page)
-        fetched_offsets.append(offset)
-        entries = payload["data"]
-        for entry in entries:
-            review = extract_review(entry)
-            if review is None:
-                invalid_records += 1
-            elif review["id"] in reviews:
-                duplicate_records += 1
-            else:
-                reviews[review["id"]] = review
-                if len(reviews) >= count:
-                    break
-        if len(reviews) >= count or not entries or not payload.get("next"):
-            break
+        yield SourcePage(page, payload["data"], offset)
+        if not payload["data"] or not payload.get("next"):
+            return
         try:
             next_offset = int(parse_qs(urlsplit(payload["next"]).query)["offset"][0])
             if next_offset <= offset:
                 raise ValueError("next offset must increase")
         except (ValueError, KeyError) as exc:
-            failed_pages.append({"page": page, "offset": offset, "error": f"Invalid pagination: {exc}"})
-            break
+            yield SourcePage(page, offset=offset, error=f"Invalid pagination: {exc}")
+            return
         offset = next_offset
-    available = list(reviews.values())
-    selected = available
-    return {
-        "metadata": {
-            "app_id": app_id,
-            "country": country,
-            "requested_count": count,
-            "available_count": len(available),
-            "actual_count": len(selected),
-            "shortfall": max(0, count - len(selected)),
-            "seed": seed,
-            "selection": "first_unique",
-            "collected_at": datetime.now(timezone.utc).isoformat(),
-            "source": "Apple App Store catalog reviews JSON",
-            "sampling_pool": "First unique valid reviews in Apple catalog response order, stopping at the requested count or 10 pages",
-            "language": "en-US",
-            "fetched_pages": fetched_pages,
-            "fetched_offsets": fetched_offsets,
-            "failed_pages": failed_pages,
-            "invalid_records": invalid_records,
-            "duplicate_records": duplicate_records,
-        },
-        "reviews": selected,
-    }
+
+
+class ReviewCollection:
+    def __init__(self, app_id, country, count, seed):
+        self.app_id = app_id
+        self.country = country
+        self.count = count
+        self.seed = seed
+        self.reviews = {}
+        self.sources = []
+        self.offsets = []
+
+    @property
+    def complete(self):
+        return len(self.reviews) >= self.count
+
+    def consume(self, source, pages):
+        stats = {"source": source, "added_count": 0, "fetched_pages": [], "failed_pages": [], "invalid_records": 0, "duplicate_records": 0}
+        self.sources.append(stats)
+        for page in pages:
+            if page.error is not None:
+                failure = {"source": source, "page": page.number, "error": page.error}
+                if page.offset is not None:
+                    failure["offset"] = page.offset
+                stats["failed_pages"].append(failure)
+                continue
+            stats["fetched_pages"].append(page.number)
+            if page.offset is not None:
+                self.offsets.append(page.offset)
+            for entry in page.entries:
+                review = extract_review(entry)
+                if review is None:
+                    stats["invalid_records"] += 1
+                elif review["id"] in self.reviews:
+                    stats["duplicate_records"] += 1
+                else:
+                    self.reviews[review["id"]] = review
+                    stats["added_count"] += 1
+                    if self.complete:
+                        return
+
+    def report(self):
+        fallback = len(self.sources) > 1
+        actual = len(self.reviews)
+        return {
+            "metadata": {
+                "app_id": self.app_id, "country": self.country,
+                "requested_count": self.count, "available_count": actual, "actual_count": actual,
+                "shortfall": max(0, self.count - actual), "seed": self.seed, "selection": "first_unique",
+                "collected_at": datetime.now(timezone.utc).isoformat(),
+                "source": "Apple App Store " + " → ".join(item["source"] for item in self.sources) if fallback else "Apple App Store catalog reviews JSON",
+                "sampling_pool": "First unique valid reviews in catalog, RSS, then webpage response order in the requested storefront; not a random sample or all historical reviews" if fallback else "First unique valid reviews in Apple catalog response order, stopping at the requested count or 10 pages",
+                "language": "en-US", "fetched_pages": list(self.sources[0]["fetched_pages"]), "fetched_offsets": self.offsets,
+                "failed_pages": [failure for stats in self.sources for failure in stats["failed_pages"]],
+                "invalid_records": sum(stats["invalid_records"] for stats in self.sources),
+                "duplicate_records": sum(stats["duplicate_records"] for stats in self.sources),
+                "sources": self.sources,
+            },
+            "reviews": list(self.reviews.values()),
+        }
+
+
+def collect_catalog_reviews(client, app_id, country="us", count=100, seed=42, deadline=None):
+    collection = ReviewCollection(app_id, validate_inputs(app_id, country, count), count, seed)
+    collection.consume("catalog", catalog_pages(client, app_id, collection.country, deadline))
+    result = collection.report()
+    result["metadata"].pop("sources")
+    for failure in result["metadata"]["failed_pages"]:
+        failure.pop("source")
+    return result
 
 
 def parse_rss_page(response):
@@ -273,65 +309,40 @@ def fetch_web_reviews(client, app_id, country, deadline):
     return fetch_page(client, f"https://apps.apple.com/{country}/app/{slug}/id{app_id}", deadline, parse_web_page)
 
 
+def rss_pages(client, app_id, country, deadline):
+    for page in range(1, 11):
+        if page > 1:
+            time.sleep(min(0.5, max(0, deadline - time.monotonic())))
+        try:
+            if time.monotonic() >= deadline:
+                raise httpx.TimeoutException("Collection deadline exceeded")
+            url = f"https://itunes.apple.com/{country}/rss/customerreviews/page={page}/id={app_id}/sortby=mostrecent/json"
+            payload = fetch_page(client, url, deadline, parse_rss_page)
+        except (httpx.HTTPError, ValueError) as exc:
+            yield SourcePage(page, error=str(exc))
+            return
+        yield SourcePage(page, payload["data"])
+        if not payload["next"] or not payload["data"]:
+            return
+
+
+def web_pages(client, app_id, country, deadline):
+    try:
+        if time.monotonic() >= deadline:
+            raise httpx.TimeoutException("Collection deadline exceeded")
+        payload = fetch_web_reviews(client, app_id, country, deadline)
+        yield SourcePage(1, payload["data"])
+    except (httpx.HTTPError, ValueError) as exc:
+        yield SourcePage(1, error=str(exc))
+
+
 def collect_reviews(client, app_id, country="us", count=100, seed=42, deadline=None):
-    country = validate_inputs(app_id, country, count)
-    started = time.monotonic()
-    catalog_deadline = started + 60 if deadline is None else min(started + 60, started + max(0, deadline - started) / 3)
-    result = collect_catalog_reviews(client, app_id, country, count, seed, catalog_deadline)
-    metadata = result["metadata"]
-    reviews = {review["id"]: review for review in result["reviews"]}
-    metadata["sources"] = [{
-        "source": "catalog", "added_count": metadata["available_count"],
-        "fetched_pages": list(metadata["fetched_pages"]),
-        "failed_pages": [{**failure, "source": "catalog"} for failure in metadata["failed_pages"]],
-        "invalid_records": metadata["invalid_records"], "duplicate_records": metadata["duplicate_records"],
-    }]
-    metadata["failed_pages"] = list(metadata["sources"][0]["failed_pages"])
-    for index, source in enumerate(("rss", "webpage")):
-        if metadata["available_count"] >= count:
+    collection = ReviewCollection(app_id, validate_inputs(app_id, country, count), count, seed)
+    adapters = (("catalog", catalog_pages), ("rss", rss_pages), ("webpage", web_pages))
+    for index, (source, pages) in enumerate(adapters):
+        if collection.complete:
             break
         now = time.monotonic()
-        source_deadline = now + 60 if deadline is None else min(now + 60, now + max(0, deadline - now) / (2 - index))
-        stats = {"source": source, "added_count": 0, "fetched_pages": [], "failed_pages": [], "invalid_records": 0, "duplicate_records": 0}
-        metadata["sources"].append(stats)
-        for page in range(1, 11 if source == "rss" else 2):
-            if page > 1:
-                time.sleep(min(0.5, max(0, source_deadline - time.monotonic())))
-            try:
-                if time.monotonic() >= source_deadline:
-                    raise httpx.TimeoutException("Collection deadline exceeded")
-                if source == "rss":
-                    url = f"https://itunes.apple.com/{country}/rss/customerreviews/page={page}/id={app_id}/sortby=mostrecent/json"
-                    payload = fetch_page(client, url, source_deadline, parse_rss_page)
-                else:
-                    payload = fetch_web_reviews(client, app_id, country, source_deadline)
-            except (httpx.HTTPError, ValueError) as exc:
-                stats["failed_pages"].append({"source": source, "page": page, "error": str(exc)})
-                break
-            stats["fetched_pages"].append(page)
-            added = 0
-            for entry in payload["data"]:
-                review = extract_review(entry)
-                if review is None:
-                    stats["invalid_records"] += 1
-                elif review["id"] in reviews:
-                    stats["duplicate_records"] += 1
-                else:
-                    reviews[review["id"]] = review
-                    added += 1
-                    if len(reviews) >= count:
-                        break
-            stats["added_count"] += added
-            if len(reviews) >= count or not payload["next"] or not payload["data"]:
-                break
-        metadata["failed_pages"].extend(stats["failed_pages"])
-        metadata["invalid_records"] += stats["invalid_records"]
-        metadata["duplicate_records"] += stats["duplicate_records"]
-        metadata["available_count"] = len(reviews)
-    if len(metadata["sources"]) > 1:
-        result["reviews"] = list(reviews.values())
-        metadata.update(actual_count=len(result["reviews"]), shortfall=max(0, count - len(result["reviews"])))
-        metadata["source"] = "Apple App Store " + " → ".join(item["source"] for item in metadata["sources"])
-        metadata["sampling_pool"] = "First unique valid reviews in catalog, RSS, then webpage response order in the requested storefront; not a random sample or all historical reviews"
-    return result
-
+        source_deadline = now + 60 if deadline is None else min(now + 60, now + max(0, deadline - now) / (len(adapters) - index))
+        collection.consume(source, pages(client, app_id, collection.country, source_deadline))
+    return collection.report()

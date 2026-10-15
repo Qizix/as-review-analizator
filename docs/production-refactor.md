@@ -4,7 +4,7 @@ Scope: preserve the stateless modular monolith, public report shape, original co
 
 - [x] 1. Deepen insight generation: one owner for generation, bounded repair, validation, usage, and provenance; remove discarded metrics work and repeated preprocessing; preserve stage-specific errors.
 - [x] 2. Simplify the dashboard: consume the canonical report directly; remove legacy file reconciliation; retain meaningful integrity checks.
-- [ ] 3. Consolidate collection: source adapters own pagination; one accumulator owns unique reviews and collection statistics; preserve fallback semantics and metadata.
+- [x] 3. Consolidate collection: source adapters own pagination; one accumulator owns unique reviews and collection statistics; preserve fallback semantics and metadata.
 - [ ] 4. Separate observability outputs: readable request blocks locally, JSON in production, explicit trace dumps; sum usage across repair calls.
 - [ ] 5. Unify the analysis budget: bound external operations and retries by remaining time; cover lookup, Gemini, and repair with deterministic deadline tests.
 
@@ -27,3 +27,9 @@ Focused tests cover canonical repair behavior, usage accumulation, original quot
 `prepareDashboard(response)` now accepts the actual unified response. `dashboardSources` and the generated three-file representation were deleted. The module validates source distributions, exact review counts, issue/recommendation agreement, unique evidence, negative provenance, and coverage directly, then returns render-ready state. The removed optional-source-text path was only used by the old file importer.
 
 The renderer still uses the same state shape, filters, original comments, and browser-local canonical JSON export. Node tests now construct real response-shaped fixtures rather than historical file triples. They retain empty-report, independent sentiment/rating, escaping, filters, URL/country, and malformed-report checks.
+
+## 3. Collection ownership
+
+Catalog, RSS, and webpage adapters yield `SourcePage` results. They retain their own pagination and failure behavior: catalog may advance after later failures, RSS stops at a failed page, and webpage retrieves one embedded-state document. `ReviewCollection.consume` is the only owner of record validation, deduplication, exact count stopping, and per-source contributions. Its report derives aggregate counts directly from source statistics rather than incrementally reopening an earlier report.
+
+The catalog-only function remains a compatibility adapter over the same accumulator. Its legacy metadata remains catalog-only; the full collector includes tagged source attempts. Source ordering, equal-share remaining budgets, ten-page caps, pacing, safe lookup URL construction, and original text stay unchanged. Recorded catalog/RSS fixtures and fallback cases verify output and metadata invariants.
