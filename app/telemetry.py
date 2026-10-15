@@ -1,7 +1,6 @@
 import json
 import logging
 import re
-import sys
 
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
@@ -92,6 +91,14 @@ class SafeExporter(SpanExporter):
             diagnostic("telemetry.shutdown_failed", exc)
 
 
+class SpanLogOutput:
+    def write(self, value):
+        logger.debug("trace.span", extra={"event_data": json.loads(value)})
+
+    def flush(self):
+        pass
+
+
 class Telemetry:
     def __init__(self, settings, exporter=None):
         self.settings = settings
@@ -112,7 +119,7 @@ class Telemetry:
         try:
             exporter = self.exporter
             if exporter is None and self.settings.otel_exporter == "console":
-                exporter = ConsoleSpanExporter(out=sys.stdout, formatter=lambda span: json.dumps({
+                exporter = ConsoleSpanExporter(out=SpanLogOutput(), formatter=lambda span: json.dumps({
                     "severity": "DEBUG", "event": "trace.span", "message": span.name,
                     "span": json.loads(span.to_json(indent=None)),
                 }) + "\n")

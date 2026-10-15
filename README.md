@@ -25,7 +25,7 @@ An App Store link suggests its country until you choose a country yourself. Your
 
 Gemini evidence IDs are constrained to negative reviews and validated before a report is returned. See [evidence validation](docs/insight_validation.md).
 
-Insight generation and evidence repair are shared by the analysis and standalone tooling. Production cleanup is tracked in the [refactor todo](docs/production-refactor.md).
+Insight generation and evidence repair are shared by the analysis and standalone tooling. Production cleanup is tracked in the [refactor todo](docs/production-refactor.md). Terminal logs show one block per request; Cloud Run and redirected output use JSON.
 
 Collection tries catalog, RSS, then webpage reviews, retaining the first unique records and reporting source failures and shortfalls.
 

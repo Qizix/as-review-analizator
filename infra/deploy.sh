@@ -25,6 +25,6 @@ gcloud run deploy app-store-review-analyzer \
   --max-instances 1 \
   --concurrency 1 \
   --timeout 300 \
-  --set-env-vars "SENTIMENT_MODEL_PATH=/app/models/sentiment,HF_HUB_OFFLINE=1,SENTIMENT_THREADS=1,ANALYSIS_TIMEOUT_SECONDS=280,OTEL_ENABLED=true,OTEL_EXPORTER=google,OTEL_SERVICE_NAME=appstore-review-analyzer,GOOGLE_CLOUD_PROJECT=${GCP_PROJECT},LOG_LEVEL=INFO" \
+  --set-env-vars "SENTIMENT_MODEL_PATH=/app/models/sentiment,HF_HUB_OFFLINE=1,SENTIMENT_THREADS=1,ANALYSIS_TIMEOUT_SECONDS=280,OTEL_ENABLED=true,OTEL_EXPORTER=google,OTEL_SERVICE_NAME=appstore-review-analyzer,GOOGLE_CLOUD_PROJECT=${GCP_PROJECT},LOG_LEVEL=INFO,LOG_FORMAT=json" \
   --set-secrets "GEMINI_API_KEY=${SECRET_NAME}:latest" \
   --no-allow-unauthenticated

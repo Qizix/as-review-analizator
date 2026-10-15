@@ -25,6 +25,7 @@ class Settings(BaseModel):
     otel_export_timeout_seconds: float = Field(default=3, ge=0.1, le=10)
     google_cloud_project: str | None = None
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
+    log_format: Literal["auto", "console", "json"] = "auto"
 
     @classmethod
     def from_env(cls):

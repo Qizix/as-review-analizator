@@ -1,12 +1,12 @@
 # Observability
 
-FastAPI uses the official OpenTelemetry instrumentation for HTTP server spans, custom spans for existing service operations, and standard-library JSON logging. The default service name is `appstore-review-analyzer`. No collector, database, telemetry files, separate metrics exporter, or additional service is required.
+FastAPI uses the official OpenTelemetry instrumentation for HTTP server spans, custom spans for existing service operations, and standard-library structured logging. The default service name is `appstore-review-analyzer`. No collector, database, telemetry files, separate metrics exporter, or additional service is required.
 
 ## Lifecycle and configuration
 
 `app/telemetry.py` owns the per-application tracer provider, exporters, sanitization, and shutdown. The provider is supplied to FastAPI instrumentation when the app is constructed, before its middleware stack is built. The exporter/processor starts once in the application lifespan, before model loading. Shutdown force-flushes the provider and then shuts it down, including when model loading fails. No global tracer provider is replaced, which keeps independently created test applications isolated.
 
-`app/observability.py` owns JSON formatting, request context, stage timing, and sanitized exception recording. Request context is bound in ASGI middleware before FastAPI enters synchronous worker functions. A request-local observation carries aggregate results back to middleware without relying on worker context-variable changes propagating upstream.
+`app/observability.py` owns request context, stage timing, and sanitized exception recording; `app/log_formatters.py` owns JSON and readable-console presentation. Request context is bound in ASGI middleware before FastAPI enters synchronous worker functions. A request-local observation carries aggregate results back to middleware without relying on worker context-variable changes propagating upstream.
 
 | Environment variable | Default | Purpose |
 |---|---|---|
@@ -15,7 +15,8 @@ FastAPI uses the official OpenTelemetry instrumentation for HTTP server spans, c
 | `OTEL_EXPORTER` | `console` | `console`, `google`, or `none` |
 | `OTEL_EXPORT_TIMEOUT_SECONDS` | `3` | Google OTLP request and credential-refresh timeout, constrained to 0.1–10 seconds |
 | `GOOGLE_CLOUD_PROJECT` | unset | Required for Google export and full Cloud Logging trace references |
-| `LOG_LEVEL` | `INFO` | Application threshold: DEBUG, INFO, WARNING, ERROR |
+| `LOG_LEVEL` | `INFO` | Application threshold: DEBUG, INFO, WARNING, ERROR; DEBUG also enables console span dumps |
+| `LOG_FORMAT` | `auto` | Terminal request blocks or redirected JSON; `console`/`json` override locally; Cloud Run always uses JSON |
 
 These settings use the existing validated environment configuration. `OTEL_ENABLED=false` or `OTEL_EXPORTER=none` disables tracing and performs no credential lookup or trace export. Automatic instrumentation excludes `/api/health`, disables internal ASGI send/receive spans, and uses a no-op meter provider. No HTTPX-wide or Gemini auto-instrumentation is enabled.
 
@@ -70,11 +71,11 @@ Example summary shape, with illustrative values:
 }
 ```
 
-Actual records are single physical JSON lines and also include UTC timestamp, route/method, stage results, and available diagnostic fields. A shared logging stream handler serializes each complete record under its standard emission lock. No request bodies are buffered for logging. Stage observations are capped at 128, warnings at 32, and stack frames at 20; omitted observations are counted. Transient summaries are released after the request, without an archive.
+With JSON presentation, actual records are single physical JSON lines and also include UTC timestamp, route/method, stage results, and available diagnostic fields. A shared logging stream handler serializes each complete record under its standard emission lock. No request bodies are buffered for logging. Stage observations are capped at 128, warnings at 32, and stack frames at 20; omitted observations are counted. Transient summaries are released after the request, without an archive.
 
 Successful health/static/docs requests are DEBUG-only logs. Normal completion is INFO, retries/shortfalls/rejections are WARNING, and terminal failures are ERROR. Failures use `request.failed`; rejected client requests use `request.rejected`. Uvicorn access logs are disabled. HTTPX/httpcore, Hugging Face, Google SDK, and OpenTelemetry informational chatter is suppressed. Dependency diagnostics that lack an application-safe event payload retain severity/logger identity but withhold their raw message. Model progress bars are disabled through supported library controls.
 
-The summary is emitted when the request finishes; it is not live stage-by-stage output. ASGI cancellation produces one `request.interrupted` summary with `processing_may_continue=true`; it does not claim worker inference was cancelled, and late observations do not create a second summary. Console tracing is a separate diagnostic stream of `trace.span` JSON records that displays individual spans. Set `OTEL_EXPORTER=none` when only the single application summary is wanted.
+The summary is emitted when the request finishes; it is not live stage-by-stage output. ASGI cancellation produces one `request.interrupted` summary with `processing_may_continue=true`; it does not claim worker inference was cancelled, and late observations do not create a second summary. Console tracing is a separate diagnostic stream of `trace.span` JSON records that displays individual spans. Detailed span records respect `LOG_LEVEL`: INFO shows only application summaries; DEBUG opts into raw spans. Trace collection stays active at INFO. Terminal presentation groups the summary into one readable block.
 
 ## Timings and Gemini usage
 
@@ -86,7 +87,7 @@ Monotonic clocks measure operations. Span timestamps/durations are primary; requ
 - `gemini_duration_ms`: Gemini client call, including retries and SDK setup/teardown.
 - `validation_duration_ms`: the existing validation stage, including its final issue-metric calculation.
 
-Gemini span attributes record actual SDK usage: input, output, separately reported thinking, total, and cached input tokens. Missing counters remain absent. `gemini_usage_available=false` explicitly marks missing metadata. No monetary cost is estimated.
+Gemini span attributes record actual SDK usage: input, output, separately reported thinking, total, and cached input tokens. Missing counters remain absent. `gemini_usage_available=false` explicitly marks missing metadata. Request-summary counters sum generation and repair; individual spans retain per-call values. Missing metadata marks the request totals incomplete. No monetary cost is estimated.
 
 Gemini's configured retry policy is unchanged. HTTPX request/response hooks count observed network attempts and final HTTP status without inspecting bodies. Retry count is attempts minus one. If hooks do not observe a request, availability is false and the count is null/absent rather than assumed zero. Apple retries retain attempt numbers and delays as span events and bounded request-summary warnings.
 
@@ -103,7 +104,7 @@ Exporter exceptions or failed export results emit a bounded `telemetry.export_fa
 Start the API with local console export; Google credentials are unnecessary:
 
 ```bash
-OTEL_ENABLED=true OTEL_EXPORTER=console uv run --env-file .env uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
+OTEL_ENABLED=true OTEL_EXPORTER=console LOG_LEVEL=DEBUG uv run --env-file .env uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
 ```
 
 Run the complete-analysis curl in the README, optionally adding `-H 'X-Request-ID: local-check'`. Look for one `request.completed` summary and `trace.span` records with the same trace ID. The console exporter batches spans every second and flushes on graceful shutdown, so span output can follow the response. Successful `/api/health` calls must not produce spans.
@@ -134,7 +135,7 @@ After deployment, execute one analysis and confirm the root/custom spans in Clou
 
 ## Investigation guide
 
-For a slow analysis, find its request ID or trace ID, compare the summary duration fields, then open the trace waterfall. Collection spans show HTTP status/retry delays; sentiment spans show model/count/batch size; Gemini spans show call latency, HTTP status, observed retries, and actual usage. Inspect all three metric phases if `metrics_duration_ms` is unexpectedly large. CPU inference and SDK calls retain the existing cooperative deadline limitations.
+For a slow analysis, find its request ID or trace ID, compare the summary duration fields, then open the trace waterfall. Collection spans show HTTP status/retry delays; sentiment spans show model/count/batch size; Gemini spans show call latency, HTTP status, observed retries, and actual usage. Inspect the single final metrics calculation if `metrics_duration_ms` is unexpectedly large. CPU inference and SDK calls retain the existing cooperative deadline limitations.
 
 For Gemini failures, filter `event=request.failed` and `error_stage=gemini` or validation. Check `error_type`, `gemini_http_status`, the `gemini.request`/`insights.decode` spans, and `insights.validate` exception events. Schema/evidence failures are distinct from network/provider failures. The response remains safe and generic; raw prompts/responses are intentionally unavailable in telemetry.
 

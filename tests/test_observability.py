@@ -215,6 +215,58 @@ def test_json_formatter_never_renders_raw_dependency_exception():
     assert "\n" not in output
 
 
+def test_console_request_is_one_block_without_raw_review_content(instrumented, capsys):
+    app, _, _ = instrumented(log_format="console")
+    with TestClient(app) as client:
+        response = client.post("/api/analyze", json={"app_id": "123", "review_count": 2})
+    assert response.status_code == 200
+    output = capsys.readouterr().out
+    assert output.count("POST /api/analyze: success") == 1
+    assert "Reviews  2/2" in output
+    assert "sentiment.classify" in output
+    assert "Tokens" in output
+    assert SECRET not in output
+
+
+@pytest.mark.parametrize("level,expected", [("INFO", False), ("DEBUG", True)])
+def test_console_span_export_respects_log_level(capsys, level, expected):
+    settings = Settings(log_format="json", log_level=level)
+    configure_logging(settings)
+    telemetry = Telemetry(settings)
+    telemetry.start()
+    with telemetry.tracer.start_as_current_span("diagnostic.operation"):
+        pass
+    telemetry.shutdown()
+    records = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    assert bool([record for record in records if record["event"] == "trace.span"]) is expected
+
+
+def test_cloud_run_always_uses_json_even_with_console_override(monkeypatch, capsys):
+    monkeypatch.setenv("K_SERVICE", "review-analyzer")
+    configure_logging(Settings(log_format="console"))
+    logging.getLogger("review_analyzer").info("startup", extra={"event_data": {"event": "application.ready", "message": "Ready"}})
+    assert json.loads(capsys.readouterr().out)["event"] == "application.ready"
+
+
+def test_repair_usage_is_aggregated_in_logs_but_individual_in_spans(instrumented, capsys):
+    calls = []
+
+    def respond(request):
+        calls.append(request)
+        return httpx.Response(200, json=model_response("p1" if len(calls) == 1 else "n1"))
+
+    app, exporter, _ = instrumented(respond)
+    with TestClient(app) as client:
+        response = client.post("/api/analyze", json={"app_id": "123", "review_count": 2})
+    assert response.status_code == 200
+    assert response.json()["metadata"]["gemini_usage"]["total_token_count"] == 250
+    summary = request_logs(capsys)[0]
+    assert summary["gemini_usage"]["total_token_count"] == 250
+    spans = [span for span in exporter.get_finished_spans() if span.name == "gemini.request"]
+    assert len(spans) == 2
+    assert all(span.attributes["app.gen_ai.total_tokens"] == 125 for span in spans)
+
+
 def test_initialization_is_idempotent_and_shutdown_flushes():
     exporter = InMemorySpanExporter()
     telemetry = Telemetry(Settings(), exporter)

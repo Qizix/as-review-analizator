@@ -5,7 +5,7 @@ Scope: preserve the stateless modular monolith, public report shape, original co
 - [x] 1. Deepen insight generation: one owner for generation, bounded repair, validation, usage, and provenance; remove discarded metrics work and repeated preprocessing; preserve stage-specific errors.
 - [x] 2. Simplify the dashboard: consume the canonical report directly; remove legacy file reconciliation; retain meaningful integrity checks.
 - [x] 3. Consolidate collection: source adapters own pagination; one accumulator owns unique reviews and collection statistics; preserve fallback semantics and metadata.
-- [ ] 4. Separate observability outputs: readable request blocks locally, JSON in production, explicit trace dumps; sum usage across repair calls.
+- [x] 4. Separate observability outputs: readable request blocks locally, JSON in production, explicit trace dumps; sum usage across repair calls.
 - [ ] 5. Unify the analysis budget: bound external operations and retries by remaining time; cover lookup, Gemini, and repair with deterministic deadline tests.
 
 Each step receives focused verification and a separate commit. Final verification runs all Python and frontend tests, checks deployment configuration, and reviews the final changes against the strict maintainability findings.
@@ -33,3 +33,11 @@ The renderer still uses the same state shape, filters, original comments, and br
 Catalog, RSS, and webpage adapters yield `SourcePage` results. They retain their own pagination and failure behavior: catalog may advance after later failures, RSS stops at a failed page, and webpage retrieves one embedded-state document. `ReviewCollection.consume` is the only owner of record validation, deduplication, exact count stopping, and per-source contributions. Its report derives aggregate counts directly from source statistics rather than incrementally reopening an earlier report.
 
 The catalog-only function remains a compatibility adapter over the same accumulator. Its legacy metadata remains catalog-only; the full collector includes tagged source attempts. Source ordering, equal-share remaining budgets, ten-page caps, pacing, safe lookup URL construction, and original text stay unchanged. Recorded catalog/RSS fixtures and fallback cases verify output and metadata invariants.
+
+## 4. Observation and presentation
+
+`app/log_formatters.py` contains the JSON and console adapters. `LOG_FORMAT=auto` selects a readable request block for a terminal and JSON for redirected output. `console` and `json` override local selection; Cloud Run's `K_SERVICE` always forces JSON. Production deployment files set JSON explicitly. The standard logging handler emits the entire block under one lock; concurrent requests cannot interleave its lines.
+
+Console trace export now writes through a logging adapter at DEBUG. `LOG_LEVEL=INFO` suppresses raw spans without disabling trace context or stage measurements; `LOG_LEVEL=DEBUG` opts into detailed span JSON. Google trace export is independent of log verbosity. Request token totals accumulate across generation and repair; each Gemini span retains per-call usage. Missing usage leaves known counters intact and marks completeness false.
+
+Focused tests verify local blocks, production JSON, INFO/DEBUG filtering, request usage versus span usage, correlation, sanitization, and failure isolation.

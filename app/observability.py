@@ -1,5 +1,5 @@
-import json
 import logging
+import os
 import re
 import sys
 import time
@@ -8,9 +8,10 @@ import uuid
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 
 from opentelemetry import trace
+
+from app.log_formatters import ConsoleFormatter, JsonFormatter
 
 
 logger = logging.getLogger("review_analyzer")
@@ -30,16 +31,6 @@ USAGE_FIELDS = {
 }
 
 
-class JsonFormatter(logging.Formatter):
-    def format(self, record):
-        data = dict(getattr(record, "event_data", {}))
-        data.setdefault("event", "dependency.diagnostic")
-        data.setdefault("message", "Dependency diagnostic; raw message withheld")
-        data.update(severity=record.levelname, timestamp=datetime.fromtimestamp(record.created, timezone.utc).isoformat())
-        data.setdefault("logger", record.name)
-        return json.dumps(data, ensure_ascii=True, allow_nan=False)
-
-
 def configure_logging(settings):
     root = logging.getLogger()
     for handler in list(root.handlers):
@@ -48,7 +39,8 @@ def configure_logging(settings):
             handler.close()
     handler = logging.StreamHandler(sys.stdout)
     handler.review_analyzer_handler = True
-    handler.setFormatter(JsonFormatter())
+    console = not os.environ.get("K_SERVICE") and (settings.log_format == "console" or (settings.log_format == "auto" and sys.stdout.isatty()))
+    handler.setFormatter(ConsoleFormatter() if console else JsonFormatter())
     root.addHandler(handler)
     root.setLevel(logging.WARNING)
     logger.setLevel(settings.log_level)
@@ -160,7 +152,14 @@ def record_usage(span, usage):
         if type(value) is int and value >= 0:
             span.set_attribute(attribute, value)
             counts[key] = value
-    observe(gemini_usage_available=available, gemini_usage=counts)
+    observation = current_observation.get()
+    if observation is not None and not observation.finished:
+        totals = dict(observation.fields.get("gemini_usage", {}))
+        for key, count in counts.items():
+            totals[key] = totals.get(key, 0) + count
+        observe(gemini_usage_available=available and observation.fields.get("gemini_usage_available", True), gemini_usage=totals)
+        if not available:
+            increment("gemini_usage_missing_count")
 
 
 class RequestObservationMiddleware:
