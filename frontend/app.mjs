@@ -9,6 +9,9 @@ import {
 
 const reportElement = document.querySelector("#report");
 const status = document.querySelector("#status");
+const switcher = document.querySelector(".app-switch");
+const chip = document.querySelector("#app-chip");
+const analyzeForm = document.querySelector("#analyze-form");
 const countrySelect = document.querySelector("#country-input");
 const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
 const countryOptions = [...countrySelect.options];
@@ -22,14 +25,26 @@ countrySelect.value = "us";
 let dashboard;
 let sources;
 let canonicalReport = null;
-let charts = [];
-let reviewPage = 0;
-let analyzing = false;
+let coveredIds = new Set();
+let issueTags = new Map();
+let lens = null;
 let priorityFilter = "all";
-let recurrenceFilter = "all";
-const percent = (value) =>
-  value == null ? "—" : `${(value * 100).toFixed(1)}%`;
-const colors = { positive: "#4e9988", neutral: "#a6afb9", negative: "#d97371" };
+let repeatedOnly = false;
+let analyzing = false;
+const SIGNAL = { high: 3, medium: 2, low: 1 };
+const pct = (value) => (value == null ? "—" : `${Math.round(value * 100)}%`);
+const plural = (count, word) => `${count} ${word}${count === 1 ? "" : "s"}`;
+const cap = (value) => value[0].toUpperCase() + value.slice(1);
+const validRating = (rating) => Number.isInteger(rating) && rating >= 1 && rating <= 5;
+const isLens = (type, value) => lens?.type === type && lens.value === value;
+
+function countryName(code) {
+  try {
+    return regionNames.of(String(code).toUpperCase());
+  } catch {
+    return String(code).toUpperCase();
+  }
+}
 
 async function fetchJSON(url) {
   const controller = new AbortController();
@@ -44,138 +59,215 @@ async function fetchJSON(url) {
   }
 }
 
-function ratingChart(data) {
-  return `<div class="rating-plot"><canvas id="rating-canvas" role="img" aria-label="Rating counts: ${data.stars.map((item) => `${item.star} stars ${item.count}`).join(", ")}"></canvas></div>
-    <div class="rating-explore">${[...data.stars]
-      .reverse()
-      .map(
-        (item) =>
-          `<button data-rating="${item.star}" aria-label="Explore ${item.count} ${item.star}-star reviews">${item.star} ★ <span>${data.rated ? Math.round((item.count / data.rated) * 100) + "%" : "—"}</span></button>`,
-      )
-      .join("")}</div>`;
+function setSwitcher(open) {
+  analyzeForm.hidden = !open;
+  chip.setAttribute("aria-expanded", String(open));
 }
 
-function sentimentChart(data) {
-  return `<div class="donut"><canvas id="sentiment-canvas" role="img" aria-label="Sentiment: ${data.sentiments.map((item) => `${item.count} ${item.label}`).join(", ")}"></canvas>
-    <div class="donut-center"><strong>${data.classified}</strong><span>classified reviews</span></div></div>
-    <div class="legend">${data.sentiments.map((item) => `<button data-sentiment="${item.label}" aria-label="Explore ${item.count} ${item.label} reviews"><span class="key" style="background:${colors[item.label]}"></span><span>${item.label[0].toUpperCase() + item.label.slice(1)}<small>${item.count} reviews</small></span><strong>${percent(data.classified ? item.count / data.classified : null)}</strong></button>`).join("")}</div>`;
+function keepFocus(render) {
+  const key = document.activeElement?.dataset?.key;
+  render();
+  if (key) reportElement.querySelector(`[data-key="${key}"]`)?.focus();
+}
+
+function renderAll() {
+  renderSnapshot();
+  renderIssues();
+  renderReviews();
+}
+
+function setLens(type, value) {
+  lens = isLens(type, value) ? null : { type, value };
+  keepFocus(renderAll);
+}
+
+function updateChip(next) {
+  const name = next.metadata.app_name || `App ${next.metadata.app_id || "report"}`;
+  const date = new Date(next.metadata.collected_at);
+  const details = [
+    next.metadata.country ? countryName(next.metadata.country) : null,
+    plural(next.total, "review"),
+  ].filter(Boolean);
+  document.querySelector("#app-icon").textContent = name.trim()[0]?.toUpperCase() || "A";
+  document.querySelector("#app-label").innerHTML =
+    `${h(name)} <span class="muted">· ${h(details.join(" · "))}</span>`;
+  chip.title = Number.isNaN(date.getTime())
+    ? ""
+    : `Collected ${date.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`;
 }
 
 function installReport(metrics, report, reviews) {
   const next = prepareDashboard(metrics, report, reviews);
   sources = { metrics, report, reviews };
   canonicalReport = null;
-  reviewPage = 0;
   dashboard = next;
-  priorityFilter = recurrenceFilter = "all";
-  const date = new Date(next.metadata.collected_at);
-  const collected = Number.isNaN(date.getTime())
-    ? "Collection date unavailable"
-    : `Collected ${date.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`;
-  reportElement.innerHTML = `<section class="hero" id="overview"><div><div class="eyebrow">APP STORE REVIEW REPORT</div><h1>Your review snapshot.</h1><p>Understand the feedback. Find the next thing worth fixing.</p></div>
-    <div class="dataset"><span class="pill"><span class="dot"></span>${h(next.metadata.app_name || `App ${next.metadata.app_id || "report"}`)} <span class="muted">· ${h((next.metadata.country || "").toUpperCase())}</span></span><span>${h(collected)} · ${next.total}-review sample</span></div></section>
-    <section class="stats" aria-label="Report summary">
-      <article class="stat"><div class="stat-title">Reviews analyzed</div><div class="stat-value">${next.total}</div><div class="stat-foot">${next.rated} rated · ${next.classified} classified</div><div class="stat-accent"></div></article>
-      <article class="stat"><div class="stat-title">Average rating</div><div class="stat-value">${next.average == null ? "—" : next.average.toFixed(2)} <small>/ 5</small></div><div class="stat-foot">Across ${next.rated} rated reviews</div><div class="stat-accent"></div></article>
-      <article class="stat"><div class="stat-title">Negative sentiment</div><div class="stat-value">${percent(next.classified ? next.negative / next.classified : null)}</div><div class="stat-foot">${next.negative} of ${next.classified} classified reviews</div><div class="stat-accent"></div></article>
-      <article class="stat"><div class="stat-title">Issue coverage</div><div class="stat-value">${percent(next.coverage)}</div><div class="stat-foot">${next.covered} of ${next.negative} negative reviews</div><div class="stat-accent"></div></article>
-    </section>
-    <section class="charts" aria-label="Rating and sentiment charts">
-      <article class="panel"><div class="panel-heading"><div><h2>Rating distribution</h2><p class="panel-sub">How your sample scores the app.</p></div><span class="tiny-label">1–5 stars</span></div><div class="rating-chart">${ratingChart(next)}</div><div class="chart-footer"><span>${next.rated} rated · ${next.total - next.rated} unrated</span><span>Select a bar to explore reviews ↗</span></div></article>
-      <article class="panel"><div class="panel-heading"><div><h2>Sentiment mix</h2><p class="panel-sub">What the review text is telling you.</p></div><span class="tiny-label">3 classes</span></div><div class="sentiment-layout">${sentimentChart(next)}</div><div class="chart-note">Ratings and sentiment are independent. A five-star review can still describe a problem. ${next.total - next.classified ? `${next.total - next.classified} reviews are unclassified.` : ""}</div></article>
-    </section>
-    <section class="secondary" aria-label="Issue frequency and coverage">
-      <article class="panel"><div class="panel-heading"><div><h2>Most-mentioned issues</h2><p class="panel-sub">Unique negative reviews mentioning each issue.</p></div><span class="tiny-label">${next.issues.length} issues</span></div><div class="issue-plot" style="height:${Math.max(150, next.issues.length * 44)}px">${next.issues.length ? '<canvas id="issue-canvas" role="img" aria-label="Issue frequency"></canvas>' : '<div class="empty">No supported actionable complaints.</div>'}</div><div class="chart-footer"><span>One review may mention multiple issues.</span><span>Click an issue for evidence ↗</span></div></article>
-      <article class="panel coverage-panel"><div class="panel-heading"><div><h2>Feedback accounted for</h2><p class="panel-sub">How much negative feedback has an issue assigned?</p></div></div><div class="coverage-value">${next.coverage == null ? "—" : (next.coverage * 100).toFixed(1)}${next.coverage == null ? "" : "<small>%</small>"}</div><div class="coverage-track" role="img" aria-label="${next.covered} covered and ${next.negative - next.covered} unassigned negative reviews"><span style="width:${(next.coverage || 0) * 100}%"></span></div><div class="coverage-labels"><span><strong>${next.covered}</strong> assigned</span><span><strong>${next.negative - next.covered}</strong> unassigned</span></div><p class="coverage-description">${next.negative ? "Coverage counts each negative review once, even when it mentions several issues." : "There are no negative reviews. Coverage is not applicable."}</p></article>
-    </section>
-    <section id="issues"><div class="section-head"><div><div class="eyebrow">FROM FEEDBACK TO ACTION</div><h2>What’s worth improving</h2><p>Short, evidence-linked actions. Ordered by impact, then recurrence.</p></div><div class="filters"><div class="segmented" role="group" aria-label="Filter priority">${["all", ...PRIORITIES].map((value) => `<button data-priority="${value}" aria-pressed="${value === "all"}">${value === "all" ? "All priorities" : value[0].toUpperCase() + value.slice(1)}</button>`).join("")}</div><label><span class="sr-only">Filter recurrence</span><select id="recurrence"><option value="all">All recurrence</option><option value="repeated">Repeated reports</option><option value="single">Single reports</option></select></label></div></div><div id="actions" aria-live="polite"></div></section>
-    <section class="panel raw-panel" id="raw-reviews"><div class="panel-heading"><div><h2>Source reviews</h2><p class="panel-sub">Keep the original feedback in view.</p></div><span class="tiny-label">${next.reviewMap.size} reviews</span></div>
-      <div class="review-controls"><label class="sr-only" for="review-search">Search reviews</label><input id="review-search" type="search" placeholder="Search titles or review text"><label class="sr-only" for="review-filter">Filter review sentiment</label><select id="review-filter"><option value="all">All sentiments</option><option value="positive">Positive</option><option value="neutral">Neutral</option><option value="negative">Negative</option></select></div><div id="review-table"></div></section>
-    <aside class="method-note"><strong>About this sample</strong><p>Ratings describe star scores; sentiment describes review text. Actions are model-generated and grounded in negative review IDs. These findings describe the collected sample, not all historical reviews.</p></aside>`;
-  renderActions();
-  renderReviews();
+  coveredIds = new Set(next.issues.flatMap((issue) => issue.evidence_ids));
+  issueTags = new Map();
+  for (const issue of next.issues)
+    for (const id of issue.evidence_ids)
+      issueTags.set(id, [...(issueTags.get(id) || []), issue.category]);
+  lens = next.issues.length ? { type: "issue", value: 0 } : null;
+  priorityFilter = "all";
+  repeatedOnly = false;
+  reportElement.innerHTML = `<div class="board">
+    <div class="board-main"><section class="card snapshot" id="snapshot" aria-label="Ratings and sentiment"></section><section class="card issues" id="issues" aria-label="Issues to fix"></section></div>
+    <aside class="card reviews" id="reviews" aria-label="Reviews"></aside></div>`;
+  renderAll();
+  updateChip(next);
+  switcher.classList.remove("static");
+  setSwitcher(false);
   reportElement.hidden = false;
   status.hidden = true;
-  renderCharts();
   document.querySelector("#export").disabled = false;
 }
 
-function renderActions() {
-  const visible = filterIssues(
-    dashboard.issues,
-    priorityFilter,
-    recurrenceFilter,
-  );
-  document.querySelector("#actions").innerHTML =
-    PRIORITIES.map((priority) => {
-      const items = visible.filter((issue) => issue.priority === priority);
-      if (!items.length) return "";
-      return `<section class="issue-group"><div class="group-heading">${priority} priority<span class="count">${items.length} ${items.length === 1 ? "issue" : "issues"}</span></div>${items.map((issue) => `<article class="action-card"><div><div class="action-top"><h3>${h(issue.category)}</h3><span class="priority ${priority}">${priority}</span></div><p>${h(issue.action)}</p></div><div class="action-count"><span><strong>${issue.frequency}</strong><small>${issue.frequency === 1 ? "review" : "reviews"} · ${percent(issue.fraction)} of negative</small></span><button class="text-button" data-issue="${dashboard.issues.indexOf(issue)}">View evidence ↗</button></div></article>`).join("")}</section>`;
-    }).join("") ||
-    `<div class="empty">${dashboard.issues.length ? "No issues match these filters. Try another priority or recurrence." : "No supported actionable complaints were identified."}</div>`;
+function renderSnapshot() {
+  const data = dashboard;
+  const maxStar = Math.max(...data.stars.map((item) => item.count), 1);
+  const rows = [...data.stars]
+    .reverse()
+    .map(({ star, count }) => {
+      const on = isLens("star", star);
+      const dim = lens?.type === "star" && !on;
+      const share = data.rated ? ` · ${pct(count / data.rated)}` : "";
+      return `<button class="rate${on ? " on" : ""}${dim ? " dim" : ""}" data-key="star-${star}" data-rating="${star}" aria-pressed="${on}" title="${plural(count, "review")}${share}"><span class="label">${star} ★</span><span class="track"><span class="fill star${star}" style="width:${(count / maxStar) * 100}%"></span></span><span class="count">${count}</span></button>`;
+    })
+    .join("");
+  const live = (label) =>
+    !lens ||
+    lens.type === "star" ||
+    (lens.type === "sentiment" ? lens.value === label : label === "negative");
+  const parts = data.classified
+    ? data.sentiments
+        .map(
+          (item) =>
+            `<span class="part ${item.label}${live(item.label) ? "" : " dim"}" style="flex:${item.count} 1 0"></span>`,
+        )
+        .join("")
+    : '<span class="part none" style="flex:1"></span>';
+  const legend = data.sentiments
+    .map((item) => {
+      const on = isLens("sentiment", item.label);
+      return `<button class="legend${on ? " on" : ""}" data-key="sentiment-${item.label}" data-sentiment="${item.label}" aria-pressed="${on}" title="${plural(item.count, "review")}"><span class="dot ${item.label}"></span><span>${cap(item.label)}</span><b>${pct(data.classified ? item.count / data.classified : null)}</b></button>`;
+    })
+    .join("");
+  const summary = data.sentiments
+    .map((item) => `${item.count} ${item.label}`)
+    .join(", ");
+  document.querySelector("#snapshot").innerHTML = `<div class="column">
+      <div class="column-head"><h2 title="${data.rated} rated · ${data.total - data.rated} unrated">Ratings</h2><div class="average"><strong>${data.average == null ? "—" : data.average.toFixed(2)}</strong><span>avg of 5</span></div></div>
+      <div class="rates">${rows}</div></div>
+    <div class="column">
+      <div class="column-head"><h2 title="${data.classified} classified · ${data.total - data.classified} unclassified">Sentiment</h2></div>
+      <div class="stack" role="img" aria-label="Sentiment: ${summary}">${parts}</div>
+      <div class="legends">${legend}</div></div>`;
 }
 
-function showEvidence(title, reviews, ids = []) {
-  document.querySelector("#evidence-title").textContent = title;
-  document.querySelector("#evidence-content").innerHTML = reviews.length
-    ? `<p class="muted">${reviews.length} ${reviews.length === 1 ? "review" : "reviews"} in this sample.</p>${reviews.map((review) => `<article class="review"><h3>${h(review.title || "Untitled review")}</h3><div class="review-meta"><span>${review.rating == null ? "Unrated" : `${h(review.rating)}/5 stars`}</span><span>${h(review.label || "Unclassified")}</span><span>ID ${h(review.id)}</span></div><p>${h(review.text)}</p></article>`).join("")}`
-    : `<p class="muted">${dashboard.reviewMap.size ? "No matching reviews in this sample." : "Open this report with its reviews JSON file to read the source text."}</p>${ids.length ? `<p class="id-list">${ids.map(h).join("<br>")}</p>` : ""}`;
-  document.querySelector("#evidence-dialog").showModal();
+function renderIssues() {
+  const data = dashboard;
+  const visible = filterIssues(
+    data.issues,
+    priorityFilter,
+    repeatedOnly ? "repeated" : "all",
+  );
+  const unassigned = data.negative - data.covered;
+  const maxCount = Math.max(...data.issues.map((issue) => issue.frequency), unassigned, 1);
+  const tabs = ["all", ...PRIORITIES]
+    .map(
+      (value) =>
+        `<button data-key="priority-${value}" data-priority="${value}" aria-pressed="${priorityFilter === value}">${cap(value)}<span>${value === "all" ? data.issues.length : data.issues.filter((issue) => issue.priority === value).length}</span></button>`,
+    )
+    .join("");
+  const rows = visible
+    .map((issue) => {
+      const index = data.issues.indexOf(issue);
+      const on = isLens("issue", index);
+      const signal = [1, 2, 3]
+        .map((step) => `<i${step <= SIGNAL[issue.priority] ? ' class="on"' : ""}></i>`)
+        .join("");
+      return `<button class="issue${on ? " on" : ""}" data-key="issue-${index}" data-issue="${index}" aria-pressed="${on}" title="${plural(issue.frequency, "review")} · ${pct(issue.fraction)} of negative"><span class="priority"><span class="signal" aria-hidden="true">${signal}</span><span>${cap(issue.priority)}</span></span><span class="summary"><span class="category">${h(issue.category)}</span><span class="action">${h(issue.action)}</span></span><span class="frequency"><span class="track"><span class="fill negative" style="width:${(issue.frequency / maxCount) * 100}%"></span></span><span class="count">${issue.frequency}</span></span></button>`;
+    })
+    .join("");
+  const gapOn = isLens("gap", 1);
+  const gapRow =
+    unassigned > 0 && priorityFilter === "all" && !repeatedOnly
+      ? `<button class="issue${gapOn ? " on" : ""}" data-key="gap" data-gap="1" aria-pressed="${gapOn}" title="${plural(unassigned, "negative review")} without a specific issue"><span class="priority"><span>—</span></span><span class="summary"><span class="category muted">Not assigned to an issue</span></span><span class="frequency"><span class="track"><span class="fill gap" style="width:${(unassigned / maxCount) * 100}%"></span></span><span class="count">${unassigned}</span></span></button>`
+      : "";
+  const empty =
+    rows || gapRow
+      ? ""
+      : `<div class="empty">${data.issues.length ? "No issues match these filters." : "No supported actionable complaints were identified."}</div>`;
+  document.querySelector("#issues").innerHTML = `<div class="issues-head">
+      <h2>What to fix</h2>
+      <div class="filters"><div class="segmented" role="group" aria-label="Filter by priority">${tabs}</div>
+      <button class="toggle" data-key="repeated" data-repeated="1" aria-pressed="${repeatedOnly}"><span class="box"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 5.2l2.1 2.1L8 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Repeated only</button></div>
+    </div>${rows}${gapRow}${empty}`;
+}
+
+function reviewHTML(review) {
+  const rated = validRating(review.rating);
+  const stars = rated
+    ? `<span class="stars" role="img" aria-label="${review.rating} out of 5 stars"><span class="on">${"★".repeat(review.rating)}</span>${"★".repeat(5 - review.rating)}</span>`
+    : '<span class="stars muted">Unrated</span>';
+  const label = review.label || "unclassified";
+  const tags = (issueTags.get(review.id) || [])
+    .map((category) => `<span class="tag">${h(category)}</span>`)
+    .join("");
+  return `<article class="review"><div class="review-top">${stars}<span class="sentiment"><span class="dot ${h(label)}"></span>${h(cap(label))}</span></div><div class="review-title">${h(review.title || "Untitled review")}</div><p class="review-text">${h(review.text)}</p><div class="review-foot"><div class="tags">${tags}</div><span class="mono">${h(review.id)}</span></div></article>`;
+}
+
+function lensIds() {
+  return lens?.type === "issue" ? dashboard.issues[lens.value].evidence_ids : [];
+}
+
+function lensReviews() {
+  const all = [...dashboard.reviewMap.values()];
+  if (!lens) return all;
+  if (lens.type === "issue")
+    return lensIds()
+      .map((id) => dashboard.reviewMap.get(id))
+      .filter(Boolean);
+  if (lens.type === "star") return all.filter((review) => review.rating === lens.value);
+  if (lens.type === "sentiment") return all.filter((review) => review.label === lens.value);
+  return all.filter((review) => review.label === "negative" && !coveredIds.has(review.id));
+}
+
+function renderReviews() {
+  const sourceless = !dashboard.reviewMap.size;
+  const items = sourceless ? [] : lensReviews();
+  let body;
+  if (sourceless) {
+    const ids = lensIds();
+    body = `<div class="empty"><span>Open this report with its reviews JSON file to read the source text.</span>${ids.length ? `<p class="id-list">${ids.map(h).join("<br>")}</p>` : ""}</div>`;
+  } else if (items.length) {
+    body = items.map(reviewHTML).join("");
+  } else {
+    body = `<div class="empty"><span>No reviews match.</span>${lens ? '<button class="btn" data-key="clear" data-clear="1">Show all reviews</button>' : ""}</div>`;
+  }
+  const pane = document.querySelector("#reviews");
+  pane.innerHTML = `<div class="reviews-head"><h2>Reviews</h2><span class="muted">${sourceless ? "" : plural(items.length, "review")}</span></div><div class="reviews-list">${body}</div>`;
 }
 
 reportElement.addEventListener("click", (event) => {
   const button = event.target.closest("button");
   if (!button || !dashboard) return;
-  if (button.dataset.review) {
-    const review = dashboard.reviewMap.get(button.dataset.review);
-    showEvidence(review.title || "Review", [review]);
-  } else if (button.dataset.page) {
-    reviewPage += Number(button.dataset.page);
-    renderReviews();
-  } else if (button.dataset.priority) {
-    priorityFilter = button.dataset.priority;
-    document
-      .querySelectorAll("[data-priority]")
-      .forEach((item) =>
-        item.setAttribute("aria-pressed", String(item === button)),
-      );
-    renderActions();
-  } else if (button.dataset.issue !== undefined) {
-    const issue = dashboard.issues[Number(button.dataset.issue)];
-    showEvidence(
-      issue.category,
-      issue.evidence_ids
-        .map((id) => dashboard.reviewMap.get(id))
-        .filter(Boolean),
-      issue.evidence_ids,
-    );
-  } else if (button.dataset.rating) {
-    const star = Number(button.dataset.rating);
-    showEvidence(
-      `${star}-star reviews`,
-      [...dashboard.reviewMap.values()].filter(
-        (review) => review.rating === star,
-      ),
-    );
-  } else if (button.dataset.sentiment) {
-    showEvidence(
-      `${button.dataset.sentiment[0].toUpperCase() + button.dataset.sentiment.slice(1)} reviews`,
-      [...dashboard.reviewMap.values()].filter(
-        (review) => review.label === button.dataset.sentiment,
-      ),
-    );
+  const data = button.dataset;
+  if (data.rating) setLens("star", Number(data.rating));
+  else if (data.sentiment) setLens("sentiment", data.sentiment);
+  else if (data.issue !== undefined) setLens("issue", Number(data.issue));
+  else if (data.gap) setLens("gap", 1);
+  else if (data.clear) {
+    lens = null;
+    keepFocus(renderAll);
+  } else if (data.priority) {
+    priorityFilter = data.priority;
+    keepFocus(renderIssues);
+  } else if (data.repeated) {
+    repeatedOnly = !repeatedOnly;
+    keepFocus(renderIssues);
   }
 });
-reportElement.addEventListener("change", (event) => {
-  if (event.target.id === "review-filter") {
-    reviewPage = 0;
-    renderReviews();
-  }
-  if (event.target.id === "recurrence") {
-    recurrenceFilter = event.target.value;
-    renderActions();
-  }
-});
+chip.addEventListener("click", () => setSwitcher(analyzeForm.hidden));
 document
   .querySelector("#open-report")
   .addEventListener("click", () =>
@@ -259,215 +351,6 @@ function installAnalysis(response) {
   }
 }
 
-function renderCharts() {
-  charts.forEach((chart) => chart.destroy());
-  charts = [];
-  if (!globalThis.Chart)
-    throw new Error(
-      "Charts are unavailable. Rebuild the frontend assets and reload.",
-    );
-  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
-  Chart.defaults.color = "#63717d";
-  Chart.defaults.font.size = 11;
-  const base = {
-    responsive: true,
-    maintainAspectRatio: false,
-    animation: reducedMotion ? false : { duration: 350 },
-    plugins: { legend: { display: false } },
-  };
-  const ratingItems = [...dashboard.stars].reverse();
-  charts.push(
-    new Chart(document.querySelector("#rating-canvas"), {
-      type: "bar",
-      data: {
-        labels: ratingItems.map((item) => `${item.star} stars`),
-        datasets: [
-          {
-            data: ratingItems.map((item) => item.count),
-            backgroundColor: "#597eae",
-            borderRadius: 4,
-            barThickness: 14,
-          },
-        ],
-      },
-      options: {
-        ...base,
-        indexAxis: "y",
-        scales: {
-          x: {
-            beginAtZero: true,
-            ticks: { precision: 0 },
-            grid: { color: "#eef1f4" },
-            border: { display: false },
-          },
-          y: { grid: { display: false }, border: { display: false } },
-        },
-        plugins: {
-          ...base.plugins,
-          tooltip: {
-            callbacks: {
-              label: (context) =>
-                `${context.raw} reviews · ${percent(dashboard.rated ? context.raw / dashboard.rated : null)} of rated`,
-            },
-          },
-        },
-        onClick: (_, elements) => {
-          if (elements.length) {
-            const star = ratingItems[elements[0].index].star;
-            showEvidence(
-              `${star}-star reviews`,
-              [...dashboard.reviewMap.values()].filter(
-                (review) => review.rating === star,
-              ),
-            );
-          }
-        },
-      },
-    }),
-  );
-  charts.push(
-    new Chart(document.querySelector("#sentiment-canvas"), {
-      type: "doughnut",
-      data: {
-        labels: dashboard.sentiments.map((item) => item.label),
-        datasets: [
-          {
-            data: dashboard.sentiments.map((item) => item.count),
-            backgroundColor: dashboard.sentiments.map(
-              (item) => colors[item.label],
-            ),
-            borderColor: "#fff",
-            borderWidth: 3,
-          },
-        ],
-      },
-      options: {
-        ...base,
-        cutout: "76%",
-        plugins: {
-          ...base.plugins,
-          tooltip: {
-            callbacks: {
-              label: (context) =>
-                `${context.label}: ${context.raw} reviews · ${percent(dashboard.classified ? context.raw / dashboard.classified : null)}`,
-            },
-          },
-        },
-        onClick: (_, elements) => {
-          if (elements.length) {
-            const label = dashboard.sentiments[elements[0].index].label;
-            showEvidence(
-              `${label} reviews`,
-              [...dashboard.reviewMap.values()].filter(
-                (review) => review.label === label,
-              ),
-            );
-          }
-        },
-      },
-    }),
-  );
-  if (dashboard.issues.length) {
-    const issues = [...dashboard.issues].sort(
-      (a, b) =>
-        b.frequency - a.frequency || a.category.localeCompare(b.category),
-    );
-    charts.push(
-      new Chart(document.querySelector("#issue-canvas"), {
-        type: "bar",
-        data: {
-          labels: issues.map((issue) =>
-            issue.category.length > 33
-              ? `${issue.category.slice(0, 31)}…`
-              : issue.category,
-          ),
-          datasets: [
-            {
-              data: issues.map((issue) => issue.frequency),
-              backgroundColor: issues.map(
-                (issue) =>
-                  ({ high: "#d97371", medium: "#d4aa6b", low: "#597eae" })[
-                    issue.priority
-                  ],
-              ),
-              borderRadius: 3,
-              barThickness: 10,
-            },
-          ],
-        },
-        options: {
-          ...base,
-          indexAxis: "y",
-          scales: {
-            x: {
-              beginAtZero: true,
-              ticks: { precision: 0 },
-              grid: { color: "#eef1f4" },
-              border: { display: false },
-            },
-            y: {
-              grid: { display: false },
-              border: { display: false },
-              ticks: { font: { size: 10 } },
-            },
-          },
-          plugins: {
-            ...base.plugins,
-            tooltip: {
-              callbacks: {
-                title: (contexts) => issues[contexts[0].dataIndex].category,
-                label: (context) => `${context.raw} unique negative reviews`,
-              },
-            },
-          },
-          onClick: (_, elements) => {
-            if (elements.length) {
-              const issue = issues[elements[0].index];
-              showEvidence(
-                issue.category,
-                issue.evidence_ids
-                  .map((id) => dashboard.reviewMap.get(id))
-                  .filter(Boolean),
-                issue.evidence_ids,
-              );
-            }
-          },
-        },
-      }),
-    );
-  }
-}
-
-function renderReviews() {
-  const query = document
-    .querySelector("#review-search")
-    .value.toLowerCase()
-    .trim();
-  const sentiment = document.querySelector("#review-filter").value;
-  const reviews = [...dashboard.reviewMap.values()].filter(
-    (review) =>
-      (sentiment === "all" || review.label === sentiment) &&
-      `${review.title || ""} ${review.text}`.toLowerCase().includes(query),
-  );
-  reviewPage = Math.min(
-    Math.max(0, reviewPage),
-    Math.max(0, Math.ceil(reviews.length / 10) - 1),
-  );
-  const start = reviewPage * 10;
-  const items = reviews.slice(start, start + 10);
-  document.querySelector("#review-table").innerHTML = items.length
-    ? `<div class="table-scroll"><table><thead><tr><th>Review</th><th>Rating</th><th>Sentiment</th><th>Source</th></tr></thead><tbody>${items.map((review) => `<tr><td><button class="review-title" data-review="${h(review.id)}">${h(review.title || "Untitled review")}</button><p class="review-excerpt">${h(review.text.slice(0, 180))}${review.text.length > 180 ? "…" : ""}</p></td><td>${review.rating == null ? "—" : `${h(review.rating)}/5`}</td><td><span class="sentiment-badge ${h(review.label || "unclassified")}">${h(review.label || "unclassified")}</span></td><td class="table-id">${h(review.id)}</td></tr>`).join("")}</tbody></table></div><div class="pagination"><span>${start + 1}–${start + items.length} of ${reviews.length} reviews</span><div><button class="button" data-page="-1" ${reviewPage === 0 ? "disabled" : ""}>Previous</button><button class="button" data-page="1" ${start + 10 >= reviews.length ? "disabled" : ""}>Next</button></div></div>`
-    : `<div class="empty">${dashboard.reviewMap.size ? "No reviews match these filters." : "Open the report with its review file to browse source text."}</div>`;
-}
-
-reportElement.addEventListener("input", (event) => {
-  if (event.target.id === "review-search") {
-    reviewPage = 0;
-    renderReviews();
-  }
-});
-
 async function postJSON(url, body, timeout = 290000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
@@ -512,41 +395,39 @@ document.querySelector("#app-input").addEventListener("change", (event) => {
     } catch {}
   }
 });
-document
-  .querySelector("#analyze-form")
-  .addEventListener("submit", async (event) => {
-    event.preventDefault();
-    if (analyzing) return;
-    const button = document.querySelector("#analyze-button");
-    try {
-      const normalized = normalizeAppInput(
-        document.querySelector("#app-input").value,
-        document.querySelector("#country-input").value.toLowerCase(),
-      );
-      analyzing = true;
-      button.disabled = true;
-      document.querySelector("#open-report").disabled = true;
-      button.textContent = "Analyzing…";
-      status.hidden = false;
-      status.setAttribute("role", "status");
-      status.textContent =
-        "Collecting reviews and analyzing feedback. This can take a few minutes.";
-      const response = await postJSON("/api/analyze", {
-        ...normalized,
-        review_count: Number(document.querySelector("#count-input").value),
-      });
-      installAnalysis(await response.json());
-    } catch (error) {
-      status.hidden = false;
-      status.setAttribute("role", "alert");
-      status.textContent = error.message;
-    } finally {
-      analyzing = false;
-      button.disabled = false;
-      document.querySelector("#open-report").disabled = false;
-      button.textContent = "Analyze reviews →";
-    }
-  });
+analyzeForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (analyzing) return;
+  const button = document.querySelector("#analyze-button");
+  try {
+    const normalized = normalizeAppInput(
+      document.querySelector("#app-input").value,
+      document.querySelector("#country-input").value.toLowerCase(),
+    );
+    analyzing = true;
+    button.disabled = true;
+    document.querySelector("#open-report").disabled = true;
+    button.textContent = "Analyzing…";
+    status.hidden = false;
+    status.setAttribute("role", "status");
+    status.textContent =
+      "Collecting reviews and analyzing feedback. This can take a few minutes.";
+    const response = await postJSON("/api/analyze", {
+      ...normalized,
+      review_count: Number(document.querySelector("#count-input").value),
+    });
+    installAnalysis(await response.json());
+  } catch (error) {
+    status.hidden = false;
+    status.setAttribute("role", "alert");
+    status.textContent = error.message;
+  } finally {
+    analyzing = false;
+    button.disabled = false;
+    document.querySelector("#open-report").disabled = false;
+    button.textContent = "Analyze reviews";
+  }
+});
 
 fetchJSON("/api/health")
   .then((health) => {

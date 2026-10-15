@@ -4,7 +4,7 @@ Deployment files are prepared only. No cloud resource, image push, or deployment
 
 ## Container
 
-Docker builds frontend assets in Node 22 and uses Python 3.12 with uv 0.11.26 and locked production dependencies. Linux Torch is resolved from the explicit official CPU index, excluding CUDA/NVIDIA packages. macOS uses its native wheel with CPU inference selected explicitly.
+Docker uses Python 3.12 with uv 0.11.26 and locked production dependencies. Linux Torch is resolved from the explicit official CPU index, excluding CUDA/NVIDIA packages. macOS uses its native wheel with CPU inference selected explicitly.
 
 `scripts/download_model.py` fetches tokenizer/config files and one weight format at the pinned CardiffNLP revision. Weights are bundled in `/app/models/sentiment`; runtime sets `HF_HUB_OFFLINE=1`. Gemini inference remains external. The final container is unprivileged, runs one Uvicorn worker, respects PORT, and stores no reports. Docker context excludes credentials, outputs, local environments, models, node_modules, and Git metadata.
 

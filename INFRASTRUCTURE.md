@@ -36,7 +36,6 @@ Backend	FastAPI
 API validation	Pydantic
 Frontend	HTML, CSS, Vanilla JavaScript
 HTML templates	Jinja2
-Charts	Chart.js
 Sentiment analysis	Cardiff NLP RoBERTa
 Insights generation	Gemini 3.5 Flash-Lite API
 Package management	uv

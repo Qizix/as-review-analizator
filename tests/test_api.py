@@ -64,7 +64,6 @@ def test_dashboard_assets_health_and_openapi(api):
     assert client.get("/").status_code == 200
     assert 'max="100"' in client.get("/").text
     assert client.get("/static/app.mjs").status_code == 200
-    assert client.get("/static/vendor/chart.umd.js").status_code == 200
     assert client.get("/api/health").json()["sentiment_ready"] is True
     assert client.get("/docs").status_code == 200
     assert client.get("/.env").status_code == 404

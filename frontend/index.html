@@ -3,54 +3,54 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f5f6f8" />
+    <meta name="theme-color" content="#f3f4f6" />
     <title>Review Atlas · App review intelligence</title>
     <link rel="icon" href="/static/icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/static/styles.css" />
-    <script defer src="/static/vendor/chart.umd.js"></script>
     <script type="module" src="/static/app.mjs"></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to report</a>
     <header class="header">
-      <a class="brand" href="/" aria-label="Review Atlas home"
-        ><span class="brand-mark">a<span>•</span></span
-        >review<span class="brand-light">atlas</span></a
-      >
-      <nav aria-label="Report sections">
-        <a href="#overview">Overview</a><a href="#issues">Issues & actions</a>
-      </nav>
-      <div class="header-actions">
-        <button class="button" id="open-report">
-          Open report <span aria-hidden="true">↗</span></button
-        ><button class="button dark" id="export" disabled>
-          Export JSON <span aria-hidden="true">↓</span>
+      <div class="app-switch static">
+        <button
+          class="btn chip"
+          id="app-chip"
+          aria-expanded="true"
+          aria-controls="analyze-form"
+        >
+          <span class="appico" id="app-icon" aria-hidden="true">+</span>
+          <span class="chip-label" id="app-label">Analyze an app</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+            <path
+              d="M4 6l4 4 4-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
         </button>
-      </div>
-    </header>
-    <main id="main">
-      <section class="analysis-entry panel" aria-labelledby="analyze-title">
-        <h2 id="analyze-title">Analyze an app</h2>
-        <p class="panel-sub">
-          Collect reviews, understand sentiment, and surface improvements in one
-          report.
-        </p>
-        <form id="analyze-form">
-          <label class="app-input"
+        <form class="card pop" id="analyze-form">
+          <label class="field wide"
             >App Store ID or URL<input
+              class="input"
               id="app-input"
               placeholder="389801252 or https://apps.apple.com/…"
               required
               autocomplete="off"
           /></label>
-          <label
-            >Country<select id="country-input" required>
+          <label class="field"
+            >Country<select class="input" id="country-input" required>
               {% for country in countries %}
               <option value="{{ country }}"{% if country == 'us' %} selected{% endif %}>{{ country | upper }}</option>
               {% endfor %}
-            </select></label>
-          <label
+            </select></label
+          >
+          <label class="field"
             >Reviews<input
+              class="input"
               id="count-input"
               type="number"
               value="100"
@@ -59,20 +59,32 @@
               step="1"
               required
           /></label>
-          <button class="button dark" type="submit" id="analyze-button">
-            Analyze reviews →
+          <button class="btn dark wide" type="submit" id="analyze-button">
+            Analyze reviews
           </button>
         </form>
-      </section>
+      </div>
+      <button class="btn" id="open-report">Open report</button>
+      <button class="btn dark" id="export" disabled>
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+          <path
+            d="M8 2.5v8M4.8 7.6L8 10.8l3.2-3.2M3 13h10"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        Export JSON
+      </button>
+    </header>
+    <main id="main">
       <div class="notice" id="status" role="status">
         Enter an app above to generate a report, or open a saved analysis.
       </div>
       <section id="report" hidden></section>
     </main>
-    <footer>
-      <span>Review Atlas</span
-      ><span>A clearer picture of your app’s feedback.</span>
-    </footer>
     <dialog id="import-dialog" aria-labelledby="import-title">
       <div class="dialog-heading">
         <h2 id="import-title">Open a review report</h2>
@@ -85,44 +97,35 @@
         files. Add the review file to explore the evidence.
       </p>
       <form id="import-form">
-        <label
+        <label class="field"
           >Metrics or exported report JSON
           <input
+            class="input"
             type="file"
             id="metrics-file"
             accept=".json,application/json"
             required
         /></label>
-        <label
+        <label class="field"
           >Insights JSON
           <span class="muted">not needed for an exported report</span
           ><input
+            class="input"
             type="file"
             id="insights-file"
             accept=".json,application/json"
         /></label>
-        <label
+        <label class="field"
           >Reviews JSON <span class="muted">optional</span
-          ><input type="file" id="reviews-file" accept=".json,application/json"
+          ><input
+            class="input"
+            type="file"
+            id="reviews-file"
+            accept=".json,application/json"
         /></label>
         <p id="import-error" role="alert" class="error"></p>
-        <button class="button dark" type="submit">
-          View report <span aria-hidden="true">→</span>
-        </button>
+        <button class="btn dark" type="submit">View report</button>
       </form>
-    </dialog>
-    <dialog id="evidence-dialog" aria-labelledby="evidence-title">
-      <div class="dialog-heading">
-        <h2 id="evidence-title">Review evidence</h2>
-        <button
-          class="icon-button"
-          data-close
-          aria-label="Close evidence dialog"
-        >
-          ×
-        </button>
-      </div>
-      <div id="evidence-content"></div>
     </dialog>
   </body>
 </html>
