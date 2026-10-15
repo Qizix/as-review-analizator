@@ -33,7 +33,6 @@
           </svg>
         </button>
       </div>
-      <button class="btn" id="open-report">Open report</button>
       <button class="btn dark" id="export" hidden>
         <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
           <path
@@ -86,47 +85,5 @@
       <div class="notice" id="status" role="status"></div>
       <section id="report" hidden></section>
     </main>
-    <dialog id="import-dialog" aria-labelledby="import-title">
-      <div class="dialog-heading">
-        <h2 id="import-title">Open a review report</h2>
-        <button class="icon-button" data-close aria-label="Close import dialog">
-          ×
-        </button>
-      </div>
-      <p class="muted">
-        Open a saved full analysis, or choose matching metrics and insights
-        files. Add the review file to explore the evidence.
-      </p>
-      <form id="import-form">
-        <label class="field"
-          >Metrics or exported report JSON
-          <input
-            class="input"
-            type="file"
-            id="metrics-file"
-            accept=".json,application/json"
-            required
-        /></label>
-        <label class="field"
-          >Insights JSON
-          <span class="muted">not needed for an exported report</span
-          ><input
-            class="input"
-            type="file"
-            id="insights-file"
-            accept=".json,application/json"
-        /></label>
-        <label class="field"
-          >Reviews JSON <span class="muted">optional</span
-          ><input
-            class="input"
-            type="file"
-            id="reviews-file"
-            accept=".json,application/json"
-        /></label>
-        <p id="import-error" role="alert" class="error"></p>
-        <button class="btn dark" type="submit">View report</button>
-      </form>
-    </dialog>
   </body>
 </html>

@@ -23,7 +23,6 @@ countrySelect.replaceChildren(
 );
 countrySelect.value = "us";
 let dashboard;
-let sources;
 let canonicalReport = null;
 let coveredIds = new Set();
 let issueTags = new Map();
@@ -98,8 +97,6 @@ function updateChip(next) {
 
 function installReport(metrics, report, reviews) {
   const next = prepareDashboard(metrics, report, reviews);
-  sources = { metrics, report, reviews };
-  canonicalReport = null;
   dashboard = next;
   coveredIds = new Set(next.issues.flatMap((issue) => issue.evidence_ids));
   issueTags = new Map();
@@ -221,15 +218,11 @@ function reviewHTML(review) {
   return `<article class="review"><div class="review-top">${stars}<span class="sentiment"><span class="dot ${h(label)}"></span>${h(cap(label))}</span></div><div class="review-title">${h(review.title || "Untitled review")}</div><p class="review-text">${h(review.text)}</p><div class="review-foot"><div class="tags">${tags}</div><span class="mono">${h(review.id)}</span></div></article>`;
 }
 
-function lensIds() {
-  return lens?.type === "issue" ? dashboard.issues[lens.value].evidence_ids : [];
-}
-
 function lensReviews() {
   const all = [...dashboard.reviewMap.values()];
   if (!lens) return all;
   if (lens.type === "issue")
-    return lensIds()
+    return dashboard.issues[lens.value].evidence_ids
       .map((id) => dashboard.reviewMap.get(id))
       .filter(Boolean);
   if (lens.type === "star") return all.filter((review) => review.rating === lens.value);
@@ -238,19 +231,11 @@ function lensReviews() {
 }
 
 function renderReviews() {
-  const sourceless = !dashboard.reviewMap.size;
-  const items = sourceless ? [] : lensReviews();
-  let body;
-  if (sourceless) {
-    const ids = lensIds();
-    body = `<div class="empty"><span>Open this report with its reviews JSON file to read the source text.</span>${ids.length ? `<p class="id-list">${ids.map(h).join("<br>")}</p>` : ""}</div>`;
-  } else if (items.length) {
-    body = items.map(reviewHTML).join("");
-  } else {
-    body = `<div class="empty"><span>No reviews match.</span>${lens ? '<button class="btn" data-key="clear" data-clear="1">Show all reviews</button>' : ""}</div>`;
-  }
-  const pane = document.querySelector("#reviews");
-  pane.innerHTML = `<div class="reviews-head"><h2>Reviews</h2><span class="muted">${sourceless ? "" : plural(items.length, "review")}</span></div><div class="reviews-list">${body}</div>`;
+  const items = lensReviews();
+  const body = items.length
+    ? items.map(reviewHTML).join("")
+    : `<div class="empty"><span>No reviews match.</span>${lens ? '<button class="btn" data-key="clear" data-clear="1">Show all reviews</button>' : ""}</div>`;
+  document.querySelector("#reviews").innerHTML = `<div class="reviews-head"><h2>Reviews</h2><span class="muted">${plural(items.length, "review")}</span></div><div class="reviews-list">${body}</div>`;
 }
 
 reportElement.addEventListener("click", (event) => {
@@ -273,67 +258,9 @@ reportElement.addEventListener("click", (event) => {
   }
 });
 chip.addEventListener("click", () => setSwitcher(analyzeForm.hidden));
-document
-  .querySelector("#open-report")
-  .addEventListener("click", () =>
-    document.querySelector("#import-dialog").showModal(),
-  );
-document
-  .querySelectorAll("[data-close]")
-  .forEach((button) =>
-    button.addEventListener("click", () => button.closest("dialog").close()),
-  );
-
-async function readFile(id, required) {
-  const file = document.querySelector(`#${id}`).files[0];
-  if (!file) {
-    if (required)
-      throw new Error("Choose both metrics and insights JSON files.");
-    return null;
-  }
-  if (file.size > 20 * 1024 * 1024)
-    throw new Error("Each report file must be smaller than 20 MB.");
-  return JSON.parse(await file.text());
-}
-document
-  .querySelector("#import-form")
-  .addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const button = event.submitter;
-    button.disabled = true;
-    document.querySelector("#import-error").textContent = "";
-    try {
-      const [metrics, report, reviews] = await Promise.all([
-        readFile("metrics-file", true),
-        readFile("insights-file", false),
-        readFile("reviews-file", false),
-      ]);
-      if (metrics.app && metrics.metrics && metrics.insights)
-        installAnalysis(metrics);
-      else if (metrics.metrics && metrics.report)
-        installReport(
-          metrics.metrics,
-          metrics.report,
-          reviews || metrics.reviews,
-        );
-      else {
-        if (!report)
-          throw new Error(
-            "Choose the insights JSON file, or open an exported report.",
-          );
-        installReport(metrics, report, reviews);
-      }
-      document.querySelector("#import-dialog").close();
-      document.querySelector("#open-report").focus();
-    } catch (error) {
-      document.querySelector("#import-error").textContent = error.message;
-    } finally {
-      button.disabled = false;
-    }
-  });
 document.querySelector("#export").addEventListener("click", () => {
   const url = URL.createObjectURL(
-    new Blob([JSON.stringify(canonicalReport || sources, null, 2)], {
+    new Blob([JSON.stringify(canonicalReport, null, 2)], {
       type: "application/json",
     }),
   );
@@ -411,7 +338,6 @@ analyzeForm.addEventListener("submit", async (event) => {
     );
     analyzing = true;
     button.disabled = true;
-    document.querySelector("#open-report").disabled = true;
     button.textContent = "Analyzing…";
     status.hidden = false;
     status.setAttribute("role", "status");
@@ -429,7 +355,6 @@ analyzeForm.addEventListener("submit", async (event) => {
   } finally {
     analyzing = false;
     button.disabled = false;
-    document.querySelector("#open-report").disabled = false;
     button.textContent = "Analyze reviews";
   }
 });
@@ -438,9 +363,9 @@ fetchJSON("/api/health")
   .then((health) => {
     if (!health.gemini_configured)
       status.textContent =
-        "Gemini credentials are not configured on the server. You can still open saved reports.";
+        "Gemini credentials are not configured on the server.";
   })
   .catch(() => {
     status.textContent =
-      "The API is unavailable. You can still open a saved report.";
+      "The API is unavailable.";
   });
