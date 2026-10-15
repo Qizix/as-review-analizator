@@ -1,38 +1,47 @@
-# Apple Store Review Analysis API
+# App Store Review Analyzer
 
-A company test assignment to collect app reviews, calculate rating metrics, and generate sentiment insights through a REST API.
+One FastAPI application collects App Store reviews, classifies sentiment on CPU, generates evidence-linked Gemini insights, and serves an interactive dashboard. Reports include independent rating/sentiment metrics, issue frequencies, coverage, and source reviews.
 
-Review collection, sentiment classification, Gemini-generated insights, and local metrics calculation are ready. The REST API is still pending.
+## Analysis flow
 
-Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
+![Project sequence diagram: collection, sentiment, Gemini insights, validation, metrics, and dashboard](docs/sequence.svg)
+
+[PNG image](docs/sequence.png) · [Mermaid source](docs/sequence.mmd)
+
+## Run locally
+
+Python 3.12 is pinned for compatibility with Hydra and the container. Install [uv](https://docs.astral.sh/uv/) and Node.js, then set `GEMINI_API_KEY` in `.env` using `.env.example` as a guide.
 
 ```bash
 uv sync --locked
-uv run scripts/fetch_reviews.py 389801252 --output output/reviews.json
-uv run scripts/analyze_sentiment.py output/reviews.json
-uv run scripts/generate_insights.py output/reviews_sentiment.json
-uv run scripts/calculate_metrics.py output/reviews_sentiment.json --insights output/reviews_sentiment_insights.json
+npm ci --prefix frontend
+npm run --prefix frontend build
+uv run --env-file .env uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
 ```
 
-Optional arguments: `--country us`, `--count 100`, and `--seed 42`.
-The collector samples unique reviews from Apple's ten most recent feed pages and saves reviews plus collection metadata. It reports shortfalls and failed pages explicitly.
+Open [the dashboard](http://127.0.0.1:8000/) or [API documentation](http://127.0.0.1:8000/docs). Enter an app ID or App Store URL, country, and review count. Charts render in the browser with bundled Chart.js; the backend returns JSON. The first local startup may download the pinned sentiment model. Docker bundles its weights instead.
 
-Sentiment classification uses CardiffNLP's model on CPU and adds a positive, negative, or neutral label with a confidence score to each review. The first run downloads the model. Results default to `output/reviews_sentiment.json`; use `--output PATH` to choose another file.
+The service keeps no reports in a database or on disk. The browser holds the current report and downloads JSON/CSV. Negative reviews support improvement recommendations; positive and neutral reviews provide context. Shortfalls and incomplete collections are reported explicitly.
 
-Set `GEMINI_API_KEY` or `GOOGLE_API_KEY` in your environment before generating insights. This step sends preprocessed reviews to Gemini 3.5 Flash-Lite, grouped by sentiment. Negative reviews support improvements; positive and neutral reviews provide context. It saves short actions grouped by priority and recurrence to `output/reviews_sentiment_insights.json` and a matching `.md` report. Use `--output PATH.json` to choose another location.
+## Run the pipeline without the dashboard
 
-If your API key is in `.env`, run `uv run --env-file .env scripts/generate_insights.py output/reviews_sentiment.json`.
+```bash
+uv run --env-file .env review-analyzer 389801252 --output output/report.json
+```
 
-Metrics calculation needs no API key. It saves average rating, rating/sentiment distributions and percentages, issue frequencies, and negative-review coverage to `output/reviews_sentiment_metrics.json`. Use `--output PATH` to choose another file.
+This runs the same services as the API. The older per-step scripts remain optional compatibility tools. Reproducible experiments use `uv run --env-file .env python -m experiments.analyze` with Hydra overrides.
 
-Run the offline tests with `uv run python -m unittest discover -s tests -v`.
+## Verify
 
-- [Assignment requirements](TEST_TASK.md)
-- [Research checklist](RESEARCH_TODO.md)
-- [Project instructions for Claude](CLAUDE.md)
-- [Collector behavior and verification](docs/fetch_reviews.md)
-- [Sentiment classification](docs/analyze_sentiment.md)
-- [Gemini insight generation](docs/generate_insights.md)
-- [Metrics calculations](docs/calculate_metrics.md)
+```bash
+uv run --locked pytest -q
+npm test --prefix frontend
+```
 
-API run instructions and the sample insights report will be added as the API is built.
+- [Infrastructure plan](INFRASTRUCTURE.md)
+- [Architecture, API, and pipeline](docs/architecture.md)
+- [Dashboard and JSON contract](docs/dashboard.md)
+- [Docker and Cloud Run deployment](docs/deployment.md)
+- [Assignment](TEST_TASK.md) and [research checklist](RESEARCH_TODO.md)
+
+Cloud deployment files are prepared; no cloud resources have been created or deployed.

@@ -1,0 +1,69 @@
+sequenceDiagram
+    actor User
+    participant UI as Dashboard / Chart.js
+    participant API as FastAPI
+    participant Pipeline as Analyzer
+    participant Apple as Apple RSS / Lookup
+    participant Prep as Preprocessor
+    participant Sentiment as Local RoBERTa (CPU)
+    participant Gemini as Gemini Flash-Lite
+    participant Validator as Report Validator
+    participant Metrics as Metrics Service
+
+    Note over API,Sentiment: Startup: load sentiment model once and reuse it
+    User->>UI: Enter app ID or URL, country, review count
+    UI->>API: POST /api/v1/analyze
+    API->>API: Validate input, credentials, and rate limit
+    API->>Pipeline: Start analysis
+    Pipeline->>Pipeline: Acquire single-analysis lock
+
+    loop Pages 1-10, sequentially
+        Pipeline->>Apple: Fetch recent reviews
+        Apple-->>Pipeline: Review records
+        Note over Pipeline,Apple: Timeouts and bounded retries
+    end
+    Pipeline->>Pipeline: Validate records, deduplicate IDs, sample uniformly
+    Note over Pipeline: Report actual count and any shortfall
+    Pipeline->>Apple: Look up app details
+    Apple-->>Pipeline: App name, developer, icon, store URL
+
+    Pipeline->>Prep: Normalize text and emojis, crop oversized text
+    Prep-->>Pipeline: Prepared reviews
+    Note over Pipeline: Preserve original review text
+    Pipeline->>Metrics: Calculate independent rating metrics
+    Metrics-->>Pipeline: Average and star distribution
+    Pipeline->>Sentiment: Classify reviews in batches
+    Sentiment-->>Pipeline: Positive / neutral / negative + confidence
+    Pipeline->>Metrics: Calculate sentiment distribution
+    Metrics-->>Pipeline: Counts and percentages
+
+    Pipeline->>Prep: Group reviews by sentiment for Gemini
+    Prep-->>Pipeline: Negative, positive, and neutral groups
+    Pipeline->>Gemini: System instructions + grouped review JSON
+    Note over Pipeline,Gemini: Negative reviews support actionable issues<br/>Positive and neutral reviews provide context
+    Gemini-->>Pipeline: Issues, priorities, actions, evidence IDs
+    Pipeline->>Validator: Validate schema and cited review IDs
+    Note over Validator: Only negative reviews support issues<br/>An empty issue list is valid
+    Validator-->>Pipeline: Validated insights with original evidence quotes
+    Pipeline->>Metrics: Calculate issue frequency, fractions, and coverage
+    Metrics-->>Pipeline: Issue metrics using unique review IDs
+
+    Pipeline->>Pipeline: Attach timings, token usage, and warnings
+    Pipeline->>Pipeline: Release analysis lock
+    Pipeline-->>API: Unified report
+    API-->>UI: JSON response
+    UI->>UI: Render charts, insights, and review table
+    User->>UI: Filter issues or inspect evidence
+    UI-->>User: Interactive report
+
+    opt Download report
+        User->>UI: Export JSON
+        UI-->>User: Download complete report
+    end
+    opt Download reviews as CSV
+        User->>UI: Export CSV
+        UI->>API: POST /api/v1/reviews/export
+        API-->>UI: CSV attachment
+        UI-->>User: Download CSV
+    end
+    Note over UI,API: Reports stay in memory, no database or server-side report storage
