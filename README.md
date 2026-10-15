@@ -23,6 +23,8 @@ The service keeps no reports in a database or on disk. The browser holds the cur
 
 An App Store link suggests its country until you choose a country yourself. Your selected country always controls which reviews are collected.
 
+Gemini evidence IDs are constrained to negative reviews and validated before a report is returned. See [evidence validation](docs/insight_validation.md).
+
 ## Test the API
 
 With the server running, check readiness:

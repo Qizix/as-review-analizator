@@ -39,6 +39,12 @@ class ModelReport(BaseModel):
 def request_insights(groups, prompt, usage=None, model=MODEL):
     if not any(groups.values()):
         return ModelReport(issues=[])
+    schema = ModelReport.model_json_schema()
+    negative_ids = [review["id"] for review in groups["negative"]]
+    if negative_ids:
+        schema["$defs"]["Issue"]["properties"]["evidence_ids"]["items"]["enum"] = negative_ids
+    else:
+        schema["properties"]["issues"]["maxItems"] = 0
     api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if not api_key:
         raise ValueError("set GEMINI_API_KEY or GOOGLE_API_KEY before generating insights")
@@ -72,7 +78,7 @@ def request_insights(groups, prompt, usage=None, model=MODEL):
                     config=types.GenerateContentConfig(
                         system_instruction=prompt,
                         response_mime_type="application/json",
-                        response_json_schema=ModelReport.model_json_schema(),
+                        response_json_schema=schema,
                         max_output_tokens=8192,
                     ),
                 )

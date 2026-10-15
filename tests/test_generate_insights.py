@@ -88,7 +88,8 @@ class GenerateInsightsTests(unittest.TestCase):
         self.assertNotIn('"sentiment":', kwargs["contents"])
         self.assertEqual(kwargs["config"].system_instruction, "System instructions")
         self.assertEqual(kwargs["config"].response_mime_type, "application/json")
-        self.assertEqual(kwargs["config"].response_json_schema, ModelReport.model_json_schema())
+        schema = kwargs["config"].response_json_schema
+        self.assertEqual(schema["$defs"]["Issue"]["properties"]["evidence_ids"]["items"], {"type": "string", "enum": ["n1", "n2"]})
         self.assertIsNone(kwargs["config"].response_schema)
         self.assertEqual(client.call_args.kwargs["http_options"].timeout, 60000)
         self.assertEqual(client.call_args.kwargs["http_options"].retry_options.attempts, 3)
@@ -143,12 +144,34 @@ class GenerateInsightsTests(unittest.TestCase):
         self.assertEqual(payload["generationConfig"]["responseMimeType"], "application/json")
         schema = payload["generationConfig"]["responseJsonSchema"]
         self.assertNotIn("responseSchema", payload["generationConfig"])
-        self.assertEqual(schema, ModelReport.model_json_schema())
+        self.assertEqual(schema["$defs"]["Issue"]["properties"]["evidence_ids"]["items"], {"type": "string", "enum": ["n1", "n2"]})
         self.assertIs(schema["additionalProperties"], False)
         self.assertIs(schema["$defs"]["Issue"]["additionalProperties"], False)
         self.assertNotIn("additional_properties", json.dumps(schema))
         groups = json.loads(payload["contents"][0]["parts"][0]["text"])
         self.assertEqual(set(groups), {"negative", "positive", "neutral"})
+
+    @patch("app.services.insights.genai.Client")
+    @patch.dict(os.environ, {"GEMINI_API_KEY": "test-only"}, clear=True)
+    def test_evidence_schema_is_request_specific_and_keeps_context(self, client):
+        fake = client.return_value.__enter__.return_value
+        fake.models.generate_content.return_value = SimpleNamespace(text='{"issues": []}')
+        data = collection()
+        data["reviews"][0]["id"] = "14031104092"
+        first_groups = prepare_reviews(data)
+        request_insights(first_groups, "Prompt")
+        first_schema = fake.models.generate_content.call_args.kwargs["config"].response_json_schema
+        self.assertEqual(first_schema["$defs"]["Issue"]["properties"]["evidence_ids"]["items"]["enum"], ["14031104092", "n2"])
+        context = prepare_reviews({"reviews": data["reviews"][2:]})
+        request_insights(context, "Prompt")
+        kwargs = fake.models.generate_content.call_args.kwargs
+        self.assertEqual(json.loads(kwargs["contents"]), context)
+        self.assertEqual(kwargs["config"].response_json_schema["properties"]["issues"]["maxItems"], 0)
+        request_insights(prepare_reviews(collection()), "Prompt")
+        latest = fake.models.generate_content.call_args.kwargs["config"].response_json_schema
+        self.assertNotIn("maxItems", latest["properties"]["issues"])
+        self.assertEqual(latest["$defs"]["Issue"]["properties"]["evidence_ids"]["items"]["enum"], ["n1", "n2"])
+        self.assertNotIn("enum", ModelReport.model_json_schema()["$defs"]["Issue"]["properties"]["evidence_ids"]["items"])
 
     @patch("app.services.insights.genai.Client")
     @patch.dict(os.environ, {"GEMINI_API_KEY": "test-only"}, clear=True)

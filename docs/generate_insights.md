@@ -38,6 +38,8 @@ The local code calculates `review_count` from evidence IDs and `negative_review_
 
 ## Saved reports
 
+For each Gemini call, the response schema additionally restricts evidence IDs to the negative group's IDs using a string enum. If there are no negative reviews, it requires an empty issues array. Positive and neutral records are still sent for context. See [validation and recovery](insight_validation.md) for the API's bounded repair behavior and remaining validation limits.
+
 JSON contains preserved `metadata`, a deterministic `summary`, and `insights` grouped first by priority and then recurrence. Each issue includes category, action, review count, negative-review fraction, and sorted evidence IDs. Within each bucket, issues sort by descending count and then case-folded category. Empty buckets remain arrays. Summary includes total and per-sentiment review counts, categorized/uncategorized negative-review counts, and issue count.
 
 `metadata.insight_generation` records the model, whether it was called, UTC generation timestamp, SHA-256 of the exact prompt, preprocessing limits, and IDs of truncated reviews. Markdown is rendered locally from validated JSON, with short action lists rather than free-form model prose. A report with no issues explicitly says no supported actionable complaints were identified. It does not infer historical rating changes or mark fixes resolved because the input contains no longitudinal history.
