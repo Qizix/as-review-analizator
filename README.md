@@ -39,6 +39,28 @@ Responses are JSON. The dashboard visualizes distributions, issue frequency/cove
 
 Sentiment and issue interpretation are model estimates. The classifier is English-oriented; selecting a storefront does not filter review language. Logs and traces contain timings and diagnostics, excluding review contents and credentials.
 
+## Service metrics per request
+
+Measured on **2026-10-15**: one deployed Nebula analysis of **100 reviews**, using **1 vCPU and 4 GiB RAM** in Warsaw. This benchmark is a separate run from the screenshot below and includes one Gemini evidence-repair call.
+
+| Processing stage | Measured time |
+|---|---:|
+| Review collection | 6.03 s |
+| Sentiment inference on CPU | 140.09 s |
+| Gemini generation and repair | 12.76 s |
+| App lookup, preprocessing, validation, and metrics | 0.66 s |
+| **Complete HTTP request** | **159.56 s** |
+
+| Cost component | Usage | Estimated cost (USD) |
+|---|---|---:|
+| Cloud Run CPU | 159.56 vCPU-seconds | $0.00345 |
+| Cloud Run allocated memory | 638.24 GiB-seconds | $0.00153 |
+| Gemini input | 57,807 tokens | $0.01734 |
+| Gemini output | 2,853 tokens | $0.00713 |
+| **Total processing estimate** | **One 100-review request** | **$0.0295 (~3 cents)** |
+
+Estimates use paid list prices before free-tier allowances, credits, discounts, and taxes. Cloud Run startup/idle time, builds, storage, networking, logs, and traces are additional; this is not the full billed cost or a fixed price. Review length, repairs, and instance performance change each request's usage. See [calculation and pricing sources](docs/deployment.md#per-request-cost-calculation).
+
 ## Application example: Nebula
 
 ![Nebula dashboard showing ratings, sentiment, prioritized improvements, and supporting reviews](examples/nebula-dashboard.png)

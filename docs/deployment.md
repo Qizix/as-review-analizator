@@ -121,3 +121,19 @@ Project: `obrio-test-task-api`. Runtime region: `europe-central2` (Warsaw). Clou
 - Native Cloud Monitoring returned Cloud Run request-count series. CPU/memory/latency dashboards remain the standard Cloud Run monitoring views; no custom metrics service was added.
 
 The service-account key was never created; runtime ADC is supplied by Cloud Run. Secret Manager version 1 supplies the Gemini credential. The real report was inspected locally for verification and was not persisted by the HTTP application. There is no earlier known-good revision yet; for a first-release incident, pause processing rather than selecting an unverified rollback target.
+
+## Per-request cost calculation
+
+Pricing checked on 2026-10-15. The README benchmark uses the live deployment smoke request `deployment-smoke-66baf074e35b`, not the earlier supplied screenshot export. HTTP duration was 159.560803 seconds, with 57,807 input and 2,853 output tokens across generation and one repair. CPU/memory costs use allocated resources for the whole processing window, including network waits; peak RSS does not determine billed memory.
+
+Warsaw instance-based list rates, verified through the Google Cloud Billing Catalog: CPU SKU `6872-8766-BE5C` costs $0.0000216 per vCPU-second; memory SKU `14DC-011F-3982` costs $0.0000024 per GiB-second. [Cloud Run pricing](https://cloud.google.com/run/pricing).
+
+Gemini 3.5 Flash-Lite standard paid rates are $0.30 per million input tokens and $2.50 per million output tokens, including thinking. This run reported no separate thinking-token counter. Actual provider usage is used, without estimated token counts or assumed cache discounts. [Gemini pricing](https://ai.google.dev/gemini-api/docs/pricing#gemini-3.5-flash-lite).
+
+- CPU: 159.560803 × 1 × $0.0000216 = $0.0034465.
+- Memory: 159.560803 × 4 × $0.0000024 = $0.0015318.
+- Gemini input: 57,807 / 1,000,000 × $0.30 = $0.0173421.
+- Gemini output: 2,853 / 1,000,000 × $2.50 = $0.0071325.
+- Processing-window total: $0.0294529, displayed as $0.0295.
+
+This is an allocation-based estimate before free tiers, credits, discounts, and taxes, not an invoice. Instance-based billing also covers startup and idle time until shutdown; builds, artifact/source storage, Secret Manager, networking, logging, and tracing have separate costs. Idle time cannot be attributed uniquely to one request without a billing-allocation policy. No fixed all-inclusive per-request charge is claimed.
