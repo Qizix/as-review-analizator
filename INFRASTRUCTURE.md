@@ -47,7 +47,7 @@ Hosting	Google Cloud Run
 
 3. Backend Design
 Service-oriented modules
-- Collector: Fetch and randomly sample accessible App Store reviews.
+- Collector: Fetch the first unique accessible App Store reviews in source order.
 - Preprocessor: Normalize and validate review data.
 - Sentiment: Classify reviews as positive, negative, or neutral.
 - Metrics: Calculate rating, sentiment, and issue statistics.
@@ -128,7 +128,8 @@ RAM	4 GiB
 GPU	None
 Minimum instances	0
 Maximum instances	1
-Concurrency	1
+HTTP concurrency	8
+Active processing requests	1
 Request timeout	300 seconds
 Workers	1
 Scaling	Scale to zero
@@ -174,7 +175,9 @@ Security
 - Explicit handling of provider errors.
 - LLM evidence validation.
 - Review text treated as untrusted input.
-- Access restriction or server-side rate limiting for the paid Gemini endpoint.
+- Public access without sign-in; one shared processing gate for analysis and collection.
+- Process-local minute/day allowances, Retry-After responses, and WORK_ENABLED maintenance switch.
+- One worker and maximum one instance; no traffic splitting. See docs/deployment.md for rollout limitations.
 9. Observability
 Track:
 Metric	Purpose

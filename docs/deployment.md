@@ -1,55 +1,103 @@
-# Docker and Cloud Run
+# Public single-request deployment
 
-Deployment files are prepared only. No cloud resource, image push, or deployment was performed. `INFRASTRUCTURE.md` defines the initial resource profile; validate it on Cloud Run before production use.
+The prepared target is a public Cloud Run service with no sign-in, one Uvicorn worker, and one active processing request. No cloud deployment has been performed. Container execution requires a working Docker daemon; local Python tests do not establish Linux/container or Cloud Run readiness.
 
-## Container
+## Processing policy
 
-Docker uses Python 3.12 with uv 0.11.26 and locked production dependencies. Linux Torch is resolved from the explicit official CPU index, excluding CUDA/NVIDIA packages. macOS uses its native wheel with CPU inference selected explicitly.
+`app/admission.py` owns a nonblocking gate shared by `/api/analyze` and `/api/reviews/collect`. Analysis uses internal collection without acquiring the gate twice. A second processing request gets 409 and `Retry-After: 5`; it is not queued. The dashboard, assets, docs, and health remain accessible. Request/response JSON schemas are unchanged.
 
-`scripts/download_model.py` fetches tokenizer/config files and one weight format at the pinned CardiffNLP revision. Weights are bundled in `/app/models/sentiment`; runtime sets `HF_HUB_OFFLINE=1`. Gemini inference remains external. The final container is unprivileged, runs one Uvicorn worker, respects PORT, and stores no reports. Docker context excludes credentials, outputs, local environments, models, node_modules, and Git metadata.
+| Environment variable | Default | Behavior |
+|---|---|---|
+| WORK_ENABLED | true | false returns 503 for processing, Retry-After 60 |
+| MAX_REVIEW_COUNT | 100 | Maximum reviews in each request |
+| ANALYZE_REQUESTS_PER_MINUTE | 3 | Rolling 60-second global analysis allowance |
+| ANALYZE_REQUESTS_PER_DAY | 100 | Global accepted analyses per UTC day |
+| COLLECT_REQUESTS_PER_MINUTE | 6 | Rolling standalone collection allowance |
+| COLLECT_REQUESTS_PER_DAY | 200 | Global accepted standalone collections per UTC day |
 
-```bash
-docker build --platform linux/amd64 -t review-analyzer .
-docker run --rm --env-file .env -p 8080:8080 review-analyzer
-```
-
-Open `http://localhost:8080/`. Docker must be running. Image execution was not verified here because no daemon was available; local services/API/assets were tested separately.
-
-## Cloud prerequisites
-
-Use an existing billing-enabled project and chosen region. Enable Cloud Run Admin, Artifact Registry, Cloud Build, and Secret Manager. Create a Docker repository named `review-analyzer`, a runtime service account, and a Secret Manager secret named `gemini-api-key`. Grant the runtime account Secret Accessor on that secret only. Keep credentials out of images/frontend.
-
-The operator needs build/push/deploy and service-account impersonation permissions; Cloud Build needs repository write access, and Cloud Run needs image pull access. Use existing organizational identity policies rather than broad owner grants.
-
-`infra/cloud-run.yaml` documents the service settings. Replace project, region, image, account, and secret placeholders before using it with `gcloud run services replace`. It references a secret version without containing the value.
-
-Alternatively, with prerequisites already configured:
-
-```bash
-bash infra/deploy.sh PROJECT_ID REGION SERVICE_ACCOUNT_EMAIL
-```
-
-The script builds/pushes through Cloud Build and deploys a private service. It creates no project, registry repository, account, or secret. Override `GEMINI_SECRET_NAME` for another existing secret. This command performs deployment and can incur charges; it has not been run.
+Exhausted allowances return 429 and Retry-After. Accepted work consumes allowance even if providers fail. Invalid request counts and busy rejections do not consume allowance. Minute/day counters are separate for analysis and standalone collection. They contain no review data or client identifiers and reset when the process restarts. These are shared demo limits: any public visitor can consume them. They provide neither per-user fairness nor a durable spending ceiling. Configure Gemini provider quotas and billing alerts separately; alerts do not stop spending.
 
 ## Resource profile
 
 | Setting | Value |
 |---|---|
-| CPU / GPU | 1 vCPU / none |
-| RAM | 4 GiB |
-| Minimum / maximum instances | 0 / 1 |
-| Concurrency / workers | 1 / 1 |
-| Request timeout | 300 seconds |
-| Cooperative analysis budget | 280 seconds |
+| CPU / GPU / memory | 1 vCPU / none / 4 GiB |
+| Minimum / maximum instances | 0 / 1 (service and revision limits) |
+| HTTP concurrency / workers | 8 / 1 |
+| Active processing requests per process | 1 |
+| Request timeout / cooperative analysis budget | 300 / 280 seconds |
 | Torch threads | 1 |
-| Paid endpoint limit | 3 attempts/minute per worker |
+| Access | Public, Invoker IAM check disabled |
 
-The startup probe checks `/api/health` after the classifier loads. Cloud Run provides HTTPS and scale-to-zero. Private access requires IAM invocation. For a private service, use `gcloud run services proxy app-store-review-analyzer --project PROJECT_ID --region REGION --port 8080` to test through a local browser without placing credentials in frontend code.
+HTTP concurrency 8 lets busy requests and health checks reach the application. Setting it to 1 would make Cloud Run queue requests before the application could reject them. The startup probe waits for `/api/health` after model loading. CPU allocation is instance-based so telemetry can export completed HTTP spans; minimum instances remain zero.
 
-Cloud Logging receives structured application events. Verify cold-start time, end-to-end latency at 100 reviews, actual container memory, retries, and deadline behavior under the configured resources. Local Mac RSS measurements are not a Cloud Run guarantee.
+Cloud Run can temporarily exceed instance limits during maintenance or rollouts. The gate is process-local, not a distributed lock. Keep one serving revision with 100% traffic, no traffic splitting or revision URLs exposed to users, and drain work before releases. Strict global exclusivity through platform replacements would require external coordination, intentionally outside this stateless design.
 
-The in-memory rate limit resets on restart and is not a distributed quota system. The private deployment supplies an access boundary. Making it public requires an explicitly chosen access policy and suitable server-side limits. Free allowances do not guarantee zero charges for builds, images, runtime, logs, or Gemini.
+## Local and CI checks
 
-## Observability deployment
+Docker uses Python 3.12, uv 0.11.26, locked production dependencies, official Linux CPU Torch wheels, and the pinned CardiffNLP weights. Runtime inference uses the bundled model offline. The unprivileged image contains third-party attribution in `/app/NOTICE`. Reports remain in memory and return as JSON.
 
-The prepared Cloud Run files enable ADC-authenticated Google OTLP tracing and set `GOOGLE_CLOUD_PROJECT`. They also select instance-based CPU allocation (`--no-cpu-throttling`) so the batch exporter can export HTTP server spans after responses finish. This changes billing behavior; minimum instances remain zero. Enable the Telemetry/Trace APIs and grant the runtime service account the trace-write/quota-consumer roles documented in [observability.md](observability.md). Native stdout JSON logs and Cloud Run's built-in metrics require no collector. These files have not been deployed; Cloud Trace ingestion, IAM, correlation, and CPU behavior must be verified in the target environment.
+```bash
+uv run --locked pytest -q
+npm test --prefix frontend
+bash -n infra/deploy.sh infra/smoke.sh
+docker build --platform linux/amd64 -t review-analyzer .
+bash infra/smoke.sh review-analyzer
+```
+
+The smoke check runs offline CPU sentiment inference under 1 CPU/4 GiB, checks the non-root user, starts HTTP, checks readiness/dashboard/docs, and confirms analysis fails cleanly without credentials. It makes no paid Gemini calls. Set SMOKE_PORT to change the default 18080 host port. GitHub Actions runs tests followed by these container checks on Linux; it does not deploy, push images, or require cloud secrets. Initial model downloads during builds need network access.
+
+## Cloud prerequisites
+
+Use a billing-enabled project and an existing chosen region. Install current gcloud, uv, and Node.js. Authenticate the operator through normal Google credentials. Enable Cloud Run Admin, Artifact Registry, Cloud Build, Secret Manager, and the Telemetry/Trace APIs described in [observability](observability.md).
+
+Create an Artifact Registry Docker repository named `review-analyzer`, a runtime service account, and a Secret Manager secret named `gemini-api-key`. Grant that account Secret Accessor on this secret only, plus the Trace/Telemetry roles in the observability guide. Use ADC, with no static service-account keys in images or source.
+
+The deploying identity needs build, repository push, Cloud Run deploy/public-access configuration, and permission to act as the runtime account. Cloud Build needs repository write access; Cloud Run needs image pull access. Organization policies may disallow public access. Resolve policy constraints explicitly rather than broadening IAM grants.
+
+## Deployment
+
+First pass container checks and commit the release. The script refuses a dirty working tree, runs Python/frontend tests, tags the Cloud Build image with the full commit SHA, deploys the public resource profile, routes 100% of service traffic to the latest revision, and polls readiness with Gemini configuration required. The health check confirms presence of credentials, not their validity. Use a numeric secret version for reproducible releases.
+
+```bash
+GEMINI_SECRET_VERSION=1 bash infra/deploy.sh PROJECT_ID REGION SERVICE_ACCOUNT_EMAIL
+```
+
+The script builds, pushes, changes public access and traffic, and can incur charges. It creates no project, repository, account, or secret. GEMINI_SECRET_NAME overrides the secret name; absent GEMINI_SECRET_VERSION defaults to latest. Build failures stop before deploy. Failed readiness exits nonzero but does not automatically revert traffic; use rollback below. Never run competing releases concurrently. Keep release image tags immutable in Artifact Registry.
+
+`infra/cloud-run.yaml` is the equivalent configuration template. Replace project, region, image tag, account, and secret version before applying it. Prefer a commit tag or image digest over its illustrative latest placeholder.
+
+## Updating an existing deployment
+
+Record the current serving revision and secret version before each release:
+
+```bash
+gcloud run services describe app-store-review-analyzer --project PROJECT_ID --region REGION --format='yaml(status.traffic)'
+```
+
+For a maintenance release, first pause processing:
+
+```bash
+gcloud run services update app-store-review-analyzer --project PROJECT_ID --region REGION --update-env-vars WORK_ENABLED=false
+```
+
+Wait until the paused revision serves all service traffic and existing processing finishes (inspect request completion logs; allow the full 300-second request window). Then run the deployment script, which re-enables processing on the new revision. The configuration change itself is a rollout: the switch cannot instantly cancel already-running work. For emergency containment, also disable public invocation or restrict ingress and revoke/limit the Gemini credential as appropriate.
+
+## Rollback
+
+Route service traffic back to the recorded known-good revision:
+
+```bash
+gcloud run services update-traffic app-store-review-analyzer --project PROJECT_ID --region REGION --to-revisions PREVIOUS_REVISION=100
+uv run --locked python scripts/check_health.py https://SERVICE_URL --require-gemini
+```
+
+Select the earlier working revision, not the maintenance-paused revision. Old requests may finish during rollback. Revision rollback restores its environment/image but does not restore service-level public access settings or external secret contents; keep pinned secret versions available. If the service has no known-good revision, leave processing paused while fixing it.
+
+## Deployment acceptance
+
+After deployment, verify public dashboard/health without an identity token, then run one real 100-review analysis. While it runs, send a second processing request: expect 409/Retry-After and responsive health. Confirm the original response and browser JSON export. Exercise a small test allowance and maintenance pause in a non-production configuration, then restore defaults.
+
+Inspect actual memory, cold-start time, end-to-end latency, provider failures, and deadline handling under the configured resources. Confirm Cloud Trace spans, correlated JSON logs, Gemini token usage, and native Cloud Run metrics. These checks remain environment-dependent and have not been executed here. The sentiment classifier is English-oriented; country selection does not guarantee equal sentiment accuracy across languages.
+
+Official references: [public access](https://docs.cloud.google.com/run/docs/authenticating/public), [deploy flags](https://docs.cloud.google.com/sdk/gcloud/reference/run/deploy), [instance limits](https://docs.cloud.google.com/run/docs/configuring/max-instances), [uv CI integration](https://docs.astral.sh/uv/guides/integration/github/).

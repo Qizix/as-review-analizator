@@ -1,6 +1,6 @@
 # Modular analysis application
 
-`INFRASTRUCTURE.md` is the target architecture. `app/main.py` owns FastAPI routes, Jinja2 HTML, static assets, lifespan, request logging, and an in-process rate limit. Business logic in `app/services/` does not import FastAPI.
+`INFRASTRUCTURE.md` is the target architecture. `app/main.py` owns FastAPI routes, Jinja2 HTML, static assets, lifespan, request logging, and HTTP error handling. Business logic in `app/services/` does not import FastAPI.
 
 ## Services and lifecycle
 
@@ -45,9 +45,9 @@ Rating, sentiment, and issue metrics are calculated inside the analysis pipeline
 
 ## Errors, limits, and observability
 
-422 indicates request/data validation, 503 missing provider credentials, 409 concurrent analysis, 429 rate limiting, 502 provider/inference/evidence failure, and 504 an exceeded stage deadline. Failed evidence validation never produces a successful report.
+422 indicates request/data validation, 503 paused processing or missing provider credentials, 409 concurrent processing, 429 rate limiting, 502 provider/inference/evidence failure, and 504 an exceeded stage deadline. Failed evidence validation never produces a successful report.
 
-The paid endpoint uses a global per-worker rolling limit of three attempted analyses/minute by default; 429 includes Retry-After. This volatile limit resets after restarts and is not distributed identity/quota infrastructure. Prepared Cloud Run deployment is private by default. Health and assets do not spend Gemini tokens.
+`app/admission.py` owns one nonblocking gate shared by analysis and collection. Internal collection during analysis reuses the admitted operation. Defaults are 3 analyses/minute and 100/day, plus 6 standalone collections/minute and 200/day; accepted failures consume allowance, busy/invalid requests do not. Daily windows reset at UTC midnight. Admission errors preserve the JSON detail response and include Retry-After. WORK_ENABLED=false pauses processing while health/assets remain available. These process-local counters reset on restart. Public Cloud Run uses one worker, maximum one instance, and HTTP concurrency 8 so busy responses can reach the gate. See [deployment limits](deployment.md) for rollout and scaling limitations.
 
 The 280-second application deadline is cooperative, below Cloud Run's 300-second timeout. Collection uses shrinking budgets, and stages check before and after work. Gemini and app lookup derive per-attempt timeouts from the same remaining deadline, and Gemini retry delays consume that budget. CPU inference and SDK calls cannot be forcibly cancelled mid-operation; disconnected clients can leave their current computation finishing. Validate resource sizing and timeout behavior on Cloud Run before production use.
 

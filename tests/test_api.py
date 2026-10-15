@@ -182,7 +182,7 @@ def test_missing_credentials_and_rate_limit(monkeypatch):
     with TestClient(app) as client:
         assert client.post("/api/analyze", json={"app_id": "123"}).status_code == 503
         monkeypatch.setenv("GEMINI_API_KEY", "test-only")
-        app.state.analyzer.analyze = lambda _: {"app": {}, "collection": {}, "metrics": {}, "insights": {}, "reviews": [], "metadata": {}}
+        app.state.analyzer._analyze = lambda _: {"app": {}, "collection": {}, "metrics": {}, "insights": {}, "reviews": [], "metadata": {}}
         assert client.post("/api/analyze", json={"app_id": "123"}).status_code == 200
         response = client.post("/api/analyze", json={"app_id": "123"})
         assert response.status_code == 429

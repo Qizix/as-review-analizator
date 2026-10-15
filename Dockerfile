@@ -4,6 +4,7 @@ WORKDIR /app
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 UV_LINK_MODE=copy TOKENIZERS_PARALLELISM=false OMP_NUM_THREADS=1
 COPY pyproject.toml uv.lock ./
 RUN uv sync --locked --no-dev --no-install-project
+COPY NOTICE ./NOTICE
 COPY app ./app
 COPY prompts ./prompts
 COPY scripts/download_model.py ./scripts/download_model.py

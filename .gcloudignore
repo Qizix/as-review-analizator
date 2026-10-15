@@ -1,0 +1,16 @@
+.gcloudignore
+.git
+.gitignore
+.env
+.env.*
+.venv
+**/__pycache__
+.pytest_cache
+.DS_Store
+output
+models
+hydra_outputs
+frontend/node_modules
+tests
+docs
+.github

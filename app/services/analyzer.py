@@ -1,10 +1,10 @@
 import resource
 import sys
-import threading
 import time
 
 import httpx
 from app.observability import observe, operation, warning
+from app.admission import Admission
 from app.services.collector import collect_reviews
 from app.services.app_info import lookup_app_info
 from app.services.insights import generate_insights, InsightDecodeError
@@ -19,13 +19,20 @@ class Analyzer:
     def __init__(self, settings, classifier):
         self.settings = settings
         self.classifier = classifier
-        self.lock = threading.Lock()
+        self.admission = Admission(settings)
 
     def collect(self, request, deadline=None):
         observe(app_id=request.app_id, country=request.country, requested_count=request.review_count)
+        self.check_count(request)
+        with self.admission.work("collection"):
+            return self._collect(request, deadline)
+
+    def check_count(self, request):
+        if request.review_count > self.settings.max_review_count:
+            raise AnalysisError(f"review_count must not exceed {self.settings.max_review_count}", 422, "INVALID_REQUEST", "admission")
+
+    def _collect(self, request, deadline=None):
         with operation("reviews.collect", {"app.reviews.requested_count": request.review_count, "app.country": request.country}) as span:
-            if request.review_count > self.settings.max_review_count:
-                raise AnalysisError(f"review_count must not exceed {self.settings.max_review_count}", 422, "INVALID_REQUEST", "reviews.collect")
             with httpx.Client(follow_redirects=True) as client:
                 result = collect_reviews(client, request.app_id, request.country, request.review_count, request.model_dump()["seed"], deadline)
             metadata = result["metadata"]
@@ -44,15 +51,18 @@ class Analyzer:
             return result
 
     def analyze(self, request):
-        if not self.lock.acquire(blocking=False):
-            raise AnalysisError("An analysis is already running; retry later", 409, "ANALYSIS_BUSY", "startup")
+        self.check_count(request)
+        with self.admission.work("analysis"):
+            return self._analyze(request)
+
+    def _analyze(self, request):
         run = AnalysisRun(self.settings)
         warnings = []
         stage = run.stage
 
         try:
             with stage("collection"):
-                collected = self.collect(request, run.deadline)
+                collected = self._collect(request, run.deadline)
             with stage("app_info", "appstore.lookup"):
                 app_info = lookup_app_info(request.app_id, request.country, deadline=run.deadline)
             with stage("preprocessing", "reviews.preprocess"):
@@ -115,4 +125,3 @@ class Analyzer:
             raise AnalysisError("An upstream service or inference step failed; retry later", code=code, stage=run.active_stage) from exc
         finally:
             observe(analysis_duration_ms=round((time.monotonic() - run.started) * 1000, 3))
-            self.lock.release()

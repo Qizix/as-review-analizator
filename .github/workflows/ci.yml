@@ -1,0 +1,26 @@
+name: Verify
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+        with:
+          version: "0.11.26"
+          python-version: "3.12"
+      - run: uv sync --locked
+      - run: uv run --locked pytest -q
+      - run: npm test --prefix frontend
+      - run: bash -n infra/deploy.sh infra/smoke.sh
+  container:
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - run: docker build --platform linux/amd64 -t review-analyzer:test .
+      - run: bash infra/smoke.sh review-analyzer:test

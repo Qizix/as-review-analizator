@@ -1,8 +1,6 @@
 import logging
 import os
-import threading
 import time
-from collections import deque
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
@@ -30,8 +28,6 @@ def create_app(settings=None, classifier_factory=load_classifier, span_exporter=
     settings = settings or Settings.from_env()
     configure_logging(settings)
     telemetry = Telemetry(settings, span_exporter)
-    requests = deque()
-    rate_lock = threading.Lock()
 
     @asynccontextmanager
     async def lifespan(app):
@@ -61,7 +57,7 @@ def create_app(settings=None, classifier_factory=load_classifier, span_exporter=
         observe(error_stage=exc.stage, error_type=exc.code)
         if exc.status >= 500:
             record_exception(trace.get_current_span(), exc)
-        return JSONResponse(status_code=exc.status, content={"detail": str(exc)})
+        return JSONResponse(status_code=exc.status, content={"detail": str(exc)}, headers=exc.headers)
 
     @app.exception_handler(StarletteHTTPException)
     async def http_error(request, exc):
@@ -89,13 +85,6 @@ def create_app(settings=None, classifier_factory=load_classifier, span_exporter=
         observe(app_id=payload.app_id, country=payload.country, requested_count=payload.review_count)
         if not (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")):
             raise HTTPException(503, "Gemini credentials are not configured on the server")
-        with rate_lock:
-            now = time.monotonic()
-            while requests and requests[0] <= now - 60:
-                requests.popleft()
-            if len(requests) >= settings.analyze_requests_per_minute:
-                raise HTTPException(429, "Analysis rate limit reached; retry in one minute", headers={"Retry-After": "60"})
-            requests.append(now)
         return app.state.analyzer.analyze(payload)
 
     @app.post("/api/reviews/collect")

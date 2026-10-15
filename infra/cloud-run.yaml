@@ -2,6 +2,9 @@ apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
   name: app-store-review-analyzer
+  annotations:
+    run.googleapis.com/maxScale: "1"
+    run.googleapis.com/invoker-iam-disabled: "true"
 spec:
   template:
     metadata:
@@ -10,7 +13,7 @@ spec:
         autoscaling.knative.dev/maxScale: "1"
         run.googleapis.com/cpu-throttling: "false"
     spec:
-      containerConcurrency: 1
+      containerConcurrency: 8
       timeoutSeconds: 300
       serviceAccountName: review-analyzer@PROJECT_ID.iam.gserviceaccount.com
       containers:
@@ -22,6 +25,18 @@ spec:
               cpu: "1"
               memory: 4Gi
           env:
+            - name: WORK_ENABLED
+              value: "true"
+            - name: MAX_REVIEW_COUNT
+              value: "100"
+            - name: ANALYZE_REQUESTS_PER_MINUTE
+              value: "3"
+            - name: ANALYZE_REQUESTS_PER_DAY
+              value: "100"
+            - name: COLLECT_REQUESTS_PER_MINUTE
+              value: "6"
+            - name: COLLECT_REQUESTS_PER_DAY
+              value: "200"
             - name: OTEL_ENABLED
               value: "true"
             - name: OTEL_SERVICE_NAME

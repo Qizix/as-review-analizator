@@ -131,6 +131,10 @@ Cloud Run automatically supplies W3C `traceparent`. Logs use the active trace ID
 
 After deployment, execute one analysis and confirm the root/custom spans in Cloud Trace, matching log trace references, token attributes, and native Cloud Monitoring request/error/latency/CPU/memory/instance/startup metrics. Cloud deployment and live ADC/IAM/Trace ingestion remain manual verification; preparing files or mocking export does not prove them.
 
+## Admission diagnostics
+
+Public demo processing uses one shared gate and process-local allowances. `error_stage=admission` distinguishes busy (409/ANALYSIS_BUSY), minute allowance (429/RATE_LIMITED), daily allowance (429/DAILY_LIMITED), and paused service (503/SERVICE_PAUSED) responses from provider failures. These requests do not produce pipeline stage spans. Retry-After tells clients when to retry. See [deployment](deployment.md) for configuration and counter/rollout limitations.
+
 ## Investigation guide
 
 For a slow analysis, find its request ID or trace ID, compare the summary duration fields, then open the trace waterfall. Collection spans show HTTP status/retry delays; sentiment spans show model/count/batch size; Gemini spans show call latency, HTTP status, observed retries, and actual usage. Inspect the single final metrics calculation if `metrics_duration_ms` is unexpectedly large. CPU inference and SDK calls retain the existing cooperative deadline limitations.

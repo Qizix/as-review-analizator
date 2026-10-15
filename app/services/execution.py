@@ -5,11 +5,12 @@ from app.observability import operation
 
 
 class AnalysisError(Exception):
-    def __init__(self, message, status=502, code="ANALYSIS_FAILED", stage=None):
+    def __init__(self, message, status=502, code="ANALYSIS_FAILED", stage=None, headers=None):
         super().__init__(message)
         self.status = status
         self.code = code
         self.stage = stage
+        self.headers = headers
 
 
 class DeadlineExceeded(TimeoutError):

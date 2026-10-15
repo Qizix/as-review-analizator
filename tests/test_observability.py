@@ -188,7 +188,7 @@ def test_health_excluded_and_concurrent_collection_contexts(instrumented, capsys
 
         with ThreadPoolExecutor(max_workers=2) as pool:
             responses = list(pool.map(collect, ("123", "456")))
-    assert all(response.status_code == 200 for response in responses)
+    assert all(response.status_code in {200, 409} for response in responses)
     logs = request_logs(capsys)
     assert len(logs) == 2
     assert {log["request_id"]: log["app_id"] for log in logs} == {"request-123": "123", "request-456": "456"}

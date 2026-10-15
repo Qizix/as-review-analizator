@@ -91,4 +91,8 @@ npm test --prefix frontend
 - [Observability: tracing, correlated JSON logs, and troubleshooting](docs/observability.md)
 - [Assignment](TEST_TASK.md) and [research checklist](RESEARCH_TODO.md)
 
-Cloud deployment files are prepared; no cloud resources have been created or deployed.
+## Public single-request deployment
+
+Deployment files allow public access without sign-in. One analysis or collection runs at a time; other processing requests receive HTTP 409 with `Retry-After`. The dashboard and health checks stay available. Configurable minute/day limits return 429, and `WORK_ENABLED=false` pauses processing.
+
+[Deployment instructions](docs/deployment.md) cover prerequisites, container checks, rollout, and rollback. GitHub Actions runs tests and an offline container smoke check. Cloud deployment and container execution still require verification; no cloud resources have been created or deployed.
