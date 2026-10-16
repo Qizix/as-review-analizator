@@ -41,35 +41,36 @@ Sentiment and issue interpretation are model estimates. The classifier is Englis
 
 ## Service metrics per request
 
-Latest verified cloud request on **2026-10-16**: Nebula analysis using **PyTorch batch size 1**, **1 vCPU, 4 GiB RAM, and one inference thread** in Warsaw. Requested **100 reviews**, collected **10**: Apple throttled later pages with HTTP 429, leaving an explicitly reported shortfall of 90 reviews. The request succeeded with three validated issues.
+Verified on **2026-10-16** with a deployed Nebula analysis: **90 unique reviews out of 100 requested**, HTTP 200, and six validated issue groups. Apple throttled one review page; the report explicitly records the 10-review shortfall. Runtime: **1 vCPU, 4 GiB RAM, one inference thread, PyTorch batch size 1**, Warsaw.
+
+The sample's average rating is **2.79/5**. Sentiment: **31 positive, 14 neutral, 45 negative**. Issue groups cover **40 of 45 negative reviews (88.9%)**, with five unassigned. The most frequent group concerns unwanted subscriptions (23 reviews).
 
 | Processing stage | Measured time |
 |---|---:|
-| Review collection, including fallback attempts | 35.104 s |
-| App information lookup | 0.154 s |
-| Text preprocessing | 0.038 s |
-| Sentiment inference on CPU (10 reviews) | 15.741 s |
-| Gemini insight generation | 8.670 s |
-| Evidence validation | 1.5 ms |
-| Rating, sentiment, and issue metrics | 0.2 ms |
-| **Complete analysis pipeline** | **59.713 s** |
-| **Complete HTTP request** | **59.718 s** |
+| Review collection, including fallback attempts | 15.166 s |
+| App information lookup | 0.145 s |
+| Text preprocessing | 0.159 s |
+| Sentiment inference on CPU (90 reviews) | 77.974 s |
+| Gemini insight generation | 8.010 s |
+| Evidence validation | 0.560 ms |
+| Rating, sentiment, and issue metrics | 0.339 ms |
+| Report assembly | 0.118 ms |
+| **Complete analysis pipeline** | **101.459 s** |
+| **Complete HTTP request** | **101.467 s** |
 
-Stage timings come from the structured request log; totals include orchestration and response handling. This partial sample cannot establish a speedup against the earlier 100-review run. See [rollout verification](docs/deployment.md#batch-size-1-rollout--2026-10-16).
+Stage timings come from the response and structured request log; totals include orchestration and response handling. This is one measured request, not a latency guarantee. See [verification details](docs/deployment.md#final-nebula-verification--2026-10-16).
 
-Estimated processing cost for the **same 10-review batch-1 request**, using actual provider token counts:
+Estimated processing cost for the **same 90-review request**, using actual provider token counts:
 
 | Cost component | Usage | Estimated cost (USD) |
 |---|---|---:|
-| Cloud Run CPU | 59.72 vCPU-seconds | $0.00129 |
-| Cloud Run allocated memory | 238.87 GiB-seconds | $0.00057 |
-| Gemini input | 3,862 tokens | $0.00116 |
-| Gemini output | 401 tokens | $0.00100 |
-| **Total processing estimate** | **One 10-review request** | **$0.00402 (~0.4 cents)** |
+| Cloud Run CPU | 101.47 vCPU-seconds | $0.00219 |
+| Cloud Run allocated memory | 405.87 GiB-seconds | $0.00097 |
+| Gemini input | 25,624 tokens | $0.00769 |
+| Gemini output | 1,432 tokens | $0.00358 |
+| **Total processing estimate** | **One 90-review request** | **$0.01443 (~1.44 cents)** |
 
-Estimates use paid list prices before free-tier allowances, credits, discounts, and taxes. Cloud Run startup/idle time, builds, storage, networking, logs, and traces are additional; this is not the full billed cost or a fixed price. Review length, repairs, and instance performance change each request's usage. See [calculation and pricing sources](docs/deployment.md#per-request-cost-calculation).
-
-An [ONNX/quantization benchmark](docs/sentiment-benchmark.md) now compares the Xenova conversion against PyTorch. On the local ARM Mac, batch size 1 improved PyTorch inference from 7.71 to 6.33 seconds; quantized ONNX was slower and changed some labels. Production inference now uses PyTorch batch size 1; the ONNX backends remain experimental. Both tables above describe the latest 10-review cloud check; they do not predict the time or cost of a complete 100-review analysis.
+Estimates use paid list prices before free-tier allowances, credits, discounts, and taxes. Cloud Run startup/idle time, builds, storage, networking, logs, and traces are additional. Review length and provider retries affect usage. See [calculation and pricing sources](docs/deployment.md#per-request-cost-calculation).
 
 ## Application example: Nebula
 

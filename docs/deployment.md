@@ -124,17 +124,17 @@ The service-account key was never created; runtime ADC is supplied by Cloud Run.
 
 ## Per-request cost calculation
 
-The README estimate uses the 2026-10-16 batch-1 verification request `batch-one-c0ad9ded8522`: 10 collected reviews out of 100 requested, HTTP duration 59.718319 seconds, and one Gemini call reporting 3,862 input and 401 output tokens (4,263 total). Apple throttling caused the shortfall. No evidence repair was needed. These measurements do not predict a full 100-review request. CPU/memory costs use allocated resources for the whole processing window, including network waits; peak RSS does not determine billed memory.
+The README estimate uses the 2026-10-16 Nebula verification request `final-100-review-20261016`: 90 collected reviews out of 100 requested, server HTTP duration 101.466818 seconds, and Gemini reporting 25,624 input and 1,432 output tokens (27,056 total). Apple throttling caused the shortfall. One Gemini transport retry was recorded; no evidence repair was needed. These measurements describe this request, not a projected 100-review request. CPU/memory costs use allocated resources for the whole processing window, including network waits; peak RSS does not determine billed memory. Provider token counts cover reported usage; no unreported retry usage is estimated.
 
 Warsaw instance-based list rates, verified through the Google Cloud Billing Catalog: CPU SKU `6872-8766-BE5C` costs $0.0000216 per vCPU-second; memory SKU `14DC-011F-3982` costs $0.0000024 per GiB-second. [Cloud Run pricing](https://cloud.google.com/run/pricing).
 
 Gemini pricing rechecked on 2026-10-16; Cloud Run rates retain the 2026-10-15 Billing Catalog verification. Gemini 3.5 Flash-Lite standard paid rates are $0.30 per million input tokens and $2.50 per million output tokens, including thinking. This run reported no separate thinking-token counter. Actual provider usage is used, without estimated token counts or assumed cache discounts. [Gemini pricing](https://ai.google.dev/gemini-api/docs/pricing#gemini-3.5-flash-lite).
 
-- CPU: 59.718319 × 1 × $0.0000216 = $0.0012899.
-- Memory: 59.718319 × 4 × $0.0000024 = $0.0005733.
-- Gemini input: 3,862 / 1,000,000 × $0.30 = $0.0011586.
-- Gemini output: 401 / 1,000,000 × $2.50 = $0.0010025.
-- Processing-window total: $0.0040243, displayed as $0.00402 (~0.4 US cents).
+- CPU: 101.466818 × 1 × $0.0000216 = $0.0021917.
+- Memory: 101.466818 × 4 × $0.0000024 = $0.0009741.
+- Gemini input: 25,624 / 1,000,000 × $0.30 = $0.0076872.
+- Gemini output: 1,432 / 1,000,000 × $2.50 = $0.0035800.
+- Processing-window total: $0.0144330, displayed as $0.01443 (~1.44 US cents).
 
 This is an allocation-based estimate before free tiers, credits, discounts, and taxes, not an invoice. Instance-based billing also covers startup and idle time until shutdown; builds, artifact/source storage, Secret Manager, networking, logging, and tracing have separate costs. Idle time cannot be attributed uniquely to one request without a billing-allocation policy. No fixed all-inclusive per-request charge is claimed.
 
@@ -151,3 +151,15 @@ This is an allocation-based estimate before free tiers, credits, discounts, and 
 - During analysis, concurrent processing returned 409 and health remained 200. Release checks passed with 139 Python tests, 62 subtests, and six frontend tests.
 
 The earlier known-good processing revision is `app-store-review-analyzer-00001-h68` (batch size 8). If rollback is needed, route 100% traffic there; do not select the maintenance-paused revision `00002-tlw`. Git commits were kept local as requested; deployment used the Cloud Build source upload.
+
+## Final Nebula verification — 2026-10-16
+
+- Public `POST /api/analyze`, app `1459969523`, US storefront, requested count 100. HTTP 200 on revision `app-store-review-analyzer-00003-67b`; resources remained one vCPU, 4 GiB RAM, one inference thread, batch size 1.
+- Request ID: `final-100-review-20261016`; trace ID: `c85317fc3edebf30f2129f75911a7777`. Cloud Logging confirmed the serving revision and server HTTP duration of 101.466818 seconds. Client elapsed time was 101.776416 seconds.
+- Returned 90 unique reviews, all with valid 1–5 ratings. Catalog page 6 exhausted bounded retries with HTTP 429; fallback sources added no unique reviews. The response reported a shortfall of 10 and incomplete collection. This was a successful partial analysis.
+- Independently checked response-schema validity, unique IDs, ratings, average rating, sentiment counts, issue evidence membership in negative reviews, duplicate-free evidence, per-issue counts, and union coverage against the returned reviews.
+- Average rating: 2.788889. Sentiment: 31 positive, 14 neutral, 45 negative. Six issue groups cover 40/45 negative reviews (88.8889%); five remain unassigned. Group counts: unwanted subscriptions 23, paywalls 12, customer support/refunds 7, messaging errors 4, account access/deletion 3, astrological calculations 3. Counts overlap where reviews mention several issues.
+- Response stage durations in seconds: collection 15.1656, app lookup 0.1453, preprocessing 0.1592, sentiment 77.9742, Gemini generation 8.0097, validation 0.0006, metrics 0.0003, pipeline 101.4591. Structured logs provide validation 0.560 ms, metrics 0.339 ms, and report assembly 0.118 ms. Gemini generation includes its request, retry, and decoding time; overlapping spans must not be added again.
+- Gemini reported 25,624 input and 1,432 output tokens; one transport retry, no evidence repair. Estimated processing-window cost is $0.0144330 using the calculation above. Peak process RSS was 894.02 MiB.
+
+The README presents this final measured result. The initial release and 10-review rollout checks above remain historical verification records, not comparable speed benchmarks.
