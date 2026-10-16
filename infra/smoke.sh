@@ -7,7 +7,16 @@ if [[ $# -ne 1 ]]; then
 fi
 cd "$(dirname "$0")/.."
 IMAGE="$1"
-docker run --rm --network none --cpus 1 --memory 4g "$IMAGE" .venv/bin/python -c 'import os; from app.services.sentiment import load_classifier; assert os.getuid() != 0; result = load_classifier()(["I love this app"], truncation=True, max_length=512); assert result[0]["label"].lower() in {"positive", "neutral", "negative"}'
+docker run --rm --network none --cpus 1 --memory 4g "$IMAGE" .venv/bin/python -c 'import importlib.util, os
+assert os.getuid() != 0
+if os.environ.get("QUALITY_ENABLED") == "false":
+    assert importlib.util.find_spec("torch") is None
+    assert importlib.util.find_spec("transformers") is None
+    from app.main import create_app
+else:
+    from app.services.sentiment import load_classifier
+    result = load_classifier()(["I love this app"], truncation=True, max_length=512)
+    assert result[0]["label"].lower() in {"positive", "neutral", "negative"}'
 CONTAINER="$(docker run -d --rm --network none --cpus 1 --memory 4g -e OTEL_ENABLED=false -e LOG_FORMAT=json "$IMAGE")"
 cleanup() {
   status=$?

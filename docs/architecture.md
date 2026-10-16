@@ -10,12 +10,12 @@
 - `review_batch.py`: owns original and prepared reviews together, attaches inference labels consistently, and supplies defensive copies to insight generation. Callers cannot independently substitute sentiment groups.
 - `sentiment.py`: loads CardiffNLP RoBERTa on CPU, classifies preprocessed text one review at a time (batch size 1), and truncates at 512 tokens. The revision is pinned to `3216a57f2a0d9c45a2e6c20157c20c49fb4bf9c7`. Torch uses one thread by default. Rating never determines sentiment.
 - `metrics.py`: calculates independent distributions and denominators, unique issue frequencies, negative fractions, and union-based coverage. Undefined ratios are null.
-- `insights.py`: sends compact negative/positive/neutral arrays and a versioned system prompt to Gemini 3.5 Flash-Lite, using `response_json_schema`, capturing provider usage, and owning bounded evidence repair.
-- `validator.py`: rejects unknown/nonnegative/duplicate evidence and duplicate categories. Quotations are taken directly from original reviews. Keywords come from semantic grouping.
+- `interpretation.py`: owns fast unified Gemini and quality RoBERTa-then-Gemini interpretation behind one interface. It checks complete ID-based sentiment coverage and exact source-excerpt quotations. `insights.py` shares structured transport, deadlines, retries and token accounting, and retains the standalone negative-only insight format. See [dual-mode analysis](dual-mode-analysis.md).
+- `validator.py`: validates source IDs and unique categories and assembles grouped reports. Production interpretation allows all sentiments and supplies verified model quotations; legacy standalone insight generation retains negative-only evidence. Keywords are semantic descriptors.
 - `execution.py`: owns request-local stage identity, actual stage durations, usage, and the cooperative deadline.
 - `analyzer.py`: orchestrates all stages and assembles the unified response. Original titles/text are restored after sentiment classification, so model preprocessing does not replace raw source reviews.
 
-FastAPI lifespan loads one classifier per worker before accepting traffic. One nonblocking processing gate per worker covers analysis and standalone collection, returning 409 instead of queuing concurrent work. The synchronous route runs through FastAPI's thread pool and returns the complete JSON report. There are no background jobs, persistent reports, databases, or brokers.
+With QUALITY_ENABLED=true, FastAPI lifespan loads one classifier per worker before accepting traffic. Fast-only installations skip all local model imports and loading. One nonblocking processing gate per worker covers analysis and standalone collection, returning 409 instead of queuing concurrent work. The synchronous route runs through FastAPI's thread pool and returns the complete JSON report. There are no background jobs, persistent reports, databases, or brokers.
 
 Missing Gemini credentials are rejected before API collection. Empty samples skip inference/provider generation. If every collection page fails and no reviews are available, analysis fails. Empty accessible feeds and negative feedback without concrete actionable complaints can produce valid empty insight lists.
 
@@ -29,7 +29,7 @@ Missing Gemini credentials are rejected before API collection. Empty samples ski
 | GET | `/docs` | OpenAPI documentation |
 | GET | `/` | Jinja2 dashboard |
 
-`AnalyzeRequest` accepts positive numeric string IDs and normalized ISO countries. Count is a strict integer 1–500 at the schema boundary, limited to 100 by default operational settings. The dashboard receives the configured maximum. Seed defaults to 42.
+`AnalyzeRequest` accepts positive numeric string IDs and normalized ISO countries. Mode accepts fast/quality and defaults to quality. Count is a strict integer 1–500 at the schema boundary, limited to 100 by default operational settings. The dashboard receives the configured maximum. Seed defaults to 42.
 
 The unified response includes `app`, `collection`, `metrics`, `insights`, `reviews`, and `metadata`:
 
@@ -38,14 +38,14 @@ The unified response includes `app`, `collection`, `metrics`, `insights`, `revie
 - Issue frequencies/coverage computed locally from source labels and unique evidence IDs.
 - `insights.issues` with category, priority, review count, negative fraction, supporting IDs, original quotations, and keywords.
 - `insights.recommendations` with short actions linked to categories and evidence IDs.
-- Original source reviews plus sentiment labels/scores.
+- Original source reviews plus sentiment labels; only RoBERTa supplies scores.
 - Model/revision identity, timings, token usage, prompt hash, peak process RSS, preprocessing details, and warnings.
 
-Rating, sentiment, and issue metrics are calculated inside the analysis pipeline and returned by `POST /api/analyze`. There is no standalone metrics endpoint. Coverage uses the union of evidence IDs, since a review can support several issues. The API returns JSON and has no export endpoint. The dashboard can download the JSON report directly from browser memory. No review or report file is stored server-side.
+Rating, sentiment, and issue metrics are calculated inside the analysis pipeline and returned by `POST /api/analyze`. There is no standalone metrics endpoint. Negative coverage uses the union of negative supporting evidence IDs, since a review can support several issues. The API returns JSON and has no export endpoint. The dashboard can download the JSON report directly from browser memory. No review or report file is stored server-side.
 
 ## Errors, limits, and observability
 
-422 indicates request/data validation, 503 paused processing or missing provider credentials, 409 concurrent processing, 429 rate limiting, 502 provider/inference/evidence failure, and 504 an exceeded stage deadline. Failed evidence validation never produces a successful report.
+422 indicates request/data validation, 503 paused processing, unavailable quality mode, or missing provider credentials, 409 concurrent processing, 429 rate limiting, 502 provider/inference/evidence failure, and 504 an exceeded stage deadline. Failed evidence validation never produces a successful report.
 
 `app/admission.py` owns one nonblocking gate shared by analysis and collection. Internal collection during analysis reuses the admitted operation. Defaults are 3 analyses/minute and 100/day, plus 6 standalone collections/minute and 200/day; accepted failures consume allowance, busy/invalid requests do not. Daily windows reset at UTC midnight. Admission errors preserve the JSON detail response and include Retry-After. WORK_ENABLED=false pauses processing while health/assets remain available. These process-local counters reset on restart. Public Cloud Run uses one worker, maximum one instance, and HTTP concurrency 8 so busy responses can reach the gate. See [deployment limits](deployment.md) for rollout and scaling limitations.
 

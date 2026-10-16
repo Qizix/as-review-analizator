@@ -9,15 +9,15 @@ This experiment evaluates the pinned Xenova ONNX conversion against the existing
 ## Reproduce
 
 ```bash
-uv sync --locked
-uv run --locked python -m experiments.benchmark_sentiment
+uv sync --locked --extra quality
+uv run --locked --extra quality python -m experiments.benchmark_sentiment
 ```
 
 Hydra configuration is `conf/sentiment_benchmark.yaml`. Results and resolved config go under ignored `hydra_outputs/sentiment_benchmark/`. To change one experiment setting:
 
 ```bash
-uv run --locked python -m experiments.benchmark_sentiment threads=2
-uv run --locked python -m experiments.benchmark_sentiment 'batch_sizes=[1]' repeats=5
+uv run --locked --extra quality python -m experiments.benchmark_sentiment threads=2
+uv run --locked --extra quality python -m experiments.benchmark_sentiment 'batch_sizes=[1]' repeats=5
 ```
 
 Quote list overrides in shells that expand brackets: `'batch_sizes=[1]'`. Inputs must be a nonempty collection accepted by the existing preprocessor. The default input is the checked-in Nebula export, reused without collecting fresh reviews or calling Gemini.

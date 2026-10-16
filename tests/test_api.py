@@ -4,8 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import create_app
-from app.services.insights import ModelReport
-from app.services.validator import build_report
+from app.services.interpretation import IssueAnalysis as ModelReport, validate_analysis
 from app.settings import Settings
 
 
@@ -25,17 +24,18 @@ def api(monkeypatch):
     monkeypatch.setenv("GEMINI_API_KEY", "test-only")
     classifier = Mock(return_value=[{"label": "negative", "score": .9}, {"label": "positive", "score": .8}, {"label": "negative", "score": .9}])
     factory = Mock(return_value=classifier)
-    monkeypatch.setattr("app.services.analyzer.collect_reviews", lambda *args: collected())
+    monkeypatch.setattr("app.services.analyzer.collect_reviews", lambda *args, **kwargs: collected())
     monkeypatch.setattr("app.services.analyzer.lookup_app_info", lambda app_id, country, **kwargs: {"app_id": app_id, "country": country, "name": "Example App"})
-    report = ModelReport.model_validate({"issues": [{"category": "Startup failures", "action": "Investigate startup failures.", "priority": "high", "evidence_ids": ["n1", "n2"], "keywords": ["startup", "access"]}]})
+    report = ModelReport.model_validate({"issues": [{"category": "Startup failures", "action": "Investigate startup failures.", "priority": "high", "evidence": [{"review_id": "n1", "quote": "Does not open 😡"}, {"review_id": "n2", "quote": "Cannot open"}], "keywords": ["startup", "access"]}]})
 
-    def insights(groups, prompt, usage, model, **kwargs):
-        assert set(groups) == {"negative", "positive", "neutral"}
-        assert groups["negative"][0]["text"] != collected()["reviews"][0]["text"]
+    def insights(reviews, prompt, usage, model, mode, **kwargs):
+        assert mode == "quality"
+        assert all("rating" not in review for review in reviews)
+        assert reviews[0]["text"] == collected()["reviews"][0]["text"]
         usage.update({"prompt_token_count": 100, "candidates_token_count": 20})
         return report
 
-    monkeypatch.setattr("app.services.insights.request_insights", insights)
+    monkeypatch.setattr("app.services.interpretation.request_analysis", insights)
     with TestClient(create_app(Settings(analyze_requests_per_minute=10), factory)) as client:
         yield client, classifier, factory
 
@@ -116,9 +116,9 @@ def test_export_endpoint_is_removed(api):
 
 def test_untrusted_model_evidence_is_rejected_without_a_report(api, monkeypatch):
     client, _, _ = api
-    invalid = ModelReport.model_validate({"issues": [{"category": "Fake", "action": "Fix a fabricated problem.", "priority": "high", "evidence_ids": ["p1"]}]})
+    invalid = ModelReport.model_validate({"issues": [{"category": "Fake", "action": "Fix a fabricated problem.", "priority": "high", "keywords": [], "evidence": [{"review_id": "unknown", "quote": "fake"}]}]})
     generate = Mock(return_value=invalid)
-    monkeypatch.setattr("app.services.insights.request_insights", generate)
+    monkeypatch.setattr("app.services.interpretation.request_analysis", generate)
     response = client.post("/api/analyze", json={"app_id": "123", "review_count": 3})
     assert response.status_code == 502
     assert "evidence validation" in response.json()["detail"]
@@ -126,37 +126,37 @@ def test_untrusted_model_evidence_is_rejected_without_a_report(api, monkeypatch)
     assert generate.call_count == 2
 
 
-@pytest.mark.parametrize("evidence", [["p1"], ["unknown"], ["n1", "n1"]])
+@pytest.mark.parametrize("evidence", [[{"review_id": "unknown", "quote": "fake"}], [{"review_id": "n1", "quote": "fabricated quote"}]])
 def test_invalid_evidence_is_regenerated_and_validated(api, monkeypatch, evidence, caplog):
     client, classifier, _ = api
-    invalid = ModelReport.model_validate({"issues": [{"category": "Startup", "action": "Investigate startup failures.", "priority": "high", "evidence_ids": evidence}]})
+    invalid = ModelReport.model_validate({"issues": [{"category": "Startup", "action": "Investigate startup failures.", "priority": "high", "keywords": [], "evidence": evidence}]})
     valid = invalid.model_copy(deep=True)
-    valid.issues[0].evidence_ids = ["n1", "n2"]
+    valid.issues[0].evidence = ModelReport.model_validate({"issues": [{"category": "Startup", "action": "Investigate startup failures.", "priority": "high", "keywords": [], "evidence": [{"review_id": "n1", "quote": "Does not open"}, {"review_id": "n2", "quote": "Cannot open"}]}]}).issues[0].evidence
     generate = Mock(side_effect=[invalid, valid])
-    monkeypatch.setattr("app.services.insights.request_insights", generate)
+    monkeypatch.setattr("app.services.interpretation.request_analysis", generate)
     response = client.post("/api/analyze", json={"app_id": "123", "review_count": 3})
     assert response.status_code == 200, response.text
     assert response.json()["insights"]["issues"][0]["evidence_ids"] == ["n1", "n2"]
     assert generate.call_count == 2
     assert classifier.call_count == 1
     prompt = generate.call_args.args[1]
-    assert 'only IDs from this list: ["n1", "n2"]' in prompt
+    assert "exact nonempty source excerpts" in prompt
     event = next(record.event_data for record in caplog.records if getattr(record, "event_data", {}).get("event") == "request.completed")
     assert event["insight_repair_count"] == 1
-    assert event["insight_validation_reason"] in {"duplicate_evidence_ids", "nonnegative_or_unknown_evidence_ids"}
+    assert event["insight_validation_reason"] in {"unknown_evidence_ids", "evidence_quote_not_in_source_excerpt"}
     assert "error" not in event
 
 
 def test_repair_respects_analysis_deadline(api, monkeypatch):
     client, _, _ = api
-    invalid = ModelReport.model_validate({"issues": [{"category": "Startup", "action": "Investigate startup failures.", "priority": "high", "evidence_ids": ["unknown"]}]})
+    invalid = ModelReport.model_validate({"issues": [{"category": "Startup", "action": "Investigate startup failures.", "priority": "high", "keywords": [], "evidence": [{"review_id": "unknown", "quote": "fake"}]}]})
     generate = Mock(return_value=invalid)
-    monkeypatch.setattr("app.services.insights.request_insights", generate)
+    monkeypatch.setattr("app.services.interpretation.request_analysis", generate)
     def expired(*args):
         client.app.state.analyzer.settings.analysis_timeout_seconds = 0
-        return build_report(*args)
+        return validate_analysis(*args)
 
-    monkeypatch.setattr("app.services.insights.build_report", expired)
+    monkeypatch.setattr("app.services.interpretation.validate_analysis", expired)
     response = client.post("/api/analyze", json={"app_id": "123", "review_count": 3})
     assert response.status_code == 504
     assert generate.call_count == 1
@@ -166,7 +166,7 @@ def test_external_deadline_exhaustion_returns_stage_specific_timeout(api, monkey
     from app.services.execution import DeadlineExceeded
 
     client, _, _ = api
-    monkeypatch.setattr("app.services.insights.request_insights", Mock(side_effect=DeadlineExceeded("Budget exhausted")))
+    monkeypatch.setattr("app.services.interpretation.request_analysis", Mock(side_effect=DeadlineExceeded("Budget exhausted")))
     response = client.post("/api/analyze", json={"app_id": "123", "review_count": 3})
     assert response.status_code == 504
     assert response.json() == {"detail": "Analysis exceeded its processing deadline"}
@@ -187,3 +187,23 @@ def test_missing_credentials_and_rate_limit(monkeypatch):
         response = client.post("/api/analyze", json={"app_id": "123"})
         assert response.status_code == 429
         assert response.headers["retry-after"] == "60"
+
+
+def test_quality_mode_accepts_verified_positive_complaint_and_uses_deeper_collection(api, monkeypatch):
+    client, classifier, _ = api
+    result = ModelReport.model_validate({"issues": [{"category": "Access", "action": "Investigate access problems.", "priority": "medium", "keywords": [], "evidence": [{"review_id": "n1", "quote": "Does not open"}, {"review_id": "p1", "quote": "cannot open videos"}]}]})
+    adapter = Mock(return_value=result)
+    data = collected()
+    data["reviews"][1]["text"] = "I love it but cannot open videos"
+    collect = Mock(return_value=data)
+    monkeypatch.setattr("app.services.interpretation.request_analysis", adapter)
+    monkeypatch.setattr("app.services.analyzer.collect_reviews", collect)
+    response = client.post("/api/analyze", json={"app_id": "123", "mode": "quality", "review_count": 3})
+    assert response.status_code == 200
+    issue = response.json()["metrics"]["issues"]["items"][0]
+    assert issue["frequency"] == 2
+    assert issue["negative_review_count"] == 1
+    assert issue["negative_review_fraction"] == 0.5
+    assert collect.call_args.kwargs["max_pages"] == 30
+    assert classifier.call_count == 1
+    assert all("sentiment" in review and "rating" not in review for review in adapter.call_args.args[0])

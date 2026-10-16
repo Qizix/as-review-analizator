@@ -19,12 +19,11 @@ from app.schemas import AnalysisResponse, AnalyzeRequest
 from app.services.analyzer import Analyzer
 from app.services.execution import AnalysisError
 from app.services.collector import COUNTRIES
-from app.services.sentiment import load_classifier
 from app.settings import ROOT, Settings
 from app.telemetry import Telemetry, diagnostic
 
 
-def create_app(settings=None, classifier_factory=load_classifier, span_exporter=None):
+def create_app(settings=None, classifier_factory=None, span_exporter=None):
     settings = settings or Settings.from_env()
     configure_logging(settings)
     telemetry = Telemetry(settings, span_exporter)
@@ -34,9 +33,18 @@ def create_app(settings=None, classifier_factory=load_classifier, span_exporter=
         telemetry.start()
         started = time.monotonic()
         try:
-            emit("model.loading", model=settings.sentiment_model_path, device="cpu")
-            app.state.analyzer = Analyzer(settings, classifier_factory(settings))
-            emit("application.ready", sentiment_revision=settings.sentiment_revision, model_load_duration_ms=round((time.monotonic() - started) * 1000, 3), collection_source="apple_catalog", tracing_enabled=telemetry.enabled, trace_export_ready=telemetry.export_ready)
+            classifier = None
+            if settings.quality_enabled:
+                if classifier_factory is None:
+                    from app.services.sentiment import load_classifier
+
+                    factory = load_classifier
+                else:
+                    factory = classifier_factory
+                emit("model.loading", model=settings.sentiment_model_path, device="cpu")
+                classifier = factory(settings)
+            app.state.analyzer = Analyzer(settings, classifier)
+            emit("application.ready", quality_enabled=settings.quality_enabled, sentiment_revision=settings.sentiment_revision if settings.quality_enabled else None, model_load_duration_ms=round((time.monotonic() - started) * 1000, 3), collection_source="apple_catalog", tracing_enabled=telemetry.enabled, trace_export_ready=telemetry.export_ready)
             yield
         except Exception as exc:
             emit("application.failed", logging.ERROR, error=error_details(exc))
@@ -74,11 +82,11 @@ def create_app(settings=None, classifier_factory=load_classifier, span_exporter=
 
     @app.get("/", include_in_schema=False)
     def dashboard(request: Request):
-        return templates.TemplateResponse(request=request, name="index.html", context={"max_review_count": settings.max_review_count, "countries": sorted(COUNTRIES)})
+        return templates.TemplateResponse(request=request, name="index.html", context={"max_review_count": settings.max_review_count, "countries": sorted(COUNTRIES), "quality_enabled": settings.quality_enabled})
 
     @app.get("/api/health")
     def health():
-        return {"status": "ok", "sentiment_ready": app.state.analyzer is not None, "gemini_configured": bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))}
+        return {"status": "ok", "sentiment_ready": app.state.analyzer is not None, "available_modes": ["fast", "quality"] if settings.quality_enabled else ["fast"], "gemini_configured": bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))}
 
     @app.post("/api/analyze", response_model=AnalysisResponse)
     def analyze(payload: AnalyzeRequest):

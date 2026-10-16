@@ -12,8 +12,8 @@ jobs:
         with:
           version: "0.11.26"
           python-version: "3.12"
-      - run: uv sync --locked
-      - run: uv run --locked pytest -q
+      - run: uv sync --locked --extra quality
+      - run: uv run --locked --extra quality pytest -q
       - run: npm test --prefix frontend
       - run: bash -n infra/deploy.sh infra/smoke.sh
   container:
@@ -24,3 +24,5 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - run: docker build --platform linux/amd64 -t review-analyzer:test .
       - run: bash infra/smoke.sh review-analyzer:test
+      - run: docker build --platform linux/amd64 --target fast -t review-analyzer:fast .
+      - run: bash infra/smoke.sh review-analyzer:fast

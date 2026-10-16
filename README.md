@@ -9,16 +9,16 @@ Collect App Store reviews, measure ratings and sentiment, and turn recurring com
 Install [uv](https://docs.astral.sh/uv/). Python 3.12 is pinned and installed automatically by uv when needed. Copy `.env.example` to `.env` and set `GEMINI_API_KEY`.
 
 ```bash
-uv sync --locked
-uv run --env-file .env uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
+uv sync --locked --extra quality
+uv run --extra quality --env-file .env uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
 ```
 
-Open the [dashboard](http://127.0.0.1:8000/) or [interactive API docs](http://127.0.0.1:8000/docs). The first startup downloads the sentiment model. Analysis needs internet access to Apple and Gemini; collection alone needs no Gemini key. Prepared review text is sent to Google for insights.
+Open the [dashboard](http://127.0.0.1:8000/) or [interactive API docs](http://127.0.0.1:8000/docs). The dual-mode startup downloads the sentiment model if it is not cached. Analysis needs internet access to Apple and Gemini; collection alone needs no Gemini key. Prepared review text is sent to Google for insights.
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/analyze \
   -H 'Content-Type: application/json' \
-  -d '{"app_id":"1459969523","country":"us","review_count":100}'
+  -d '{"app_id":"1459969523","country":"us","review_count":100,"mode":"fast"}'
 ```
 
 | Endpoint | Result |
@@ -29,17 +29,30 @@ curl -X POST http://127.0.0.1:8000/api/analyze \
 
 Responses are JSON. The dashboard visualizes distributions, issue frequency/coverage, and supporting reviews, and downloads the report locally.
 
+Choose `mode: "fast"` for one Gemini call that classifies sentiment and extracts issues, or `mode: "quality"` for RoBERTa followed by Gemini with deeper collection. Omitted mode defaults to `quality` for compatibility; the name does not guarantee higher accuracy.
+
+| Mode | Sentiment | Catalog page limit |
+|---|---|---:|
+| Fast | Gemini, alongside issue analysis | 10 |
+| Quality | RoBERTa on CPU | 30 |
+
+Both stop when the requested number of unique reviews is collected. Both extract complaints across all sentiments, verify source quotations, and calculate metrics in Python. Negative issue fractions use only negative supporting reviews.
+
+For a lightweight fast-only installation, run `uv sync --locked --no-dev`, set `QUALITY_ENABLED=false` in `.env`, then run `uv run --no-dev --env-file .env uvicorn app.main:app --workers 1`. It needs no Torch, Transformers, or model weights. See [mode behavior, testing, and container profiles](docs/dual-mode-analysis.md). A local check on the same 100 saved reviews completed in **19.05 s fast / 28.12 s quality**; it excludes collection and model loading and is not a Cloud Run benchmark.
+
 ## Approach and design
 
 - **One service:** FastAPI serves the API and a vanilla JavaScript dashboard, with no frontend build step, database, or queue.
 - **Bounded collection:** Apple catalog, RSS, then webpage fallback; retain the first unique reviews in source order and report shortfalls.
-- **Independent sentiment:** Pinned CardiffNLP RoBERTa classifies text on CPU. Star ratings never determine sentiment. Emoji become words and oversized text is trimmed for models; original comments remain in the report.
-- **Evidence-linked insights:** Gemini groups negative complaints and proposes short actions by priority and recurrence. Positive/neutral reviews provide context. Invalid evidence is rejected, with one bounded repair attempt; an empty issue list is valid.
+- **Independent sentiment:** Fast mode uses Gemini; quality mode uses pinned CardiffNLP RoBERTa on CPU. Star ratings never determine sentiment. RoBERTa input converts emoji to words; Gemini input preserves characters and crops oversized text into source excerpts; original comments remain in the report.
+- **Evidence-linked insights:** Gemini groups complaints from any sentiment and proposes short actions by priority and recurrence. Source quotations are verified. Quality mode allows one evidence repair; fast mode rejects invalid output without model fallback. An empty issue list is valid.
 - **Local metrics:** Python calculates averages, distributions, unique issue frequencies, and coverage from review IDs. The API keeps reports in memory; one analysis or collection runs at a time, with busy responses and configurable usage limits.
 
-Sentiment and issue interpretation are model estimates. The classifier is English-oriented; selecting a storefront does not filter review language. Logs and traces contain timings and diagnostics, excluding review contents and credentials.
+Sentiment and issue interpretation are model estimates. The RoBERTa classifier is English-oriented; selecting a storefront does not filter review language. Logs and traces contain timings and diagnostics, excluding review contents and credentials.
 
 ## Service metrics per request
+
+These measurements describe the deployed RoBERTa baseline before the dual-mode update; the new modes have not been deployed.
 
 Verified on **2026-10-16** with a deployed Nebula analysis: **90 unique reviews out of 100 requested**, HTTP 200, and six validated issue groups. Apple throttled one review page; the report explicitly records the 10-review shortfall. Runtime: **1 vCPU, 4 GiB RAM, one inference thread, PyTorch batch size 1**, Warsaw.
 

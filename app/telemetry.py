@@ -17,6 +17,7 @@ HTTP_ATTRIBUTES = {
     "http.response.status_code", "http.scheme", "url.scheme", "network.protocol.version",
 }
 SPAN_ATTRIBUTES = HTTP_ATTRIBUTES | {
+    "app.analysis.mode", "app.collection.page_limit",
     "error.type", "app.reviews.requested_count", "app.country", "app.reviews.collected_count",
     "app.collection.failed_pages", "app.collection.source", "app.reviews.count", "app.metrics.phase", "app.model",
     "app.batch_size", "app.prompt.version", "app.issues.count", "app.validation.failures",

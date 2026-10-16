@@ -128,3 +128,36 @@ test("normalizes Apple URLs and rejects unrelated URLs", () => {
   ])
     assert.throws(() => normalizeAppInput(value));
 });
+
+test("mixed-sentiment issue support uses negative-only coverage", () => {
+  const response = fixture();
+  for (const issue of [response.metrics.issues.items[0], response.insights.issues[0], response.insights.recommendations[0]])
+    issue.evidence_ids = ["a", "c"];
+  response.metrics.issues.items[0].negative_review_count = 1;
+  response.metrics.issues.items[0].negative_review_fraction = 0.5;
+  response.metrics.issues.covered_negative_reviews = 1;
+  response.metadata.mode = "fast";
+  const result = prepareDashboard(response);
+  assert.equal(result.issues[0].frequency, 2);
+  assert.equal(result.issues[0].negative_review_count, 1);
+  assert.equal(result.issues[0].fraction, 0.5);
+  assert.equal(result.coverage, 0.5);
+  assert.equal(result.metadata.mode, "fast");
+  response.metrics.issues.items[0].negative_review_count = 2;
+  assert.throws(() => prepareDashboard(response));
+});
+
+test("supported issues with zero negative reviews have null fractions", () => {
+  const response = fixture();
+  for (const review of response.reviews) review.sentiment = "positive";
+  response.metrics.sentiment.counts = { positive: 3, neutral: 0, negative: 0 };
+  response.metrics.issues.negative_reviews = 0;
+  response.metrics.issues.covered_negative_reviews = 0;
+  response.metrics.issues.items[0].negative_review_count = 0;
+  response.metrics.issues.items[0].negative_review_fraction = null;
+  const result = prepareDashboard(response);
+  assert.equal(result.issues[0].frequency, 2);
+  assert.equal(result.issues[0].fraction, null);
+  assert.equal(result.covered, 0);
+  assert.equal(result.coverage, null);
+});

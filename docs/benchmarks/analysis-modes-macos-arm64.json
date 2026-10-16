@@ -1,0 +1,90 @@
+{
+  "input_sha256": "704c41658d362f2d1afe65ee57861708bcc0dbf54128b4e5b04fcd7920500301",
+  "review_count": 100,
+  "model": "gemini-3.5-flash-lite",
+  "sentiment_revision": "3216a57f2a0d9c45a2e6c20157c20c49fb4bf9c7",
+  "torch_threads": 1,
+  "scope": "Local inference on identical saved reviews; excludes collection and model loading; one run per mode",
+  "sentiment_agreement": 0.73,
+  "runs": [
+    {
+      "mode": "fast",
+      "status": "success",
+      "duration_seconds": 19.051615834003314,
+      "stages_seconds": {
+        "preprocessing": 0.0326,
+        "gemini": 19.0045,
+        "validation": 0.0123,
+        "metrics": 0.0007
+      },
+      "gemini_usage": {
+        "cache_tokens_details": [
+          {
+            "modality": "TEXT",
+            "token_count": 26031
+          }
+        ],
+        "cached_content_token_count": 26031,
+        "candidates_token_count": 7228,
+        "prompt_token_count": 28325,
+        "prompt_tokens_details": [
+          {
+            "modality": "TEXT",
+            "token_count": 28325
+          }
+        ],
+        "total_token_count": 35553
+      },
+      "failure": null,
+      "sentiment_counts": {
+        "positive": 37,
+        "neutral": 9,
+        "negative": 54
+      },
+      "issue_count": 9,
+      "negative_issue_coverage": 0.8333333333333334,
+      "prompt_sha256": "e10ecfefa2eeec87309fe2025079efe8620f193d00c283fd298be0b504c3bf69",
+      "quality_scores": null
+    },
+    {
+      "mode": "quality",
+      "status": "success",
+      "duration_seconds": 28.118187125073746,
+      "stages_seconds": {
+        "preprocessing": 0.0317,
+        "sentiment": 7.6797,
+        "gemini": 20.3849,
+        "validation": 0.0168,
+        "metrics": 0.001
+      },
+      "gemini_usage": {
+        "candidates_token_count": 5052,
+        "prompt_token_count": 57459,
+        "prompt_tokens_details": [
+          {
+            "modality": "TEXT",
+            "token_count": 28747
+          }
+        ],
+        "total_token_count": 62511
+      },
+      "failure": null,
+      "sentiment_counts": {
+        "positive": 35,
+        "neutral": 16,
+        "negative": 49
+      },
+      "issue_count": 6,
+      "negative_issue_coverage": 0.8163265306122449,
+      "prompt_sha256": "de11ed2564ee25395da243f6b3c5ed21ed528a27dff0b740c80b0a31e1756866",
+      "quality_scores": null
+    }
+  ],
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "versions": {
+    "google-genai": "2.30.1",
+    "torch": "2.14.1",
+    "transformers": "5.19.0",
+    "pydantic": "2.14.1"
+  }
+}

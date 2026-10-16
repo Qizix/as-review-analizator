@@ -6,7 +6,7 @@ Jinja2 serves buildless HTML, CSS, and vanilla JavaScript from the same FastAPI 
 
 One screen, insight first:
 
-- **Start screen**: before any report the page shows only a centered Analyze an app title and the form (ID or URL, country, review count, Analyze). When a report installs, the same form element moves into the header popover and the Export JSON button appears.
+- **Start screen**: before any report the page shows only a centered Analyze an app title and the form (ID or URL, country, review count, analysis mode, Analyze). When a report installs, the same form element moves into the header popover and the Export JSON button appears.
 - **Header**: the app chip (app, country, review count) opens the analyze form as a popover. Export JSON sits beside it.
 - **Snapshot card**: ratings (average plus 1–5 star bars) and sentiment (one thin line plus three rows). Bars are scaled to the largest star count; sentiment percentages use classified reviews as the denominator.
 - **What to fix**: issues sorted by priority, then frequency. Priority is a three-step signal plus a word, frequency a bar plus count. Filters: priority tabs and Repeated only (`filterIssues`). A final row, Not assigned to an issue, shows negative reviews outside every issue (`negative - covered`) and is hidden while filters are active.
@@ -18,7 +18,7 @@ A single `lens` drives everything: `{type: "issue" | "star" | "sentiment" | "gap
 
 ## Workflow
 
-Users supply an app ID or HTTPS Apple URL, country, and count. URL normalization accepts `apps.apple.com` and `itunes.apple.com`. The app input's `input` event suggests the URL country immediately when the URL parses, only while `countrySelected` is false. A user `change` event on the country dropdown sets that flag for the page session; subsequent app-input edits cannot overwrite the selection. Submission always passes the dropdown value to `normalizeAppInput`, overriding the URL country. A Polish URL followed by a United States selection therefore posts `country: "us"`. Server-side validation remains authoritative.
+Users supply an app ID or HTTPS Apple URL, country, count, and fast/quality mode. Quality is selected initially when available; fast-only deployments offer fast. The completed report header displays the actual mode. URL normalization accepts `apps.apple.com` and `itunes.apple.com`. The app input's `input` event suggests the URL country immediately when the URL parses, only while `countrySelected` is false. A user `change` event on the country dropdown sets that flag for the page session; subsequent app-input edits cannot overwrite the selection. Submission always passes the dropdown value to `normalizeAppInput`, overriding the URL country. A Polish URL followed by a United States selection therefore posts `country: "us"`. Server-side validation remains authoritative.
 
 The page sends `POST /api/analyze`, shows an honest busy state, and validates the returned report before replacing current browser state. Failures show an error while retaining a previous report. Browser analysis requests abort after 290 seconds. Gemini credentials never enter frontend code.
 
@@ -29,6 +29,8 @@ JSON saves the full report locally in the browser without an export API call. St
 Every control is a native `button`, `input`, or `select`; selected state uses `aria-pressed`. The sentiment line has a text alternative. Reduced-motion preferences disable smooth scrolling. At phone width the board stacks and the reviews pane becomes a fixed-height scroll area.
 
 ## Report data
+
+Issue frequencies count all supporting sentiments; tooltips separate negative support and its fraction. Negative coverage and the unassigned row use negative IDs only. Selected issues may highlight several sentiment segments.
 
 Validation checks totals and distributions, averages, app/country consistency, issue/evidence agreement, union coverage, and review ratings/labels/counts. Undefined values display as an em dash. Empty issue lists and filters have explicit states. Untrusted strings are escaped before HTML insertion.
 

@@ -86,6 +86,7 @@ function updateChip(next) {
   const details = [
     next.metadata.country ? countryName(next.metadata.country) : null,
     plural(next.total, "review"),
+    next.metadata.mode ? `${cap(next.metadata.mode)} mode` : null,
   ].filter(Boolean);
   document.querySelector("#app-label").innerHTML =
     `${h(name)} <span class="muted">· ${h(details.join(" · "))}</span>`;
@@ -137,7 +138,7 @@ function renderSnapshot() {
   const live = (label) =>
     !lens ||
     lens.type === "star" ||
-    (lens.type === "sentiment" ? lens.value === label : label === "negative");
+    (lens.type === "sentiment" ? lens.value === label : lens.type === "issue" ? dashboard.issues[lens.value].evidence_ids.some((id) => dashboard.reviewMap.get(id).label === label) : label === "negative");
   const parts = data.classified
     ? data.sentiments
         .map(
@@ -186,7 +187,7 @@ function renderIssues() {
       const signal = [1, 2, 3]
         .map((step) => `<i${step <= SIGNAL[issue.priority] ? ' class="on"' : ""}></i>`)
         .join("");
-      return `<button class="issue${on ? " on" : ""}" data-key="issue-${index}" data-issue="${index}" aria-pressed="${on}" title="${plural(issue.frequency, "review")} · ${pct(issue.fraction)} of negative"><span class="priority"><span class="signal" aria-hidden="true">${signal}</span><span>${cap(issue.priority)}</span></span><span class="summary"><span class="category">${h(issue.category)}</span><span class="action">${h(issue.action)}</span></span><span class="frequency"><span class="track"><span class="fill negative" style="width:${(issue.frequency / maxCount) * 100}%"></span></span><span class="count">${issue.frequency}</span></span></button>`;
+      return `<button class="issue${on ? " on" : ""}" data-key="issue-${index}" data-issue="${index}" aria-pressed="${on}" title="${plural(issue.frequency, "review")} · ${issue.negative_review_count} negative · ${pct(issue.fraction)} of negative reviews"><span class="priority"><span class="signal" aria-hidden="true">${signal}</span><span>${cap(issue.priority)}</span></span><span class="summary"><span class="category">${h(issue.category)}</span><span class="action">${h(issue.action)}</span></span><span class="frequency"><span class="track"><span class="fill negative" style="width:${(issue.frequency / maxCount) * 100}%"></span></span><span class="count">${issue.frequency}</span></span></button>`;
     })
     .join("");
   const gapOn = isLens("gap", 1);
@@ -346,6 +347,7 @@ analyzeForm.addEventListener("submit", async (event) => {
       "Collecting reviews and analyzing feedback. This can take a few minutes.";
     const response = await postJSON("/api/analyze", {
       ...normalized,
+      mode: document.querySelector("#mode-input").value,
       review_count: Number(document.querySelector("#count-input").value),
     });
     installAnalysis(await response.json());

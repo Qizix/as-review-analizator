@@ -38,7 +38,7 @@ Cloud Run can temporarily exceed instance limits during maintenance or rollouts.
 Docker uses Python 3.12, uv 0.11.26, locked production dependencies, official Linux CPU Torch wheels, and the pinned CardiffNLP weights. Runtime inference uses the bundled model offline. The unprivileged image contains third-party attribution in `/app/NOTICE`. Reports remain in memory and return as JSON.
 
 ```bash
-uv run --locked pytest -q
+uv run --locked --extra quality pytest -q
 npm test --prefix frontend
 bash -n infra/deploy.sh infra/smoke.sh
 docker build --platform linux/amd64 -t review-analyzer .
@@ -46,6 +46,8 @@ bash infra/smoke.sh review-analyzer
 ```
 
 The smoke check runs offline CPU sentiment inference under 1 CPU/4 GiB, checks the non-root user, starts HTTP, checks readiness/dashboard/docs, and confirms analysis fails cleanly without credentials. It makes no paid Gemini calls. HTTP checks run inside the isolated container; no host ports or host Python/curl are needed. GitHub Actions runs tests followed by these container checks on Linux; it does not deploy, push images, or require cloud secrets. Initial model downloads during builds need network access.
+
+Dual-mode images remain the default deployment profile. For the optional fast-only target and QUALITY_ENABLED behavior, see [dual-mode packaging](dual-mode-analysis.md#packaging-and-operation).
 
 ## Cloud prerequisites
 

@@ -1,5 +1,6 @@
 app_id: "389801252"
 country: us
+mode: quality
 review_count: 100
 seed: 42
 sentiment_threads: 1

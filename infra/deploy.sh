@@ -18,7 +18,7 @@ REVISION="$(git rev-parse HEAD)"
 IMAGE="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/review-analyzer/app:${REVISION}"
 SECRET_NAME="${GEMINI_SECRET_NAME:-gemini-api-key}"
 
-uv run --locked pytest -q
+uv run --locked --extra quality pytest -q
 npm test --prefix frontend
 
 gcloud builds submit --project "$GCP_PROJECT" --region europe-west1 --config infra/cloudbuild.yaml --substitutions "_IMAGE=${IMAGE}" .

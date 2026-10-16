@@ -9,6 +9,7 @@ class AnalyzeRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     app_id: str = Field(pattern=r"^[0-9]+$", min_length=1, max_length=20)
     country: str = "us"
+    mode: Literal["fast", "quality"] = "quality"
     review_count: int = Field(default=100, ge=1, le=500, strict=True)
     seed: int = Field(default=42, strict=True, json_schema_extra={"deprecated": True}, description="Accepted for compatibility; ignored because reviews are collected in source order.")
 

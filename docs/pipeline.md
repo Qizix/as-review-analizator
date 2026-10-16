@@ -5,18 +5,18 @@ The API and full CLI share `app/services/analyzer.py`. Standalone scripts wrap t
 ## Complete analysis
 
 ```bash
-uv run --env-file .env review-analyzer 389801252 --country us --count 100 --output output/report.json
+uv run --extra quality --env-file .env review-analyzer 389801252 --country us --count 100 --mode fast --output output/report.json
 ```
 
 This collects reviews, prepares text once, classifies sentiment, generates and validates insights, computes metrics once, and assembles the canonical report. Settings are validated environment variables; secrets stay in the environment. Output directories are created and an existing output is overwritten only after successful analysis. Failures print an error and return status 1; argument errors return 2.
 
-Reproducible experiments use `uv run --env-file .env python -m experiments.analyze` with Hydra overrides from `conf/experiment.yaml`, saving resolved config and output under ignored `hydra_outputs/`. The legacy seed option has no effect on collection. Apple feeds and Gemini output can change between runs.
+Reproducible experiments use `uv run --extra quality --env-file .env python -m experiments.analyze` with Hydra overrides from `conf/experiment.yaml`, saving resolved config and output under ignored `hydra_outputs/`. The legacy seed option has no effect on collection. Apple feeds and Gemini output can change between runs.
 
 ## Individual stages
 
 ```bash
 uv run scripts/fetch_reviews.py 389801252 --country us --count 100 --output output/reviews.json
-uv run scripts/analyze_sentiment.py output/reviews.json
+uv run --extra quality scripts/analyze_sentiment.py output/reviews.json
 uv run --env-file .env scripts/generate_insights.py output/reviews_sentiment.json
 uv run scripts/calculate_metrics.py output/reviews_sentiment.json --insights output/reviews_sentiment_insights.json
 ```
@@ -32,6 +32,9 @@ Collection uses bounded catalog/RSS/webpage fallbacks and explicit shortfalls; s
 The classifier is English-oriented and trained on tweets; app-review sentiment is an estimate, with no language detection or equal-quality guarantee across storefronts.
 
 ## Gemini generation
+
+The following describes legacy standalone insight generation. The full pipeline supports fast/quality interpretation, all-sentiment evidence, and verified quotations as documented in [dual-mode analysis](dual-mode-analysis.md).
+
 
 `insights.py` supplies `prompts/generate_insights.txt` as the system instruction and compact JSON arrays keyed `negative`, `positive`, and `neutral` as data. Each item contains ID, title, text, and rating; repeated sentiment labels, confidence scores, and collection metadata are omitted. Negative reviews are issue evidence; other sentiments provide context. Review contents are untrusted instructions. Vague negative opinions can yield no issues.
 
@@ -52,16 +55,16 @@ Ratings and sentiment have independent denominators. Missing/null ratings are un
 - Average rating: sum of valid ratings / rated reviews.
 - Rating percentages: each star count / rated reviews × 100.
 - Sentiment percentages: each label count / classified reviews × 100.
-- Issue frequency: unique negative review IDs cited for that issue.
-- Negative review fraction: issue frequency / all negative reviews.
-- Issue coverage: union of all issue evidence IDs / all negative reviews.
+- Issue frequency: all unique classified review IDs cited for that issue.
+- Negative review fraction: unique negative supporting review IDs / all negative reviews.
+- Issue coverage: union of negative supporting evidence IDs / all negative reviews.
 
 A five-star negative review contributes to both buckets independently. One review may support multiple issues; issue frequencies cannot be summed to obtain coverage. Undefined denominators yield null, counts remain zero, and negative reviews with no supported issues yield coverage zero. Percentages use 0–100; fractions/coverage use 0–1.
 
-The standalone metrics tool accepts the grouped insight format, verifies app/country metadata agreement when present, rejects unknown/nonnegative evidence and duplicate categories, and recomputes counts instead of trusting cached model totals. Duplicate IDs within a metrics evidence list count once; the stricter insight-generation validator rejects them before producing its report. JSON preserves full precision; display rounding does not alter calculations.
+The standalone metrics tool accepts the grouped insight format, verifies app/country metadata agreement when present, rejects unknown or unclassified evidence and duplicate categories, and recomputes counts instead of trusting cached model totals. Duplicate IDs within a metrics evidence list count once; the stricter insight-generation validator rejects them before producing its report. JSON preserves full precision; display rounding does not alter calculations.
 
 ## Verification
 
-`uv run --locked pytest -q` covers source fixtures, preprocessing, batch consistency, classifier alignment, SDK serialization, repair, exact counts, overlap, empty inputs, deadlines, error attribution, and CLI outputs without live provider calls. The [sample report](../examples/nebula-report.md) documents a supplied live application export.
+`uv run --locked --extra quality pytest -q` covers source fixtures, preprocessing, batch consistency, classifier alignment, SDK serialization, repair, exact counts, overlap, empty inputs, deadlines, error attribution, and CLI outputs without live provider calls. The [sample report](../examples/nebula-report.md) documents a supplied live application export.
 
 For an isolated CPU backend/batching comparison using saved reviews, see the [sentiment benchmark](sentiment-benchmark.md). It uses Hydra, development-only ONNX Runtime, pinned conversion artifacts, and no Gemini calls.

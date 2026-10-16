@@ -13,8 +13,9 @@ class InsightValidationError(ValueError):
         super().__init__(reason)
 
 
-def build_report(data, groups, response, prompt, model=MODEL):
+def build_report(data, groups, response, prompt, model=MODEL, *, allow_all_sentiments=False):
     negative_ids = {review["id"] for review in group_reviews(data)["negative"]}
+    eligible_ids = {review["id"] for reviews in group_reviews(data).values() for review in reviews} if allow_all_sentiments else negative_ids
     categorized = set()
     categories = set()
     source_reviews = {review["id"]: review for review in data["reviews"]}
@@ -23,20 +24,21 @@ def build_report(data, groups, response, prompt, model=MODEL):
         ids = set(issue.evidence_ids)
         if len(ids) != len(issue.evidence_ids):
             raise InsightValidationError("duplicate_evidence_ids")
-        if not ids <= negative_ids:
+        if not ids <= eligible_ids:
             raise InsightValidationError("nonnegative_or_unknown_evidence_ids")
         category = " ".join(issue.category.split())
         action = " ".join(issue.action.split())
         if not category or not action or category.casefold() in categories:
             raise InsightValidationError("empty_action_or_duplicate_category")
         categories.add(category.casefold())
-        categorized.update(ids)
+        categorized.update(ids & negative_ids)
         count = len(ids)
         insights[issue.priority]["repeated" if count > 1 else "single"].append({
             "category": category,
             "action": action,
             "review_count": count,
-            "negative_review_fraction": count / len(negative_ids),
+            "negative_review_count": len(ids & negative_ids),
+            "negative_review_fraction": len(ids & negative_ids) / len(negative_ids) if negative_ids else None,
             "evidence_ids": sorted(ids),
             "keywords": list(dict.fromkeys(word.strip() for word in issue.keywords if word.strip())),
             "evidence_quotes": [{"review_id": review_id, "quote": source_reviews[review_id]["text"]} for review_id in sorted(ids)],
@@ -52,7 +54,7 @@ def build_report(data, groups, response, prompt, model=MODEL):
                 "model_called": any(groups.values()),
                 "generated_at": datetime.now(timezone.utc).isoformat(),
                 "prompt_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
-                "preprocessing": {"emoji": "descriptive words", "title_limit": 200, "text_limit": 4000},
+                "preprocessing": {"emoji": "preserved" if allow_all_sentiments else "descriptive words", "title_limit": 200, "text_limit": 4000},
                 "truncated_review_ids": [review["id"] for reviews in groups.values() for review in reviews if "truncated_fields" in review],
             },
         },

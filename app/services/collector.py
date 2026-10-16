@@ -108,13 +108,13 @@ class SourcePage:
     error: str | None = None
 
 
-def catalog_pages(client, app_id, country, deadline):
+def catalog_pages(client, app_id, country, deadline, max_pages=10):
     offset = 0
-    for page in range(1, 11):
+    for page in range(1, max_pages + 1):
         if page > 1:
             time.sleep(0.5 if deadline is None else min(0.5, max(0, deadline - time.monotonic())))
         if deadline is not None and time.monotonic() >= deadline:
-            for skipped in range(page, 11):
+            for skipped in range(page, max_pages + 1):
                 yield SourcePage(skipped, error="Collection deadline exceeded")
             return
         try:
@@ -139,11 +139,12 @@ def catalog_pages(client, app_id, country, deadline):
 
 
 class ReviewCollection:
-    def __init__(self, app_id, country, count, seed):
+    def __init__(self, app_id, country, count, seed, max_pages=10):
         self.app_id = app_id
         self.country = country
         self.count = count
         self.seed = seed
+        self.max_pages = max_pages
         self.reviews = {}
         self.sources = []
         self.offsets = []
@@ -185,9 +186,10 @@ class ReviewCollection:
                 "app_id": self.app_id, "country": self.country,
                 "requested_count": self.count, "available_count": actual, "actual_count": actual,
                 "shortfall": max(0, self.count - actual), "seed": self.seed, "selection": "first_unique",
+                "catalog_page_limit": self.max_pages,
                 "collected_at": datetime.now(timezone.utc).isoformat(),
                 "source": "Apple App Store " + " → ".join(item["source"] for item in self.sources) if fallback else "Apple App Store catalog reviews JSON",
-                "sampling_pool": "First unique valid reviews in catalog, RSS, then webpage response order in the requested storefront; not a random sample or all historical reviews" if fallback else "First unique valid reviews in Apple catalog response order, stopping at the requested count or 10 pages",
+                "sampling_pool": "First unique valid reviews in catalog, RSS, then webpage response order in the requested storefront; not a random sample or all historical reviews" if fallback else f"First unique valid reviews in Apple catalog response order, stopping at the requested count or {self.max_pages} pages",
                 "language": "en-US", "fetched_pages": list(self.sources[0]["fetched_pages"]), "fetched_offsets": self.offsets,
                 "failed_pages": [failure for stats in self.sources for failure in stats["failed_pages"]],
                 "invalid_records": sum(stats["invalid_records"] for stats in self.sources),
@@ -336,13 +338,16 @@ def web_pages(client, app_id, country, deadline):
         yield SourcePage(1, error=str(exc))
 
 
-def collect_reviews(client, app_id, country="us", count=100, seed=42, deadline=None):
-    collection = ReviewCollection(app_id, validate_inputs(app_id, country, count), count, seed)
+def collect_reviews(client, app_id, country="us", count=100, seed=42, deadline=None, *, max_pages=10):
+    if type(max_pages) is not int or not 1 <= max_pages <= 30:
+        raise ValueError("catalog page limit must be between 1 and 30")
+    collection = ReviewCollection(app_id, validate_inputs(app_id, country, count), count, seed, max_pages)
     adapters = (("catalog", catalog_pages), ("rss", rss_pages), ("webpage", web_pages))
     for index, (source, pages) in enumerate(adapters):
         if collection.complete:
             break
         now = time.monotonic()
         source_deadline = now + 60 if deadline is None else min(now + 60, now + max(0, deadline - now) / (len(adapters) - index))
-        collection.consume(source, pages(client, app_id, collection.country, source_deadline))
+        iterator = pages(client, app_id, collection.country, source_deadline, max_pages) if source == "catalog" else pages(client, app_id, collection.country, source_deadline)
+        collection.consume(source, iterator)
     return collection.report()

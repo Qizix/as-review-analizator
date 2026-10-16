@@ -105,14 +105,19 @@ export function prepareDashboard(response) {
         action.priority !== issue.priority || support.priority !== issue.priority ||
         !Array.isArray(ids) || !ids.length || new Set(ids).size !== ids.length ||
         count(issue.frequency, "Issue frequency") !== ids.length ||
-        !ids.every((id) => typeof id === "string" && reviewMap.get(id)?.label === "negative") ||
+        !ids.every((id) => typeof id === "string" && SENTIMENTS.includes(reviewMap.get(id)?.label)) ||
         [action, support].some((item) => !Array.isArray(item.evidence_ids) ||
           item.evidence_ids.length !== ids.length || new Set(item.evidence_ids).size !== ids.length ||
           !ids.every((id) => item.evidence_ids.includes(id))))
-      throw new Error("Issue evidence must consistently reference negative source reviews.");
+      throw new Error("Issue evidence must consistently reference classified source reviews.");
     categories.add(issue.category);
-    ids.forEach((id) => covered.add(id));
-    return { ...issue, action: action.action, fraction: ids.length / negative };
+    const negativeCount = ids.filter((id) => reviewMap.get(id).label === "negative").length;
+    const fraction = negative ? negativeCount / negative : null;
+    if ((issue.negative_review_count != null && issue.negative_review_count !== negativeCount) ||
+        (issue.negative_review_fraction !== undefined && issue.negative_review_fraction !== fraction))
+      throw new Error("Negative issue counts do not match the supporting reviews.");
+    ids.filter((id) => reviewMap.get(id).label === "negative").forEach((id) => covered.add(id));
+    return { ...issue, action: action.action, negative_review_count: negativeCount, fraction };
   }).sort((a, b) => PRIORITIES.indexOf(a.priority) - PRIORITIES.indexOf(b.priority) ||
     b.frequency - a.frequency || a.category.localeCompare(b.category));
   if (actions.size !== issues.length || supported.size !== issues.length || insights.issues.length !== issues.length ||
@@ -121,7 +126,7 @@ export function prepareDashboard(response) {
   return {
     total, stars, rated, average, classified, sentiments, negative, issues,
     covered: covered.size, coverage: negative ? covered.size / negative : null,
-    reviewMap, metadata: { ...collection, ...app, app_name: app.name },
+    reviewMap, metadata: { ...collection, ...app, mode: response.metadata?.mode, app_name: app.name },
   };
 }
 

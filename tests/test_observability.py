@@ -27,7 +27,7 @@ PREDICTIONS = [{"label": "negative", "score": .9}, {"label": "positive", "score"
 
 def model_response(evidence="n1"):
     return {"candidates": [{"content": {"role": "model", "parts": [{"text": json.dumps({"issues": [{
-        "category": "Startup", "action": "Investigate startup failures.", "priority": "high", "evidence_ids": [evidence],
+        "category": "Startup", "action": "Investigate startup failures.", "priority": "high", "keywords": [], "evidence": [{"review_id": evidence, "quote": SECRET}],
     }]})}]}, "finishReason": "STOP"}], "usageMetadata": {
         "promptTokenCount": 100, "candidatesTokenCount": 20, "thoughtsTokenCount": 5,
         "totalTokenCount": 125, "cachedContentTokenCount": 30,
@@ -39,7 +39,7 @@ def instrumented(monkeypatch):
     monkeypatch.setenv("GEMINI_API_KEY", SECRET)
     client_type = genai.Client
 
-    def collect(client, app_id, country, count, seed, deadline):
+    def collect(client, app_id, country, count, seed, deadline, **kwargs):
         entries = [{"id": review_id, "attributes": {"title": SECRET, "review": SECRET, "rating": rating}} for review_id, rating in (("n1", 5), ("p1", 1))]
         with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(200, json={"data": entries}))) as fixture_client:
             return collect_reviews(fixture_client, app_id, country, count, seed, deadline)
@@ -125,7 +125,7 @@ def test_complete_trace_hierarchy_usage_and_log_correlation(instrumented, capsys
 
 
 def test_validation_failure_is_attributed_and_redacted(instrumented, capsys):
-    app, exporter, _ = instrumented(lambda request: httpx.Response(200, json=model_response("p1")))
+    app, exporter, _ = instrumented(lambda request: httpx.Response(200, json=model_response("unknown")))
     with TestClient(app) as client:
         response = client.post("/api/analyze", json={"app_id": "123", "review_count": 2})
     assert response.status_code == 502
@@ -252,7 +252,7 @@ def test_repair_usage_is_aggregated_in_logs_but_individual_in_spans(instrumented
 
     def respond(request):
         calls.append(request)
-        return httpx.Response(200, json=model_response("p1" if len(calls) == 1 else "n1"))
+        return httpx.Response(200, json=model_response("unknown" if len(calls) == 1 else "n1"))
 
     app, exporter, _ = instrumented(respond)
     with TestClient(app) as client:
@@ -271,7 +271,7 @@ def test_missing_repair_usage_keeps_known_counts_and_marks_incomplete(instrument
 
     def respond(request):
         calls.append(request)
-        payload = model_response("p1" if len(calls) == 1 else "n1")
+        payload = model_response("unknown" if len(calls) == 1 else "n1")
         if len(calls) == 2:
             del payload["usageMetadata"]
         return httpx.Response(200, json=payload)
@@ -364,7 +364,7 @@ def test_invalid_apple_response_is_a_collection_failure(monkeypatch, instrumente
     app, exporter, _ = instrumented()
     monkeypatch.setattr("app.services.collector.time.sleep", lambda _: None)
 
-    def bad_collection(client, app_id, country, count, seed, deadline):
+    def bad_collection(client, app_id, country, count, seed, deadline, **kwargs):
         with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(200, json={"error": SECRET}))) as fixture_client:
             return collect_reviews(fixture_client, app_id, country, count, seed, deadline)
 

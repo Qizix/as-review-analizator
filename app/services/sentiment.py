@@ -2,11 +2,11 @@ from datetime import datetime, timezone
 
 from transformers import pipeline
 
-from app.settings import SENTIMENT_REVISION
+from app.settings import SENTIMENT_BATCH_SIZE, SENTIMENT_REVISION
 
 
 MODEL = "cardiffnlp/twitter-roberta-base-sentiment-latest"
-BATCH_SIZE = 1
+BATCH_SIZE = SENTIMENT_BATCH_SIZE
 
 
 def load_classifier(settings=None):

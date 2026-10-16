@@ -1,0 +1,8 @@
+input: examples/nebula-report.json
+modes: [fast, quality]
+gold_labels: null
+hydra:
+  run:
+    dir: hydra_outputs/analysis_evaluation/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  job:
+    chdir: false

@@ -77,7 +77,7 @@ class CalculateMetricsTests(unittest.TestCase):
             calculate_metrics(data, insights)
 
     def test_invalid_issue_evidence_and_report_mismatch(self):
-        for evidence in [["unknown"], ["c"], ["d"], ["f"], [], None]:
+        for evidence in [["unknown"], ["f"], [], None]:
             data, insights = inputs()
             insights["insights"]["high"]["repeated"][0]["evidence_ids"] = evidence
             with self.subTest(evidence=evidence):

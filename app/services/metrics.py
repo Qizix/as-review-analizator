@@ -21,6 +21,7 @@ def calculate_metrics(data, insights):
     sentiments = Counter({label: 0 for label in SENTIMENTS})
     review_ids = set()
     negative_ids = set()
+    classified_ids = set()
     for index, review in enumerate(data["reviews"]):
         if not isinstance(review, dict):
             raise ValueError(f"review at index {index} must be an object")
@@ -38,6 +39,7 @@ def calculate_metrics(data, insights):
         if label is not None:
             if label not in SENTIMENTS:
                 raise ValueError(f"review {review_id} has an invalid sentiment")
+            classified_ids.add(review_id)
             sentiments[label] += 1
             if label == "negative":
                 negative_ids.add(review_id)
@@ -63,14 +65,15 @@ def calculate_metrics(data, insights):
                 if not isinstance(evidence, list) or not evidence or not all(isinstance(value, str) for value in evidence):
                     raise ValueError("each issue must have a nonempty list of review IDs")
                 ids = set(evidence)
-                if not ids <= negative_ids:
-                    raise ValueError("issue evidence must reference negative reviews in the reviews input")
-                covered_ids.update(ids)
+                if not ids <= classified_ids:
+                    raise ValueError("issue evidence must reference classified reviews in the reviews input")
+                covered_ids.update(ids & negative_ids)
                 issues.append({
                     "category": category,
                     "priority": priority,
                     "frequency": len(ids),
-                    "negative_review_fraction": len(ids) / len(negative_ids),
+                    "negative_review_count": len(ids & negative_ids),
+                    "negative_review_fraction": len(ids & negative_ids) / len(negative_ids) if negative_ids else None,
                     "evidence_ids": sorted(ids),
                 })
     issues.sort(key=lambda item: (PRIORITIES.index(item["priority"]), -item["frequency"], item["category"].casefold()))

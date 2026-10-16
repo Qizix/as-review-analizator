@@ -7,10 +7,10 @@ from app.observability import observe, operation, warning
 from app.admission import Admission
 from app.services.collector import collect_reviews
 from app.services.app_info import lookup_app_info
-from app.services.insights import generate_insights, InsightDecodeError
+from app.services.insights import InsightDecodeError
+from app.services.interpretation import interpret_reviews
 from app.services.metrics import calculate_metrics
 from app.services.review_batch import ReviewBatch
-from app.services.sentiment import BATCH_SIZE
 from app.services.validator import InsightValidationError
 from app.services.execution import AnalysisError, AnalysisRun
 from app.settings import SENTIMENT_MODEL
@@ -23,7 +23,7 @@ class Analyzer:
         self.admission = Admission(settings)
 
     def collect(self, request, deadline=None):
-        observe(app_id=request.app_id, country=request.country, requested_count=request.review_count)
+        observe(app_id=request.app_id, country=request.country, requested_count=request.review_count, analysis_mode=request.mode)
         self.check_count(request)
         with self.admission.work("collection"):
             return self._collect(request, deadline)
@@ -33,9 +33,9 @@ class Analyzer:
             raise AnalysisError(f"review_count must not exceed {self.settings.max_review_count}", 422, "INVALID_REQUEST", "admission")
 
     def _collect(self, request, deadline=None):
-        with operation("reviews.collect", {"app.reviews.requested_count": request.review_count, "app.country": request.country}) as span:
+        with operation("reviews.collect", {"app.reviews.requested_count": request.review_count, "app.country": request.country, "app.collection.page_limit": 30 if request.mode == "quality" else 10, "app.analysis.mode": request.mode}) as span:
             with httpx.Client(follow_redirects=True) as client:
-                result = collect_reviews(client, request.app_id, request.country, request.review_count, request.model_dump()["seed"], deadline)
+                result = collect_reviews(client, request.app_id, request.country, request.review_count, request.model_dump()["seed"], deadline, max_pages=30 if request.mode == "quality" else 10)
             metadata = result["metadata"]
             span.set_attribute("app.reviews.collected_count", len(result["reviews"]))
             span.set_attribute("app.collection.failed_pages", len(metadata["failed_pages"]))
@@ -53,10 +53,13 @@ class Analyzer:
 
     def analyze(self, request):
         self.check_count(request)
+        if request.mode == "quality" and not self.settings.quality_enabled:
+            raise AnalysisError("Quality mode is unavailable in this deployment; use fast mode", 503, "MODE_UNAVAILABLE", "admission")
         with self.admission.work("analysis"):
             return self._analyze(request)
 
     def _analyze(self, request):
+        observe(analysis_mode=request.mode)
         run = AnalysisRun(self.settings)
         warnings = []
         stage = run.stage
@@ -68,11 +71,12 @@ class Analyzer:
                 app_info = lookup_app_info(request.app_id, request.country, deadline=run.deadline)
             with stage("preprocessing", "reviews.preprocess"):
                 batch = ReviewBatch(collected)
-                preprocessing = batch.preprocessing
-            with stage("sentiment", "sentiment.classify", {"app.model": SENTIMENT_MODEL, "app.reviews.count": len(collected["reviews"]), "app.batch_size": BATCH_SIZE}):
-                batch.classify(self.classifier, self.settings.sentiment_revision)
-                classified = batch.source
-            insights = generate_insights(batch, run, self.settings.gemini_model)
+                preprocessing = batch.semantic_preprocessing
+                if request.mode == "quality":
+                    preprocessing["sentiment"] = batch.preprocessing
+                    preprocessing["truncated_review_ids"] = sorted(set(preprocessing["truncated_review_ids"]) | set(batch.preprocessing["truncated_review_ids"]))
+            insights = interpret_reviews(batch, request.mode, self.classifier, run, self.settings)
+            classified = batch.source
             with stage("metrics", "metrics.calculate", {"app.reviews.count": len(classified["reviews"]), "app.metrics.phase": "issues"}):
                 metrics = calculate_metrics(classified, insights)
             with stage("report_assembly", "report.assemble"):
@@ -90,7 +94,8 @@ class Analyzer:
                 elapsed = round(time.monotonic() - run.started, 4)
                 peak_bytes = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * (1 if sys.platform == "darwin" else 1024)
                 metadata = {
-                    "models": {"sentiment": SENTIMENT_MODEL, "sentiment_revision": self.settings.sentiment_revision, "insights": self.settings.gemini_model},
+                    "mode": request.mode,
+                    "models": {"sentiment": SENTIMENT_MODEL if request.mode == "quality" else self.settings.gemini_model, "sentiment_revision": self.settings.sentiment_revision if request.mode == "quality" else None, "insights": self.settings.gemini_model},
                     "processing_time": {**run.durations, "total": elapsed},
                     "gemini_usage": run.usage,
                     "prompt_sha256": insights["metadata"]["insight_generation"]["prompt_sha256"],

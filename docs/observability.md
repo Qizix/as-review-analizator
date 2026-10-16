@@ -102,14 +102,14 @@ Exporter exceptions or failed export results emit a bounded `telemetry.export_fa
 Start the API with local console export; Google credentials are unnecessary:
 
 ```bash
-OTEL_ENABLED=true OTEL_EXPORTER=console LOG_LEVEL=DEBUG uv run --env-file .env uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
+OTEL_ENABLED=true OTEL_EXPORTER=console LOG_LEVEL=DEBUG uv run --extra quality --env-file .env uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
 ```
 
 Run the complete-analysis curl in the README, optionally adding `-H 'X-Request-ID: local-check'`. Look for one `request.completed` summary and `trace.span` records with the same trace ID. The console exporter batches spans every second and flushes on graceful shutdown, so span output can follow the response. Successful `/api/health` calls must not produce spans.
 
 For a log-only run, use `OTEL_EXPORTER=none`. Use `OTEL_ENABLED=false` to disable tracing entirely. Model weights and the Gemini key are still required for real analysis, independently of local tracing.
 
-Run `uv run --locked pytest -q`. Observability tests use injected in-memory exporters, real SDK calls over mocked HTTP transports, and a mocked classifier. They verify hierarchy, W3C context, stage attribution, token/retry counters, missing usage, correlation, privacy, disabled mode, export failures, initialization failures, concurrent request isolation, and shutdown export of the completed HTTP server span. No test sends telemetry to Google Cloud.
+Run `uv run --locked --extra quality pytest -q`. Observability tests use injected in-memory exporters, real SDK calls over mocked HTTP transports, and a mocked classifier. They verify hierarchy, W3C context, stage attribution, token/retry counters, missing usage, correlation, privacy, disabled mode, export failures, initialization failures, concurrent request isolation, and shutdown export of the completed HTTP server span. No test sends telemetry to Google Cloud.
 
 ## Google Cloud requirements
 
@@ -153,3 +153,7 @@ The full-pipeline CLI and compatibility scripts retain their existing interfaces
 - [Cloud Run structured logs and trace correlation](https://docs.cloud.google.com/run/docs/logging)
 - [Cloud Run trace context](https://docs.cloud.google.com/run/docs/trace)
 - [Cloud Run CPU allocation and billing](https://docs.cloud.google.com/run/docs/configuring/billing-settings)
+
+## Analysis modes
+
+Request summaries include analysis_mode; collection spans include app.analysis.mode and app.collection.page_limit. Both attributes are explicitly allowed by the telemetry sanitizer. Fast mode nests gemini.request under analysis.unified and has no sentiment.classify span. Quality retains sentiment.classify, insights.generate and an optional insights.repair. Both use insights.decode, insights.validate, metrics.calculate and report.assemble. Gemini usage and latency retain their existing fields; fast does not report a fabricated local sentiment duration. Neither prompts, review contents nor model quotations enter telemetry.

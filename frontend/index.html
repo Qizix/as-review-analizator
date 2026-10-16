@@ -76,6 +76,13 @@
               step="1"
               required
           /></label>
+          <label class="field wide">Analysis mode
+            <select class="input" id="mode-input" aria-describedby="mode-help">
+              <option value="fast" {% if not quality_enabled %}selected{% endif %}>Fast</option>
+              {% if quality_enabled %}<option value="quality" selected>Quality</option>{% endif %}
+            </select>
+            <small id="mode-help">Fast: Gemini only. Quality: RoBERTa + Gemini, deeper collection.</small>
+          </label>
           <button class="btn dark submit" type="submit" id="analyze-button">
             Analyze reviews
           </button>

@@ -86,6 +86,15 @@ def request_insights(groups, prompt, usage=None, model=MODEL, *, deadline=None):
         schema["$defs"]["Issue"]["properties"]["evidence_ids"]["items"]["enum"] = negative_ids
     else:
         schema["properties"]["issues"]["maxItems"] = 0
+    text = request_structured(groups, prompt, schema, usage, model, deadline=deadline)
+    with operation("insights.decode"):
+        try:
+            return ModelReport.model_validate_json(text)
+        except ValueError as exc:
+            raise InsightDecodeError("Gemini returned an invalid report") from exc
+
+
+def request_structured(payload, prompt, schema, usage=None, model=MODEL, *, deadline=None):
     api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if not api_key:
         raise ValueError("set GEMINI_API_KEY or GOOGLE_API_KEY before generating insights")
@@ -121,10 +130,12 @@ def request_insights(groups, prompt, usage=None, model=MODEL, *, deadline=None):
                     try:
                         response = client.models.generate_content(
                             model=model,
-                            contents=json.dumps(groups, ensure_ascii=False, separators=(",", ":")),
+                            contents=json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
                             config=types.GenerateContentConfig(
                                 system_instruction=prompt, response_mime_type="application/json",
                                 response_json_schema=schema, max_output_tokens=8192,
+                                thinking_config=types.ThinkingConfig(thinking_level="minimal"),
+                                automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
                                 http_options=types.HttpOptions(timeout=max(1, int(timeout * 1000))),
                             ),
                         )
@@ -157,13 +168,12 @@ def request_insights(groups, prompt, usage=None, model=MODEL, *, deadline=None):
             else:
                 observe(gemini_retry_count=None)
         remaining_seconds(deadline, 60)
-    with operation("insights.decode"):
-        if not response.text:
-            raise InsightDecodeError("Gemini returned no report; no insights were saved")
-        try:
-            return ModelReport.model_validate_json(response.text)
-        except ValueError as exc:
-            raise InsightDecodeError("Gemini returned an invalid report") from exc
+    candidates = getattr(response, "candidates", None)
+    if candidates and getattr(candidates[0], "finish_reason", None) not in (None, "STOP"):
+        raise InsightDecodeError("Gemini did not finish the structured report")
+    if not response.text:
+        raise InsightDecodeError("Gemini returned no report; no insights were saved")
+    return response.text
 
 
 
