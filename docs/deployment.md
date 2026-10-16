@@ -124,17 +124,17 @@ The service-account key was never created; runtime ADC is supplied by Cloud Run.
 
 ## Per-request cost calculation
 
-Pricing checked on 2026-10-15. The README benchmark uses the live deployment smoke request `deployment-smoke-66baf074e35b`, not the earlier supplied screenshot export. HTTP duration was 159.560803 seconds, with 57,807 input and 2,853 output tokens across generation and one repair. CPU/memory costs use allocated resources for the whole processing window, including network waits; peak RSS does not determine billed memory.
+The README estimate uses the 2026-10-16 batch-1 verification request `batch-one-c0ad9ded8522`: 10 collected reviews out of 100 requested, HTTP duration 59.718319 seconds, and one Gemini call reporting 3,862 input and 401 output tokens (4,263 total). Apple throttling caused the shortfall. No evidence repair was needed. These measurements do not predict a full 100-review request. CPU/memory costs use allocated resources for the whole processing window, including network waits; peak RSS does not determine billed memory.
 
 Warsaw instance-based list rates, verified through the Google Cloud Billing Catalog: CPU SKU `6872-8766-BE5C` costs $0.0000216 per vCPU-second; memory SKU `14DC-011F-3982` costs $0.0000024 per GiB-second. [Cloud Run pricing](https://cloud.google.com/run/pricing).
 
-Gemini 3.5 Flash-Lite standard paid rates are $0.30 per million input tokens and $2.50 per million output tokens, including thinking. This run reported no separate thinking-token counter. Actual provider usage is used, without estimated token counts or assumed cache discounts. [Gemini pricing](https://ai.google.dev/gemini-api/docs/pricing#gemini-3.5-flash-lite).
+Gemini pricing rechecked on 2026-10-16; Cloud Run rates retain the 2026-10-15 Billing Catalog verification. Gemini 3.5 Flash-Lite standard paid rates are $0.30 per million input tokens and $2.50 per million output tokens, including thinking. This run reported no separate thinking-token counter. Actual provider usage is used, without estimated token counts or assumed cache discounts. [Gemini pricing](https://ai.google.dev/gemini-api/docs/pricing#gemini-3.5-flash-lite).
 
-- CPU: 159.560803 × 1 × $0.0000216 = $0.0034465.
-- Memory: 159.560803 × 4 × $0.0000024 = $0.0015318.
-- Gemini input: 57,807 / 1,000,000 × $0.30 = $0.0173421.
-- Gemini output: 2,853 / 1,000,000 × $2.50 = $0.0071325.
-- Processing-window total: $0.0294529, displayed as $0.0295.
+- CPU: 59.718319 × 1 × $0.0000216 = $0.0012899.
+- Memory: 59.718319 × 4 × $0.0000024 = $0.0005733.
+- Gemini input: 3,862 / 1,000,000 × $0.30 = $0.0011586.
+- Gemini output: 401 / 1,000,000 × $2.50 = $0.0010025.
+- Processing-window total: $0.0040243, displayed as $0.00402 (~0.4 US cents).
 
 This is an allocation-based estimate before free tiers, credits, discounts, and taxes, not an invoice. Instance-based billing also covers startup and idle time until shutdown; builds, artifact/source storage, Secret Manager, networking, logging, and tracing have separate costs. Idle time cannot be attributed uniquely to one request without a billing-allocation policy. No fixed all-inclusive per-request charge is claimed.
 

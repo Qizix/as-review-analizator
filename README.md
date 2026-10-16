@@ -57,19 +57,19 @@ Latest verified cloud request on **2026-10-16**: Nebula analysis using **PyTorch
 
 Stage timings come from the structured request log; totals include orchestration and response handling. This partial sample cannot establish a speedup against the earlier 100-review run. See [rollout verification](docs/deployment.md#batch-size-1-rollout--2026-10-16).
 
-The cost estimate below belongs to the **earlier 2026-10-15 batch-8 request: 100 reviews, 159.561 seconds, and one Gemini evidence repair**. It does not describe the latest 10-review request.
+Estimated processing cost for the **same 10-review batch-1 request**, using actual provider token counts:
 
 | Cost component | Usage | Estimated cost (USD) |
 |---|---|---:|
-| Cloud Run CPU | 159.56 vCPU-seconds | $0.00345 |
-| Cloud Run allocated memory | 638.24 GiB-seconds | $0.00153 |
-| Gemini input | 57,807 tokens | $0.01734 |
-| Gemini output | 2,853 tokens | $0.00713 |
-| **Total processing estimate** | **One 100-review request** | **$0.0295 (~3 cents)** |
+| Cloud Run CPU | 59.72 vCPU-seconds | $0.00129 |
+| Cloud Run allocated memory | 238.87 GiB-seconds | $0.00057 |
+| Gemini input | 3,862 tokens | $0.00116 |
+| Gemini output | 401 tokens | $0.00100 |
+| **Total processing estimate** | **One 10-review request** | **$0.00402 (~0.4 cents)** |
 
 Estimates use paid list prices before free-tier allowances, credits, discounts, and taxes. Cloud Run startup/idle time, builds, storage, networking, logs, and traces are additional; this is not the full billed cost or a fixed price. Review length, repairs, and instance performance change each request's usage. See [calculation and pricing sources](docs/deployment.md#per-request-cost-calculation).
 
-An [ONNX/quantization benchmark](docs/sentiment-benchmark.md) now compares the Xenova conversion against PyTorch. On the local ARM Mac, batch size 1 improved PyTorch inference from 7.71 to 6.33 seconds; quantized ONNX was slower and changed some labels. Production inference now uses PyTorch batch size 1; the ONNX backends remain experimental. The timing table above records the latest cloud check; the cost table retains the earlier 100-review estimate.
+An [ONNX/quantization benchmark](docs/sentiment-benchmark.md) now compares the Xenova conversion against PyTorch. On the local ARM Mac, batch size 1 improved PyTorch inference from 7.71 to 6.33 seconds; quantized ONNX was slower and changed some labels. Production inference now uses PyTorch batch size 1; the ONNX backends remain experimental. Both tables above describe the latest 10-review cloud check; they do not predict the time or cost of a complete 100-review analysis.
 
 ## Application example: Nebula
 
