@@ -4,6 +4,11 @@ steps:
   - name: gcr.io/cloud-builders/docker
     entrypoint: bash
     args: [infra/smoke.sh, '${_IMAGE}']
+  - name: gcr.io/cloud-builders/docker
+    args: [build, --platform, linux/amd64, --target, fast, -t, '${_IMAGE}-fast-check', .]
+  - name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args: [infra/smoke.sh, '${_IMAGE}-fast-check']
 images: ['${_IMAGE}']
 options:
   logging: CLOUD_LOGGING_ONLY

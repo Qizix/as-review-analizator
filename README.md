@@ -52,7 +52,7 @@ Sentiment and issue interpretation are model estimates. The RoBERTa classifier i
 
 ## Service metrics per request
 
-These measurements describe the deployed RoBERTa baseline before the dual-mode update; the new modes have not been deployed.
+These measurements describe the earlier deployed RoBERTa baseline. Cloud Build verifies both dual-mode and fast-only containers before publishing a dual-mode release. Updated deployment experiments are recorded after rollout.
 
 Verified on **2026-10-16** with a deployed Nebula analysis: **90 unique reviews out of 100 requested**, HTTP 200, and six validated issue groups. Apple throttled one review page; the report explicitly records the 10-review shortfall. Runtime: **1 vCPU, 4 GiB RAM, one inference thread, PyTorch batch size 1**, Warsaw.
 
