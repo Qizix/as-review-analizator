@@ -173,3 +173,12 @@ Revision `app-store-review-analyzer-00005-x56` serves 100% of traffic from image
 The paused revision `00004-cfw` was verified to reject processing before the full drain window; the new image was staged without traffic before the switch. The previous working processing revision is `00003-67b`, which predates the mode parameter. Reload clients and omit mode if reverting there. Do not roll back to the maintenance-paused revision.
 
 The new revision's six live 100-review experiments, including validation failures, exact request costs, token usage, trace correlation, and native monitoring, are documented in [Cloud Run results](cloud-experiments.md). Both modes remain available, with quality the compatibility default and fast experimental. The earlier benchmark tables above are historical records, not current mode comparisons.
+
+## Fast validation repair release — 2026-10-16
+
+- Source commit: `6e06493`; Cloud Build `7ecc2ef0-c1da-4b1d-9dd5-abeede64b033` passed the dual and fast-only container smoke checks. Python verification passed 182 tests and 60 subtests; all eight frontend tests passed.
+- Serving revision: `app-store-review-analyzer-00007-km2`, 100% traffic, image digest `sha256:e384c34bf4decf63f91068550695fa9b096b08f6f6576bcb0233ce1d639a7d8c`. Fast now permits one bounded deterministic-validation repair; strict quotation and sentiment checks remain in place.
+- Processing was paused on `00006-hxx`, verified with HTTP 503, and drained for the full 300-second request window before switching. Manual one-instance scaling, 1 vCPU/4 GiB, concurrency 8, runtime account, and secret version 1 were preserved.
+- Public readiness and dashboard returned 200. Live fast-mode request `fast-repair-release-20261016`, app `835599320`, US, returned 10 unique reviews and two source-verified issues with HTTP 200 in 16.111 server seconds. No repair was needed in this smoke request; mocked SDK tests cover recovery and repeated invalid output.
+- Concurrent collection returned 409 with Retry-After 5; health remained 200. Cloud Logging attributed the successful request to the new revision with trace ID `406b27c6b3fbe85decc71348932d5fbe` and actual usage of 3,874 input and 779 output tokens.
+- Rollback target is the previous working revision `app-store-review-analyzer-00005-x56`; do not select maintenance revision `00006-hxx`.
