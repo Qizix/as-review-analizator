@@ -135,11 +135,12 @@ def fast_api(monkeypatch):
     client_type = genai.Client
     requests = []
     response_data = unified().model_dump()
+    responses = []
     finish = {"finishReason": "STOP"}
 
     def respond(request):
         requests.append(json.loads(request.content))
-        return httpx.Response(200, json={"candidates": [{"content": {"role": "model", "parts": [{"text": json.dumps(response_data)}]}, **finish}], "usageMetadata": {"promptTokenCount": 100, "candidatesTokenCount": 30, "totalTokenCount": 130}})
+        return httpx.Response(200, json={"candidates": [{"content": {"role": "model", "parts": [{"text": json.dumps(responses.pop(0) if responses else response_data)}]}, **finish}], "usageMetadata": {"promptTokenCount": 100, "candidatesTokenCount": 30, "totalTokenCount": 130}})
 
     def make_client(**kwargs):
         options = kwargs["http_options"]
@@ -154,7 +155,7 @@ def fast_api(monkeypatch):
     exporter = InMemorySpanExporter()
     app = create_app(Settings(quality_enabled=False, analyze_requests_per_minute=10), factory, exporter)
     with TestClient(app) as client:
-        yield SimpleNamespace(client=client, requests=requests, response=response_data, finish=finish, collect=collect, exporter=exporter, factory=factory)
+        yield SimpleNamespace(client=client, requests=requests, response=response_data, responses=responses, finish=finish, collect=collect, exporter=exporter, factory=factory)
 
 
 def test_fast_request_uses_one_real_sdk_call_no_ratings_and_no_cpu_inference(fast_api, caplog):
@@ -195,7 +196,7 @@ def test_fast_request_uses_one_real_sdk_call_no_ratings_and_no_cpu_inference(fas
 
 
 @pytest.mark.parametrize("invalid", ["sentiments", "quote", "schema"])
-def test_invalid_fast_outputs_fail_explicitly_without_repair_or_fallback(fast_api, invalid):
+def test_invalid_fast_outputs_fail_after_bounded_repair_without_fallback(fast_api, invalid):
     api = fast_api
     if invalid == "sentiments":
         api.response["sentiments"].pop()
@@ -206,7 +207,41 @@ def test_invalid_fast_outputs_fail_explicitly_without_repair_or_fallback(fast_ap
     response = api.client.post("/api/analyze", json={"app_id": "123", "mode": "fast"})
     assert response.status_code == 502
     assert set(response.json()) == {"detail"}
-    assert len(api.requests) == 1
+    assert len(api.requests) == (1 if invalid == "schema" else 2)
+    api.factory.assert_not_called()
+
+
+@pytest.mark.parametrize("invalid", ["quote", "sentiments"])
+def test_fast_repairs_validation_failure_with_complete_verified_report(fast_api, caplog, invalid):
+    api = fast_api
+    broken = deepcopy(api.response)
+    if invalid == "quote":
+        broken["issues"][0]["evidence"][0]["quote"] = "invented"
+    else:
+        broken["sentiments"].pop()
+    api.responses.append(broken)
+    response = api.client.post("/api/analyze", json={"app_id": "123", "review_count": 3, "mode": "fast"})
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert len(api.requests) == 2
+    assert body["metadata"]["mode"] == "fast"
+    assert body["metadata"]["gemini_usage"]["total_token_count"] == 260
+    assert body["metrics"]["sentiment"]["counts"] == {"negative": 1, "positive": 1, "neutral": 1}
+    assert "sentiment" not in body["metadata"]["processing_time"]
+    for issue in body["insights"]["issues"]:
+        for evidence in issue["evidence_quotes"]:
+            review = next(item for item in body["reviews"] if item["id"] == evidence["review_id"])
+            assert evidence["quote"] in review["title"] or evidence["quote"] in review["text"]
+    prompt = api.requests[1]["systemInstruction"]["parts"][0]["text"]
+    assert "Validation failed:" in prompt
+    assert "including every sentiment prediction" in prompt
+    assert api.requests[0]["contents"] == api.requests[1]["contents"]
+    event = next(record.event_data for record in caplog.records if getattr(record, "event_data", {}).get("event") == "request.completed")
+    assert event["insight_repair_count"] == 1
+    api.client.app.state.telemetry.provider.force_flush()
+    spans = api.exporter.get_finished_spans()
+    repair = next(span for span in spans if span.name == "insights.repair")
+    assert any(span.name == "gemini.request" and span.parent.span_id == repair.context.span_id for span in spans)
     api.factory.assert_not_called()
 
 

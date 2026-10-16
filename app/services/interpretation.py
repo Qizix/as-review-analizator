@@ -115,8 +115,8 @@ def interpret_reviews(batch, mode, classifier, run, settings):
     if not reviews:
         result = UnifiedAnalysis(sentiments=[], issues=[]) if mode == "fast" else IssueAnalysis(issues=[])
         return validate_analysis(batch, reviews, result, prompt, settings.gemini_model)
-    for attempt in range(1 if mode == "fast" else 2):
-        with run.stage("gemini", "analysis.unified" if mode == "fast" else "insights.repair" if attempt else "insights.generate", {"gen_ai.request.model": settings.gemini_model, "app.analysis.mode": mode, "app.prompt.version": hashlib.sha256(prompt.encode()).hexdigest()}):
+    for attempt in range(2):
+        with run.stage("gemini", "insights.repair" if attempt else "analysis.unified" if mode == "fast" else "insights.generate", {"gen_ai.request.model": settings.gemini_model, "app.analysis.mode": mode, "app.prompt.version": hashlib.sha256(prompt.encode()).hexdigest()}):
             observe(gemini_model=settings.gemini_model, prompt_version=hashlib.sha256(prompt.encode()).hexdigest())
             result = request_analysis(reviews, prompt, run.usage, settings.gemini_model, mode, deadline=run.deadline)
         try:
@@ -132,8 +132,8 @@ def interpret_reviews(batch, mode, classifier, run, settings):
         except InsightValidationError as exc:
             observe(insight_validation_reason=exc.reason)
             warning("INSIGHTS_INVALID", reason=exc.reason)
-            if mode == "fast" or attempt:
+            if attempt:
                 raise
             observe(insight_repair_count=1)
             warning("INSIGHTS_RETRY", reason=exc.reason)
-            prompt += f"\nRegenerate the report. Validation failed: {exc.reason}. Use existing IDs and exact nonempty source excerpts; keep categories unique."
+            prompt += f"\nRegenerate the report. Validation failed: {exc.reason}. Return the complete structured result, including every sentiment prediction when requested. Copy short, contiguous, nonempty quotations directly from one source field without paraphrasing, correcting spelling, or adding ellipses. Use existing IDs and exact nonempty source excerpts; keep categories unique."
