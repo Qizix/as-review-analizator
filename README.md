@@ -13,12 +13,12 @@ uv sync --locked --extra quality
 uv run --locked --extra quality --env-file .env uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
 ```
 
-Open the [dashboard](http://127.0.0.1:8000/) or [API docs](http://127.0.0.1:8000/docs). The first dual-mode startup downloads the sentiment model; Docker bundles its weights. Analysis requires access to Apple and Gemini. Review excerpts are sent to Google; original comments remain in the returned report.
+Open the [dashboard](http://127.0.0.1:8000/) or [API docs](http://127.0.0.1:8000/docs). The first startup downloads the sentiment model. Apple and Gemini access are required; review excerpts are sent to Google for analysis.
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/analyze \
   -H 'Content-Type: application/json' \
-  -d '{"app_id":"1459969523","country":"us","review_count":100,"mode":"quality"}'
+  -d '{"app_id":"1459969523","country":"us","review_count":100,"mode":"fast"}'
 ```
 
 | Endpoint | Result |
@@ -27,99 +27,57 @@ curl -X POST http://127.0.0.1:8000/api/analyze \
 | `POST /api/reviews/collect` | Raw reviews and collection metadata; same request body |
 | `GET /api/health` | Readiness, available modes, and credential availability |
 
-| Mode | Analysis | Catalog page limit |
-|---|---|---:|
-| `fast` | One Gemini generation for sentiment and issues | 10 |
-| `quality` (default) | CPU RoBERTa sentiment, then Gemini issues | 30 |
+## How it works
 
-Both stop at the requested number of unique reviews. Quality can attempt one evidence repair; fast rejects invalid output without a second semantic generation. Mode names identify methods, not measured accuracy guarantees. A fast-only installation without Torch or weights is also available; see [mode configuration and container profiles](docs/dual-mode-analysis.md).
+1. **Collect:** Fetch unique Apple reviews with bounded retries and explicit shortfall reporting.
+2. **Analyze:** Choose `fast` for unified Gemini sentiment and issue analysis, or `quality` (default) for RoBERTa sentiment followed by Gemini issue analysis.
+3. **Verify:** Check review IDs and source quotations, then calculate ratings, sentiment proportions, and issue frequencies in Python.
+4. **Explore:** Filter issues, read full supporting reviews, and download the JSON report from the dashboard.
 
-## Approach
+Ratings and sentiment stay independent. Complaints can be identified in positive and neutral reviews too. The application uses no database or persistent report storage; FastAPI serves the dashboard directly, with no frontend build step. Mode names describe the methods; comparative accuracy has not been established.
 
-- **One application:** FastAPI and vanilla JavaScript, with no database, queue, or frontend build step. Reports stay in memory; JSON export downloads directly from the browser.
-- **Bounded collection:** Apple catalog → RSS → webpage fallback, preserving unique source reviews and explicitly reporting shortfalls. Text is cropped only for model input; original comments are returned intact.
-- **Independent analysis:** Ratings never determine sentiment. Both modes can identify complaints within positive or neutral reviews. Gemini groups issues and proposes actions; Python verifies IDs and source quotations and calculates every metric.
+## Successful Cloud Run benchmarks
 
-Issue frequency counts all supporting reviews. Negative fractions and coverage count only negative supporting reviews. Interpretation remains a model estimate; source matching proves quotation provenance, not that a recommendation is correct. RoBERTa is English-oriented, and storefront selection does not filter language.
-
-## Cloud Run results
-
-Measured **16 October 2026**, on **1 vCPU, 4 GiB RAM, one inference thread, batch size 1**, in Warsaw. Both modes are deployed on the same warm dual-mode instance. Six sequential requests each collected **100/100 Nebula reviews**.
-
-**Fast returned one verified report in 23.44 seconds; quality returned two in 95.34–110.01 seconds. Source validation rejected the other three attempts with HTTP 502.** These are six observed requests, not a production reliability estimate. Quality remains the default; fast is experimental.
+Measured **16 October 2026**, using identical sets of **100 Nebula reviews** on a warm **1 vCPU / 4 GiB** instance in Warsaw. These figures summarize **one validated fast report and two validated quality reports**, rather than overall request reliability.
 
 | Result | Fast | Quality |
 |---|---:|---:|
-| Verified reports / attempts | **1 / 3** | **2 / 3** |
-| Sentiment: positive / neutral / negative | 40 / 8 / 52 | 35 / 16 / 49 |
-| Issues in verified reports | 7 | 7–8 |
-| Negative issue coverage | 57.7% | 81.6–85.7% |
-| Valid-report HTTP time, median | **23.440 s** | **102.677 s** |
-| All-attempt HTTP time, median | 57.124 s | 98.691 s |
-| Valid-report processing estimate, median | **$0.02448** | **$0.02818** |
-| Observed cost per valid report, including failed attempts | $0.07653 | $0.04856 |
+| Total time, median | **23.44 s** | **102.68 s** |
+| Review collection | 4.85 s | 5.46 s |
+| RoBERTa sentiment | — | 73.06 s |
+| Gemini analysis, including repairs | 18.26 s | 23.75 s |
+| Evidence validation | 18.89 ms | 34.80 ms |
+| Estimated processing cost per report, median | **$0.02448** | **$0.02818** |
+| Issues identified | 7 | 7–8 |
+| Negative reviews covered by issues | 57.7% | 81.6–85.7% |
 
-Successful runs used identical review payloads, verified by hash. Their sentiment labels agreed on **72%** of reviews; agreement is not accuracy. Human-labeled macro-F1, negative recall, and issue precision were not measured.
+Costs include Gemini tokens and request-time compute, before allowances and taxes. They exclude startup and idle costs. The current always-allocated instance costs approximately **$2.70/day** in compute, which already includes request-time compute.
 
-### Time by processing step
+See [the full experiment record, timings, and pricing methodology](docs/cloud-experiments.md) for all attempts and measurement limits.
 
-Medians of verified reports: one fast run and two quality runs. Gemini latency includes any repair calls; totals include orchestration and response handling.
-
-| Step | Fast | Quality |
-|---|---:|---:|
-| Review collection | 4.851 s | 5.456 s |
-| App lookup | 0.149 s | 0.183 s |
-| Preprocessing | 0.149 s | 0.152 s |
-| RoBERTa sentiment | Not run | **73.065 s** |
-| Gemini API calls | 18.258 s | 23.753 s |
-| Evidence validation | 18.892 ms | 34.803 ms |
-| Metrics | 0.385 ms | 0.443 ms |
-| Report assembly | 0.261 ms | 0.154 ms |
-| **Complete HTTP request** | **23.440 s** | **102.677 s** |
-
-### Every measured request
-
-All six collected 100 reviews. A rejected response contains an error, not a partial report. Estimates include the actual provider-reported tokens for failed attempts.
-
-| Run | Mode | HTTP | Server time | Input / output tokens | Estimated USD |
-|---|---|---:|---:|---:|---:|
-| 1 | Fast | 502 | 57.124 s | 23,703 / 6,557 | $0.02529 |
-| 1 | Quality | 200 | 95.343 s | 28,712 / 4,226 | $0.02215 |
-| 2 | Fast | 502 | 60.370 s | 28,325 / 6,554 | $0.02677 |
-| 2 | Quality | 502 | 98.691 s | 57,453 / 8,178 | $0.04076 |
-| 3 | Fast | 200 | 23.440 s | 28,325 / 6,100 | $0.02448 |
-| 3 | Quality | 200 | 110.011 s | 57,459 / 8,240 | $0.03421 |
-
-Token totals include repairs. Quality run 3 reported 26,153 cached input tokens; its estimate applies the cached-input rate. **Estimated processing total for all six attempts: $0.17365.** Rates are $0.30/M uncached input, $0.03/M cached input, $2.50/M output, plus allocated Cloud Run CPU and memory during each request.
-
-Prices are before free allowances, credits, and taxes and exclude startup, idle time, builds, storage, networking, and observability. The current manual one-instance configuration keeps compute allocated: approximately **$2.70 per 24 hours** at list rates, even without requests; that daily baseline already includes request-window compute. The deployed dual-mode image still loads RoBERTa, including for fast requests; no cold-start or memory saving is claimed here.
-
-Container startup was **50.14 s**; reported process peak RSS reached **907.18 MiB** on the shared instance. Health stayed available and concurrent processing returned **409 / Retry-After: 5**. All six requests have correlated logs and verified Cloud Trace spans. See [complete experiment details and pricing sources](docs/cloud-experiments.md) and the [machine-readable measurements](docs/benchmarks/cloud-run-2026-10-16.json).
-
-## Sample report: Nebula
+## Example: Nebula
 
 The verified cloud quality report analyzed **100 unique US reviews** of **Nebula: Spiritual Guidance** (`1459969523`):
 
 | Metric | Result |
 |---|---|
 | Average rating | **2.86 / 5** |
-| Ratings, 1 → 5 stars | 41 · 8 · 8 · 10 · 33 |
 | Sentiment | **35 positive · 16 neutral · 49 negative** |
 | Issues | 7 |
 | Negative issue coverage | **40 / 49 (81.6%)**, nine unassigned |
 
-Selected model recommendations from that report:
+Selected recommendations:
 
-| Priority | Recommendation | Supporting reviews | Negative support |
-|---|---|---:|---:|
-| High | Display subscription terms and charges clearly before confirmation | 30 | 27 |
-| High | Improve support responsiveness and refund handling | 6 | 5 |
-| Medium | Make core features accessible without excessive paywalls | 9 | 7 |
+| Priority | Recommended action | Supporting reviews |
+|---|---|---:|
+| High | Display subscription terms and charges clearly before confirmation | 30 |
+| High | Improve support responsiveness and refund handling | 6 |
+| Medium | Make core features accessible without excessive paywalls | 9 |
 
-A review may support several issues, so issue counts overlap. These are reported experiences and model recommendations, not independently verified defects or a survey of all users. Inspect the [complete cloud JSON report](examples/nebula-cloud-report.json).
+Reviews may support multiple issues. Recommendations reflect the sampled feedback, not independently verified defects. [Download the complete report](examples/nebula-cloud-report.json).
 
 ![Nebula dashboard with rating and sentiment charts, prioritized issues, and full review text](examples/nebula-dashboard.png)
 
-The screenshot shows the earlier supplied export, which has different issue groups. Its [original JSON](examples/nebula-report.json) and [sample narrative](examples/nebula-report.md) remain available.
+Dashboard screenshot from an [earlier sample report](examples/nebula-report.json); its issue groups differ from the cloud example above.
 
-[Deployment and rollback](docs/deployment.md) · [Architecture](docs/architecture.md) · [Observability](docs/observability.md)
+[Architecture](docs/architecture.md) · [Analysis modes and fast-only setup](docs/dual-mode-analysis.md) · [Deployment](docs/deployment.md) · [Observability](docs/observability.md)
