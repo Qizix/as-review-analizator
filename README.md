@@ -41,24 +41,23 @@ Sentiment and issue interpretation are model estimates. The classifier is Englis
 
 ## Service metrics per request
 
-Measured on **2026-10-15**: one deployed Nebula analysis of **100 reviews**, using **1 vCPU and 4 GiB RAM** in Warsaw. This benchmark is a separate run from the screenshot below and includes one Gemini evidence-repair call.
+Latest verified cloud request on **2026-10-16**: Nebula analysis using **PyTorch batch size 1**, **1 vCPU, 4 GiB RAM, and one inference thread** in Warsaw. Requested **100 reviews**, collected **10**: Apple throttled later pages with HTTP 429, leaving an explicitly reported shortfall of 90 reviews. The request succeeded with three validated issues.
 
 | Processing stage | Measured time |
 |---|---:|
-| Review collection | 6.028 s |
-| App information lookup | 0.434 s |
-| Text preprocessing | 0.223 s |
-| Sentiment inference on CPU | 140.086 s |
-| Initial Gemini insight generation | 5.434 s |
-| Initial evidence validation (repair required) | 9.224 ms |
-| Gemini evidence repair | 7.331 s |
-| Final evidence validation | 1.368 ms |
-| Rating, sentiment, and issue metrics | 0.448 ms |
-| Report assembly | 0.145 ms |
-| **Complete analysis pipeline** | **159.554 s** |
-| **Complete HTTP request** | **159.561 s** |
+| Review collection, including fallback attempts | 35.104 s |
+| App information lookup | 0.154 s |
+| Text preprocessing | 0.038 s |
+| Sentiment inference on CPU (10 reviews) | 15.741 s |
+| Gemini insight generation | 8.670 s |
+| Evidence validation | 1.5 ms |
+| Rating, sentiment, and issue metrics | 0.2 ms |
+| **Complete analysis pipeline** | **59.713 s** |
+| **Complete HTTP request** | **59.718 s** |
 
-Stage timings come from the structured request log; totals include orchestration and HTTP response handling.
+Stage timings come from the structured request log; totals include orchestration and response handling. This partial sample cannot establish a speedup against the earlier 100-review run. See [rollout verification](docs/deployment.md#batch-size-1-rollout--2026-10-16).
+
+The cost estimate below belongs to the **earlier 2026-10-15 batch-8 request: 100 reviews, 159.561 seconds, and one Gemini evidence repair**. It does not describe the latest 10-review request.
 
 | Cost component | Usage | Estimated cost (USD) |
 |---|---|---:|
@@ -70,7 +69,7 @@ Stage timings come from the structured request log; totals include orchestration
 
 Estimates use paid list prices before free-tier allowances, credits, discounts, and taxes. Cloud Run startup/idle time, builds, storage, networking, logs, and traces are additional; this is not the full billed cost or a fixed price. Review length, repairs, and instance performance change each request's usage. See [calculation and pricing sources](docs/deployment.md#per-request-cost-calculation).
 
-An [ONNX/quantization benchmark](docs/sentiment-benchmark.md) now compares the Xenova conversion against PyTorch. On the local ARM Mac, batch size 1 improved PyTorch inference from 7.71 to 6.33 seconds; quantized ONNX was slower and changed some labels. Production inference now uses PyTorch batch size 1; the ONNX backends remain experimental. The timing and cost tables above record the earlier batch-8 deployment. See the [batch-1 rollout verification](docs/deployment.md#batch-size-1-rollout--2026-10-16) for the latest cloud check.
+An [ONNX/quantization benchmark](docs/sentiment-benchmark.md) now compares the Xenova conversion against PyTorch. On the local ARM Mac, batch size 1 improved PyTorch inference from 7.71 to 6.33 seconds; quantized ONNX was slower and changed some labels. Production inference now uses PyTorch batch size 1; the ONNX backends remain experimental. The timing table above records the latest cloud check; the cost table retains the earlier 100-review estimate.
 
 ## Application example: Nebula
 
