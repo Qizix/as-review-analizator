@@ -1,0 +1,1852 @@
+{
+  "app": {
+    "app_id": "1459969523",
+    "country": "us",
+    "name": "Nebula: Spiritual Guidance",
+    "developer": "Spiritual Nebula Limited",
+    "store_url": "https://apps.apple.com/us/app/nebula-spiritual-guidance/id1459969523?uo=4",
+    "icon_url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/1a/1b/62/1a1b6223-b7f8-284f-a723-3c53c4ccd386/AppIcon-0-0-1x_U007ephone-0-1-0-0-85-220.png/100x100bb.jpg",
+    "version": "6.63.0"
+  },
+  "collection": {
+    "app_id": "1459969523",
+    "country": "us",
+    "requested_count": 100,
+    "available_count": 100,
+    "actual_count": 100,
+    "shortfall": 0,
+    "seed": 42,
+    "selection": "first_unique",
+    "catalog_page_limit": 30,
+    "collected_at": "2026-10-16T10:54:43.501152+00:00",
+    "source": "Apple App Store catalog reviews JSON",
+    "sampling_pool": "First unique valid reviews in Apple catalog response order, stopping at the requested count or 30 pages",
+    "language": "en-US",
+    "fetched_pages": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "fetched_offsets": [
+      0,
+      10,
+      20,
+      30,
+      40,
+      50,
+      60,
+      70,
+      80,
+      90
+    ],
+    "failed_pages": [],
+    "invalid_records": 0,
+    "duplicate_records": 0,
+    "sources": [
+      {
+        "source": "catalog",
+        "added_count": 100,
+        "fetched_pages": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "failed_pages": [],
+        "invalid_records": 0,
+        "duplicate_records": 0
+      }
+    ]
+  },
+  "metrics": {
+    "total_reviews": 100,
+    "ratings": {
+      "rated_reviews": 100,
+      "unrated_reviews": 0,
+      "average": 2.86,
+      "counts": {
+        "1": 41,
+        "2": 8,
+        "3": 8,
+        "4": 10,
+        "5": 33
+      },
+      "percentages": {
+        "1": 41.0,
+        "2": 8.0,
+        "3": 8.0,
+        "4": 10.0,
+        "5": 33.0
+      }
+    },
+    "sentiment": {
+      "classified_reviews": 100,
+      "unclassified_reviews": 0,
+      "counts": {
+        "positive": 35,
+        "neutral": 16,
+        "negative": 49
+      },
+      "percentages": {
+        "positive": 35.0,
+        "neutral": 16.0,
+        "negative": 49.0
+      }
+    },
+    "issues": {
+      "negative_reviews": 49,
+      "covered_negative_reviews": 40,
+      "uncovered_negative_reviews": 9,
+      "coverage": 0.8163265306122449,
+      "coverage_percentage": 81.63265306122449,
+      "items": [
+        {
+          "category": "Billing Discrepancies and Unwanted Subscriptions",
+          "priority": "high",
+          "frequency": 30,
+          "negative_review_count": 27,
+          "negative_review_fraction": 0.5510204081632653,
+          "evidence_ids": [
+            "10226790734",
+            "10772121437",
+            "11069778066",
+            "11582897081",
+            "11864621987",
+            "11889644785",
+            "11970977550",
+            "12000783686",
+            "12051799393",
+            "12091047645",
+            "12136193056",
+            "12190264147",
+            "12327394386",
+            "12336334249",
+            "12359073037",
+            "12888127585",
+            "12894933255",
+            "13005999915",
+            "13025806016",
+            "13254291446",
+            "13403113261",
+            "13619149817",
+            "5950653524",
+            "5998819267",
+            "7546839366",
+            "7550467798",
+            "7559050403",
+            "8268427566",
+            "9087926809",
+            "9238108781"
+          ]
+        },
+        {
+          "category": "Customer Service and Refund Difficulties",
+          "priority": "high",
+          "frequency": 6,
+          "negative_review_count": 5,
+          "negative_review_fraction": 0.10204081632653061,
+          "evidence_ids": [
+            "12336334249",
+            "12359073037",
+            "13254291446",
+            "14315820320",
+            "7546839366",
+            "9087926809"
+          ]
+        },
+        {
+          "category": "Excessive Paywalls and Content Locking",
+          "priority": "medium",
+          "frequency": 9,
+          "negative_review_count": 7,
+          "negative_review_fraction": 0.14285714285714285,
+          "evidence_ids": [
+            "11434430922",
+            "11951237158",
+            "12170359896",
+            "12172171105",
+            "12186255683",
+            "12338461977",
+            "13600420685",
+            "14348773666",
+            "4811839528"
+          ]
+        },
+        {
+          "category": "Chat Credit System and Psychic Cost",
+          "priority": "medium",
+          "frequency": 6,
+          "negative_review_count": 1,
+          "negative_review_fraction": 0.02040816326530612,
+          "evidence_ids": [
+            "10891021844",
+            "12286509238",
+            "12349557016",
+            "12371903552",
+            "12825163983",
+            "13718742636"
+          ]
+        },
+        {
+          "category": "App Errors and Inaccurate Astrology Data",
+          "priority": "medium",
+          "frequency": 4,
+          "negative_review_count": 2,
+          "negative_review_fraction": 0.04081632653061224,
+          "evidence_ids": [
+            "11830779768",
+            "4761806406",
+            "4798717628",
+            "5463347733"
+          ]
+        },
+        {
+          "category": "Inappropriate or Repetitive Content and Notifications",
+          "priority": "low",
+          "frequency": 4,
+          "negative_review_count": 2,
+          "negative_review_fraction": 0.04081632653061224,
+          "evidence_ids": [
+            "10055138343",
+            "12373767831",
+            "7012591492",
+            "7760345306"
+          ]
+        },
+        {
+          "category": "Gender Inclusivity Options",
+          "priority": "low",
+          "frequency": 2,
+          "negative_review_count": 1,
+          "negative_review_fraction": 0.02040816326530612,
+          "evidence_ids": [
+            "4894680133",
+            "6941619915"
+          ]
+        }
+      ]
+    }
+  },
+  "insights": {
+    "issues": [
+      {
+        "category": "Billing Discrepancies and Unwanted Subscriptions",
+        "review_count": 30,
+        "negative_review_count": 27,
+        "negative_review_fraction": 0.5510204081632653,
+        "evidence_ids": [
+          "10226790734",
+          "10772121437",
+          "11069778066",
+          "11582897081",
+          "11864621987",
+          "11889644785",
+          "11970977550",
+          "12000783686",
+          "12051799393",
+          "12091047645",
+          "12136193056",
+          "12190264147",
+          "12327394386",
+          "12336334249",
+          "12359073037",
+          "12888127585",
+          "12894933255",
+          "13005999915",
+          "13025806016",
+          "13254291446",
+          "13403113261",
+          "13619149817",
+          "5950653524",
+          "5998819267",
+          "7546839366",
+          "7550467798",
+          "7559050403",
+          "8268427566",
+          "9087926809",
+          "9238108781"
+        ],
+        "keywords": [
+          "subscription",
+          "charged",
+          "scam",
+          "unwanted",
+          "trial",
+          "fraud",
+          "billing"
+        ],
+        "evidence_quotes": [
+          {
+            "review_id": "10226790734",
+            "quote": "Every month since then NEBULA HAS BEEN CHARGING ME."
+          },
+          {
+            "review_id": "10772121437",
+            "quote": "after opting out and deciding against the app subscription.. they still attempted to charge my bank account 3 times."
+          },
+          {
+            "review_id": "11069778066",
+            "quote": "I paid $1.00 for the quick question that I never got to ask because I ran out of points before finishing the question."
+          },
+          {
+            "review_id": "11582897081",
+            "quote": "a few days later I got a notification from my bank about this very app trying to charge me $45."
+          },
+          {
+            "review_id": "11864621987",
+            "quote": "they tried to charge my car over 8 times $10 each !!"
+          },
+          {
+            "review_id": "11889644785",
+            "quote": "I did not sign up for a free trial. I did think that I was paying a small fee for a report that day."
+          },
+          {
+            "review_id": "11970977550",
+            "quote": "I did in fact click to sign up for the free trial and then it changed to the yearly subscription anyways."
+          },
+          {
+            "review_id": "12000783686",
+            "quote": "I have a subscription until December 2 but they already took it from me because I canceled it"
+          },
+          {
+            "review_id": "12051799393",
+            "quote": "Apparently since October 20th they somehow were able to get my card linked off of my Apple Pay."
+          },
+          {
+            "review_id": "12091047645",
+            "quote": "they will comment things are “clearly stated” however upon talking to customer service on insta having them admit to the app switching the choice to the 50 dollar option bc it’s “preferred” is an issue"
+          },
+          {
+            "review_id": "12136193056",
+            "quote": "I cancel my subscription the next day and notice that my trial isn’t ending in three days but in a YEAR and I was charged 60+$"
+          },
+          {
+            "review_id": "12190264147",
+            "quote": "They said you are trying a free trial. There is no way to see if you have a subscription in app or on web."
+          },
+          {
+            "review_id": "12327394386",
+            "quote": "Then last night my card was charged the $45 for the subscription i clearly communicated that I did not want or consent to."
+          },
+          {
+            "review_id": "12336334249",
+            "quote": "Okay, so I spent the dollar, then it told me I would receive a link to my reading in my gmail. So I downloaded the app, clicked the link in the gmail, and it STILL wouldn’t give me the results of the quiz I paid a dollar for."
+          },
+          {
+            "review_id": "12359073037",
+            "quote": "I signed up for the free trial and afterwards I had a very very hard time finding where to cancel through their website."
+          },
+          {
+            "review_id": "12888127585",
+            "quote": "App doesn’t let you cancel. They let you sign up so easily but then when you want to cancel"
+          },
+          {
+            "review_id": "12894933255",
+            "quote": "Last month, after I was charged, I went into my account and thought I had successfully cancelled my subscription. Somehow it didn’t go through"
+          },
+          {
+            "review_id": "13005999915",
+            "quote": "the subscription is not through the App Store so you cannot cancel unless you email them directly."
+          },
+          {
+            "review_id": "13025806016",
+            "quote": "I canceled my membership, deleted my account, and then a year later I start getting charged from them"
+          },
+          {
+            "review_id": "13254291446",
+            "quote": "About a week ago my 73 year old husband who has Alzheimer’s got hold of my phone and apparently paid for a subscription for this service!"
+          },
+          {
+            "review_id": "13403113261",
+            "quote": "it tricks you into an \nastrocartography reading and a palm reading then asks for money to see the results then it automatically subscribes you to their services"
+          },
+          {
+            "review_id": "13619149817",
+            "quote": "even after cancelling within the first two days of the “free trial” I STILL get a draft attempt on my card! FIFTY DOLLARS… FOR WHAT?!!"
+          },
+          {
+            "review_id": "5950653524",
+            "quote": "I signed up for the free trail but cancelled after I realized I wouldn’t be using it. I verified this under the subscription tab on my Apple account. HOWEVER, I soon started getting charged 9.99 WEEKLY"
+          },
+          {
+            "review_id": "5998819267",
+            "quote": "I accidentally selected membership instead of the 3 day free trial. There was not a clear way to select the option"
+          },
+          {
+            "review_id": "7546839366",
+            "quote": "This app drained for than $25 from my account in SECONDS due to a technical failure."
+          },
+          {
+            "review_id": "7550467798",
+            "quote": "After that, I was charged $9.99 three times. I emailed them about this, and they told me I did not unsubscribe in time"
+          },
+          {
+            "review_id": "7559050403",
+            "quote": "After trying their free trial and seeing it’s not all that great they charged me after the trial was over."
+          },
+          {
+            "review_id": "8268427566",
+            "quote": "I was charge after downloading the app and it of course prompted me to try the premium version for 3 days free"
+          },
+          {
+            "review_id": "9087926809",
+            "quote": "I have been getting charged multiple times in a single day at completely random increments for MONTHS and didn’t know it"
+          },
+          {
+            "review_id": "9238108781",
+            "quote": "Turns out even though my account was closed/cancelled, the company that owns this app continued to charge me."
+          }
+        ],
+        "priority": "high"
+      },
+      {
+        "category": "Customer Service and Refund Difficulties",
+        "review_count": 6,
+        "negative_review_count": 5,
+        "negative_review_fraction": 0.10204081632653061,
+        "evidence_ids": [
+          "12336334249",
+          "12359073037",
+          "13254291446",
+          "14315820320",
+          "7546839366",
+          "9087926809"
+        ],
+        "keywords": [
+          "refund",
+          "customer service",
+          "support",
+          "email",
+          "ignore",
+          "help",
+          "dispute"
+        ],
+        "evidence_quotes": [
+          {
+            "review_id": "12336334249",
+            "quote": "I WANT MY DOLLAR BACK."
+          },
+          {
+            "review_id": "12359073037",
+            "quote": "I responded and gave them all the information plus the screenshot showing that there was no active subscription and I have not heard from them again since."
+          },
+          {
+            "review_id": "13254291446",
+            "quote": "Nebula has not given me a refund and continues to say that the delay is with pay pal!!"
+          },
+          {
+            "review_id": "14315820320",
+            "quote": "I wrote may emails to try to resolve the problem and not once did I get a reply."
+          },
+          {
+            "review_id": "7546839366",
+            "quote": "When I tried to get assistance for the situation the customer service team sent me through a loop asking for countless screenshots"
+          },
+          {
+            "review_id": "9087926809",
+            "quote": "Tried to email customer service and got ran around in circles because they wouldn’t listen to what I was trying to ask"
+          }
+        ],
+        "priority": "high"
+      },
+      {
+        "category": "Excessive Paywalls and Content Locking",
+        "review_count": 9,
+        "negative_review_count": 7,
+        "negative_review_fraction": 0.14285714285714285,
+        "evidence_ids": [
+          "11434430922",
+          "11951237158",
+          "12170359896",
+          "12172171105",
+          "12186255683",
+          "12338461977",
+          "13600420685",
+          "14348773666",
+          "4811839528"
+        ],
+        "keywords": [
+          "paywall",
+          "subscription",
+          "pay",
+          "locked",
+          "expensive",
+          "features",
+          "cost"
+        ],
+        "evidence_quotes": [
+          {
+            "review_id": "11434430922",
+            "quote": "then took that away to begin charging for the “ideal partner” match compatibility feature. And slowly but surely everything started becoming unavailable unless subscribed."
+          },
+          {
+            "review_id": "11951237158",
+            "quote": "Locking literally every piece of info behind a paywall is dumb and greedy"
+          },
+          {
+            "review_id": "12170359896",
+            "quote": "Now when I try to check my birth chart, it goes straight to me having to pay for a subscription"
+          },
+          {
+            "review_id": "12172171105",
+            "quote": "if you want to look at your actual birth chart it’s impossible bc of all the ads you have to watch."
+          },
+          {
+            "review_id": "12186255683",
+            "quote": "you have to pay to see your birth chart when it used to be free"
+          },
+          {
+            "review_id": "12338461977",
+            "quote": "A feature as simple as a birth chart reading requires a $20 payment."
+          },
+          {
+            "review_id": "13600420685",
+            "quote": "While before it had a quite a few free features you MUST have a subscription at 7.99/months."
+          },
+          {
+            "review_id": "14348773666",
+            "quote": "The only reason idn give it 5 stars is because there is paywalls behind features even after paying the subscription fee."
+          },
+          {
+            "review_id": "4811839528",
+            "quote": "There’s not much to it unless you pay for the subscription which is more than 100 annually."
+          }
+        ],
+        "priority": "medium"
+      },
+      {
+        "category": "Chat Credit System and Psychic Cost",
+        "review_count": 6,
+        "negative_review_count": 1,
+        "negative_review_fraction": 0.02040816326530612,
+        "evidence_ids": [
+          "10891021844",
+          "12286509238",
+          "12349557016",
+          "12371903552",
+          "12825163983",
+          "13718742636"
+        ],
+        "keywords": [
+          "credits",
+          "minutes",
+          "chat",
+          "psychic",
+          "expensive",
+          "cost",
+          "pts"
+        ],
+        "evidence_quotes": [
+          {
+            "review_id": "10891021844",
+            "quote": "You get 3 minutes for free then every minute is 30-60 pts. 10 points is the equivalent of $1."
+          },
+          {
+            "review_id": "12286509238",
+            "quote": "purchasing credits per min, usually 40 credits/min (little pricey but worth it for the sanity)."
+          },
+          {
+            "review_id": "12349557016",
+            "quote": "Someone who is in the middle of a conversation has to stop, make payment and return to the conversation can be annoying"
+          },
+          {
+            "review_id": "12371903552",
+            "quote": "I must of typed the same message 20 times and everytime the online person once im done with message will be busy and give me more people recommended"
+          },
+          {
+            "review_id": "12825163983",
+            "quote": "They charge $3.99/min and UP for these psychics to say “hello” and “ connecting to your energy” all the while taking up minutes"
+          },
+          {
+            "review_id": "13718742636",
+            "quote": "as soon as the three minutes started I felt pressured to get all my information out before they asked me for more money"
+          }
+        ],
+        "priority": "medium"
+      },
+      {
+        "category": "App Errors and Inaccurate Astrology Data",
+        "review_count": 4,
+        "negative_review_count": 2,
+        "negative_review_fraction": 0.04081632653061224,
+        "evidence_ids": [
+          "11830779768",
+          "4761806406",
+          "4798717628",
+          "5463347733"
+        ],
+        "keywords": [
+          "error",
+          "wrong",
+          "inaccurate",
+          "date",
+          "birth",
+          "cusp",
+          "calculation"
+        ],
+        "evidence_quotes": [
+          {
+            "review_id": "11830779768",
+            "quote": "This app gives inaccurate information. At the time of my birth the sun was not in Aq, it was in Capricorn."
+          },
+          {
+            "review_id": "4761806406",
+            "quote": "in the app it says August 23rd is a Virgo, yet it says I am a Leo in the app."
+          },
+          {
+            "review_id": "4798717628",
+            "quote": "I swiped over to the month horoscope and it says August for two of the categorizes. It’s in “love and relationships” and “health.”"
+          },
+          {
+            "review_id": "5463347733",
+            "quote": "When trying to correct this mistake I realized that there was no way to correct it or at the very least it is very difficult to find."
+          }
+        ],
+        "priority": "medium"
+      },
+      {
+        "category": "Inappropriate or Repetitive Content and Notifications",
+        "review_count": 4,
+        "negative_review_count": 2,
+        "negative_review_fraction": 0.04081632653061224,
+        "evidence_ids": [
+          "10055138343",
+          "12373767831",
+          "7012591492",
+          "7760345306"
+        ],
+        "keywords": [
+          "notifications",
+          "repetitive",
+          "messaging",
+          "error",
+          "inappropriate",
+          "daily",
+          "horoscope"
+        ],
+        "evidence_quotes": [
+          {
+            "review_id": "10055138343",
+            "quote": "I keep getting “Unknown Error: Message contains inappropriate data” when I don’t say anything derogatory"
+          },
+          {
+            "review_id": "12373767831",
+            "quote": "my daily readings are all the same, just switched up a bit. Like using the same exact wording from Thursday’s horoscope on Friday"
+          },
+          {
+            "review_id": "7012591492",
+            "quote": "There is literally nothing about astrology that should be “predicting” human life, this is not a period or ovulation app. Please remove this mysognist"
+          },
+          {
+            "review_id": "7760345306",
+            "quote": "it started sending me at least 3-5 notifications a day and the WORST PART was that they all said something along the lines of “Talk to an astrologer—find out when you will get married”"
+          }
+        ],
+        "priority": "low"
+      },
+      {
+        "category": "Gender Inclusivity Options",
+        "review_count": 2,
+        "negative_review_count": 1,
+        "negative_review_fraction": 0.02040816326530612,
+        "evidence_ids": [
+          "4894680133",
+          "6941619915"
+        ],
+        "keywords": [
+          "gender",
+          "options",
+          "male",
+          "female",
+          "compatibility",
+          "nonbinary",
+          "masculine"
+        ],
+        "evidence_quotes": [
+          {
+            "review_id": "4894680133",
+            "quote": "However the love compatibility option needs to have gender options as masculine and feminine vibrations effect compatibility a lot!"
+          },
+          {
+            "review_id": "6941619915",
+            "quote": "1 star has been removed for only including male and female in the gender select screen."
+          }
+        ],
+        "priority": "low"
+      }
+    ],
+    "recommendations": [
+      {
+        "category": "Billing Discrepancies and Unwanted Subscriptions",
+        "priority": "high",
+        "action": "Ensure subscription terms and charges are displayed clearly before users confirm.",
+        "evidence_ids": [
+          "10226790734",
+          "10772121437",
+          "11069778066",
+          "11582897081",
+          "11864621987",
+          "11889644785",
+          "11970977550",
+          "12000783686",
+          "12051799393",
+          "12091047645",
+          "12136193056",
+          "12190264147",
+          "12327394386",
+          "12336334249",
+          "12359073037",
+          "12888127585",
+          "12894933255",
+          "13005999915",
+          "13025806016",
+          "13254291446",
+          "13403113261",
+          "13619149817",
+          "5950653524",
+          "5998819267",
+          "7546839366",
+          "7550467798",
+          "7559050403",
+          "8268427566",
+          "9087926809",
+          "9238108781"
+        ]
+      },
+      {
+        "category": "Customer Service and Refund Difficulties",
+        "priority": "high",
+        "action": "Improve customer support responsiveness and honor refund requests for unintended charges.",
+        "evidence_ids": [
+          "12336334249",
+          "12359073037",
+          "13254291446",
+          "14315820320",
+          "7546839366",
+          "9087926809"
+        ]
+      },
+      {
+        "category": "Excessive Paywalls and Content Locking",
+        "priority": "medium",
+        "action": "Provide more core features for free instead of locking essential sections behind paywalls.",
+        "evidence_ids": [
+          "11434430922",
+          "11951237158",
+          "12170359896",
+          "12172171105",
+          "12186255683",
+          "12338461977",
+          "13600420685",
+          "14348773666",
+          "4811839528"
+        ]
+      },
+      {
+        "category": "Chat Credit System and Psychic Cost",
+        "priority": "medium",
+        "action": "Lower the per-minute messaging rates or make chat sessions more transparent and affordable.",
+        "evidence_ids": [
+          "10891021844",
+          "12286509238",
+          "12349557016",
+          "12371903552",
+          "12825163983",
+          "13718742636"
+        ]
+      },
+      {
+        "category": "App Errors and Inaccurate Astrology Data",
+        "priority": "medium",
+        "action": "Fix date calculation bugs and ensure astrological data aligns with actual astronomical charts.",
+        "evidence_ids": [
+          "11830779768",
+          "4761806406",
+          "4798717628",
+          "5463347733"
+        ]
+      },
+      {
+        "category": "Inappropriate or Repetitive Content and Notifications",
+        "priority": "low",
+        "action": "Refine notification triggers to avoid insensitive topics and reduce repetitive horoscope phrasing.",
+        "evidence_ids": [
+          "10055138343",
+          "12373767831",
+          "7012591492",
+          "7760345306"
+        ]
+      },
+      {
+        "category": "Gender Inclusivity Options",
+        "priority": "low",
+        "action": "Expand gender selection options in compatibility and profile settings to be more inclusive.",
+        "evidence_ids": [
+          "4894680133",
+          "6941619915"
+        ]
+      }
+    ]
+  },
+  "reviews": [
+    {
+      "id": "14096844969",
+      "title": "Oh how I wish I knew about this growing up",
+      "text": "The first time I had a reading done was strange in itself. \n Strange because I wasn’t looking to have one done but a series of events that were strange in itself lead me to someone who had never seen or heard of me before and was not really interested in meeting them but somehow I ended up in his town by missing my interchange on the freeway. Next thing I know I’m in his town. I know this because of the car that he gave me said Orville and the sign on the freeway said welcome to Orville completely out of my way by at least a half hour. I decided well I guess maybe I’m supposed to go visit with this guy so I did and three hours later as I go to leave is when he calls me back to his apartment and I ask him did I forget something and he says no, but they are telling me that you need a reading done or want one done and I was like they were they so it doesn’t matter just go ahead and drive and I will text it to you. He did and when it came through, it was so powerful. I had to pull off the road because I was crying so hard I almost crashed. The accuracy was incredible. He also gave me some insights on my past present in future, and it was literally happening in real time things he said had already happened things that he said were already in play and the thing that he said was going to happen happened. These people are incredible. This person was not from this site, but amazing and incredible to his website is called into a light. He can find it on Facebook. Thank you to all you amazing people. If you don’t believe try it you will then.",
+      "rating": 5,
+      "sentiment": {
+        "label": "neutral",
+        "score": 0.6653048396110535
+      }
+    },
+    {
+      "id": "4894694860",
+      "title": "Anna",
+      "text": "Crazy accurate!!! I am not sure who writes these or how they come up with them but it's almost crazy how accurate they are sometimes!! I'm usually not one of those swear by astrology sign type of people but this app really describes what I am going through most of the time and it gives you positive hope. And I even once had an appointment with an astrologer who was supposed to help me solve some of my personal issues, and that was of course a different experience. But for those who haven’t seen real astrologers, this app is the closest to it I’ve ever seen And I can tell you for sure that with the help of the stars you can find out the most important numbers in your life, which tattoo should people of your sign do, when is the best moon for a new haircut, and a lot more. And this app is great about it, it gives you so many tips from different parts of your life, that with the personal astrologer you’d have to pay a fortune for that! So this app ain’t be cheap, but the price for this detailed info is more than acceptable. But that’s only for people who care about real astrology, for those who should just read some random predictions, framed as your horoscope - go on with free apps. I don’t believe there would be people doing so much work to prepare horoscopes for free. So I definitely recommend this app to anyone I know who is at least a bit interested in astrology, thank you for making this app so great!",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.921247124671936
+      }
+    },
+    {
+      "id": "13794076490",
+      "title": "Curious if I recently met my soulmate",
+      "text": "Four weeks ago I first started talking to this hot younger guy that I’ve been admiring that I’ve also assumed was straight who I had maybe a 1% chance of ever being friends with and a basically 0% chance of ever getting with sexually. Then the unthinkable happened, we found out we have so much in common. He does like girls but I can’t figure out if he’s also in to men. His texts and conversations lead me to suspect he might really be into me as more than a friend or even a best friend. I’m so excited because as a 47 year old gay men who’s never been in a serious relationship that has pretty much accepted the fact that I will likely die a lonely old man, I am just so excited about this.  He seems such an unlikely catch, he’s 20 years younger than me and incredibly sexy. His body language around me is quite awkward but I feel like this is because he is probably not comfortable yet with his sexuality.  I’m scared to make a move and risk our friendship if this isn’t how he actually feels so I’m just going to be cautious and let him reveal himself to me on his own terms. He definitely knows I’m gay but he never has brought  it up. \n\nI got a reading and the psychic confirmed what I suspected and he will eventually fall in love with me. Of course, I don’t know for certain this reading will play out accurately but I’d like to think so.",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.6519061923027039
+      }
+    },
+    {
+      "id": "13434717080",
+      "title": "Detailed to the endth degree",
+      "text": "Just what have been looking for, for 35+ odd years, wrapped up in one, the bonus to land this level of praise felt toward the insightful intrigue casts upon , is that it keeps on giving toward care to the internal , where external shell seems to influence knowledge based , direct tell all .. and what better than to start from where the stars align the moment became gifted to received all the beauty and wonder surrounding us ,.. for the however finite amount of time we land to hopefully lead with kindness as it’s good vs bad choices set up so preversely.. so situationally … whatever path traveled, we influence in ways we don’t choose what will stick and set tone to the next, however little of sneer or not, I just don’t understand why we keep drowning in the masses , when there’s answers that make all ends meet, vs setting them all on fire.. so belief in all things possible is my sentimental open mind, and it’s praying that faith in there being one judge of humanity turned eternity being what reunites us with those with the ability to share concern for others and wonder and all things silver lining esc , as the vastness in space aughta hold some interstellar pathways … as imagined.. - and a rabbit hole, is where I lay - thank you for any time spent on read of worldly word play.. child at heart ,., after all, we are all one .. aren’t we .. ?",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.6975151896476746
+      }
+    },
+    {
+      "id": "4894681127",
+      "title": "Alex",
+      "text": "I really like getting my daily horoscope in this beautiful app and I absolutely love that this one has a daily reminder that lets you know not to forget to read your horoscope for that day .. And if you are so curious as I am you may sometimes read your horoscope for tomorrow, but I don’t recommend to do that. I prefer to read my horoscope in the evening, to analyze the whole day and to remember the details which my daily horoscope describes, it’s like you summarize your day and remember everything the most significant from it. Another way to have fun is that you can learn for instance how Moon in Libra, that is ending already, influences your life. You can learn that from astrology course inside an app.. And then you can discover what actually happens in your life and see this huge connection! Or you can learn about previous month and analyze it as well! And then you will be able to plan some important events by yourself, taking into account the planetary movement, you will choose the right time for some changes and for big decisions. Or you can just go for personal reading from astrologist, but this is more exciting for me. And so on, and so forth, I can actually tell a lot about this app. But you’d better try yourself. I highly recommend this app... The theme, the colors, daily reminder, and much more... Thank you for this app I rate it as 5 stars!!!",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.9560022354125977
+      }
+    },
+    {
+      "id": "13197934809",
+      "title": "Hailey McKenna Wilbur’s Honest Review of the app; ‘Nebula: Horoscope & Astrology’.",
+      "text": "This app is honestly extremely amazing the more that I delve deeper into it, the cooler it gets the integrity of this app the layout, the build the specifics the information. It’s all mind-boggling with awesomeness so this was just an app that it popped up when I was going through my phone as an ad telling me to scan my palm I believe I was on the app Temu and then they said that they give me the option you know to pay for the yearly subscription the monthly subscription, but they basically gave me a range of one dollar to $13 that I could pay to get access to what my information was regarding the answers to my questions as well as the information input about my personal self along with the picture of my palm the only I chose a dollar they truly actually only charge me a dollar and only one time and the amount of information and pieces of this app that I got access to because of that one dollar was seriously awesome. I’ve tried a few other apps like this before and this is honestly the first one that actually. Me the one dollar like they said that they were on top of that every time I go back into this app and check it out it truly just keeps getting better and better. It’s they’re well written. It’s nothing like you’ve ever seen before you know the information that I’ve been getting out of this app. It’s unique completely original and I literally love that so much less I was just out and I literally got this opportunity asked me if I wanted to fill out a review and make $10 so yeah this is 100% legit. I definitely would let you know what’s up. I’m a content creator and check out this app y’all it’s worth it.",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.9550920724868774
+      }
+    },
+    {
+      "id": "4894680133",
+      "title": "Tanya",
+      "text": "Nothing but great things to say about this app! Accurate, honest and good intentions! It really makes me happy with all their caring notifications and so much interesting things to read in the app! I like the “Learn” section and the “Relationships”H section too. It’s just that every time I can’t wait to get access for the new lessons! This is so exciting and intriguing, I am studying astrology with an excitement like I am playing a game. And that is definitely a great way to study! However the love compatibility option needs to have gender options as masculine and feminine vibrations effect compatibility a lot! And that is not just about love compatibility, but also work, family, friendship, any relationship you may have with another person actually. Add gender options male female nonbinary and maybe a masculine/feminine chart for the non binary folks out there. Please consider this! This is actually really important right now. But as far as I know noone has actually done something like that, at least none of those apps that I’ve used before, and I am telling you this because I really like your app. And all the other features are absolutely great, that is the only thing I wanted you to consider. So think about it, if you do it your app will definitely be #1 among all the horoscope apps. So just keep rocking!",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.9846903681755066
+      }
+    },
+    {
+      "id": "13254291446",
+      "title": "BEWARE!! Stay far away",
+      "text": "About a week ago my 73 year old husband who has Alzheimer’s got hold of my phone and apparently paid for a subscription for this service!  I was unaware until the charge showed up in my account.  Unaware he’d done this at h  we time I contacted nebula and pay pal as this was the way he paid.  I asked nebula to cancel and please refund.  Pay pal also opened an investigation that they closed same day when I explained I found out it was my husband that made the charge.  Pay pal just said to contact nebula for refund.  To say that this has been a huge ordeal with more than 60 emails exchanged!!  Nebula continues to say that pay pal is investigating!  I have sent nebula proof that pay pal has closed claim over a week ago!!  Nebula has not given me a refund and continues to say that the delay is with pay pal!!  I am on a fixed very low income and have explained this to nebula, but they refuse to refund my money telling me I need to continue to wait until pay pal closes the investigation!  This has caused a huge problem for me I can’t purchase needed medication because I don’t have the money and nebula won’t refund!  I think everyone should stay as gas away from this company as possible!!  If for any reason you happen to need a refund you won’t get it! Stay away, bad bad customer service!  I rated 1 star as I couldn’t leave a review without it but my rating would be a NEGATIVE 5!!  They aren’t even close to getting a star! It’s shameful",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.7073383331298828
+      }
+    },
+    {
+      "id": "11434430922",
+      "title": "Worthless, and it’s Such a Shame Really",
+      "text": "0 stars, if I could do negative starts I would. Just to start off, this is like 1 of 3 reviews I’ve ever made. This app has crumbled to pieces because they’ve been blinded by greed. I’ve used them for years for simple things like my birth chart and daily horoscope and the community but I knew this would happen when they started with the “ads to see match” and then took that away to begin charging for the “ideal partner” match compatibility feature. And slowly but surely everything started becoming unavailable unless subscribed. Now their charging to see a full birth chart. So they take our information put it in their database (to no doubt sell to other companies to scam or contact you without permission) and then make practically all areas in the app inaccessible unless you pay a ridiculous amount in subscriptions. Newsflash Nebula, you shot yourselves in the foot. And asking for more money (consistently) or saying you will “reduce the price” for a certain amount of time is just absurd and offensive. For what this app provides in “services” the cost is totally out of proportion and shows just how deluded pricing has gotten. This app is only interested in taking your money. And the “psychics” for the most part seem AI generated or illegible, but I don’t dabble in that enough to care. I’ll be uninstalling and will be actively telling people to avoid this app. It really is a shame, this app was such a great asset.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.8702700734138489
+      }
+    },
+    {
+      "id": "4811839528",
+      "title": "Not worth it",
+      "text": "There’s not much to it unless you pay for the subscription which is more than 100 annually. It’s not worth it. The only thing it really has to offer is the pretty graphics it provides and the fact that it’s easily accessible since it’s an app. But for the most part it’s straight up a gimmick and basic info you can get for free. Do the 3 day trial and see for yourself. You’ll be paying over $100 for an app you’ll either get bored of quickly or won’t really benefit from very much. You can get a detailed horoscope reading and natal charts from many websites online for free or for way way cheaper. Save your money. Note: I read many of the comments/reviews for the app and the developer is great at responding however; they keep apologizing for typos or things not working correctly by saying they’re actively working on fixing these errors and they underestimated the time it would take to include some things (these are just examples). That’s a problem because, again, you’re being charged over $100 for an app that isn’t even complete or working the way it “should be”. This is $50 dollars more than your average video game, or streaming subscription. It is straight up a rip off and they know it. They push the yearly subscription yet claim they have so much to offer for free, they need to realize that their app is not worth $100.\n\nAlso a lot of the reviews on here seem to be bots/falsified. I see more negative reviews than positive ones yet they have 4+ rating. Doesn’t make sense.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.7143731117248535
+      }
+    },
+    {
+      "id": "10891021844",
+      "title": "Good for daily horoscope, but readings feel rooted in greed.",
+      "text": "This app is very well made, and it is great for the daily horoscope and other information like your birth charts and much more information about you. However, I feel as if the prices for the readings are rooted in greed, and the paywall would be best for those making $100,000 per year or more. You get 3 minutes for free then every minute is 30-60 pts. 10 points is the equivalent of $1. So a ten minute conversation by text will cost you roughly $30. Not to mention the reading people will be on and off the conversation sometimes so you are occasionally paying while they are talking to someone else. This is definitely a critical issue. They need to rearrange the app to where you can schedule a 15ish minute reading for a reasonable price and have the reader exclusively. Some readers go up to 60 pts or $6 dollars a minute. I have local readings at a place that charges about $70 for 30 minutes. So I certainly feel like the prices on the app are quite excessive in my opinion. They are also basically sales people as random readers text me in the app every day to chat with them for money per minute. Decent app but a minute goes by instantly and it can take 2 minutes for them to even respond or look at your question.",
+      "rating": 3,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.5452030897140503
+      }
+    },
+    {
+      "id": "12414601556",
+      "title": "Hacked my bank account",
+      "text": "i'm on the phone disputing a transaction from this app they hacked my bank account. This is a THEIF app. I don't even have it anymore. I deleted it I'm going to bring a lawsuit against this app. how dare you take $45 out of my bank account I didn't purchase anything from you. You're gonna be slammed With some hard-core karma now! Not only are they stealing from me they're lying about it. I have my bank statement right in front of me they keep asking me for my email and then all of a sudden well that's all going on one of their emails comes in my email stop lying to me you know my email just shot me an email knock it off. I don't want anything from this company I really don't. i'm also reading a lot of other comments on Facebook and Instagram I have other people were ripped off by this company I'm a witch and when I smell evil I call it! this is a scam a moneygrubbing scam! refund myMoney Nebula, I want my money back you stole money from my account and I don't see it going back into my account. You're a bunch of liars you're a bunch of scam artist and now you're taking advantage of the disabled, you're taking advantage of the handicapped, you're taking advantage of the indigent your demonic because you steal I never got a reading from you. I saw how lame that this was and I deleted this months ago and you're dipping into my bank account. You target the handicap you're a bunch of liars you're a bunch of frauds I want my money back.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.9260708093643188
+      }
+    },
+    {
+      "id": "12327394386",
+      "title": "Scammed me after assuring me I didn’t have active subscription",
+      "text": "I downloaded this app to see if it was something I’d be interested in subscribing to. After using it for a night I tried to find my subscription in my billing history and in my phones mobile app subscription menu under settings. I could find no evidence of a subscription but I was charged for the 7 day trial I had signed up for, so I reached out to customer service to help me cancel before my account would be charged $45/month. I was assured TWICE that there was no active subscription and I wouldn’t be charged. Then last night my card was charged the $45 for the subscription i clearly communicated that I did not want or consent to. I reached out to customer service again asking for a refund and explaining that I had been trying to verify my trial and cancel my subscription for the last 6 days. Nebula then messaged me and assured me they cancelled the subscription they said they couldn’t find before, but that they would not refund me in full despite my repetitive efforts to cancel before the charge and having email proof of that. They then went further and told me they would make a deal with me giving me a 50%refund and extra credits. I am blown away and will be filing a fraud claim with my bank unless this is rectified by morning. I don’t want the app, my other astrology app fits my needs more and has never been dishonest with me it charged me for services I very clearly did not want. Save yourself a headache and do not give Nebula any of your hard earned money!",
+      "rating": 1,
+      "sentiment": {
+        "label": "neutral",
+        "score": 0.8021550178527832
+      }
+    },
+    {
+      "id": "12825163983",
+      "title": "Do not buy into this!",
+      "text": "I am an empath so I do respect that these “psychics” are trying to connect with people.. but I just added $10 to my account so I could chat with one of them just to let her know that none of them really tapped into my personal energy, bc had they, they wouldn’t of asked about my love life or my career.   But as soon as I did, I guess the previous unseen chats were made visible (even though I could and have already read them) they charged my account for it.  So I got exactly one sentence out and that was it.  They charge $3.99/min and UP for these psychics to say “hello” and “ connecting to your energy” all the while taking up minutes that you have paid for.  A real intuitive, or empath, or “psychic” as they call themselves, wouldn’t need to ask.   Speaking as an empath myself, if you are legit, you just know.  Either you get a feeling, or your guides give you images to discern from.  Yes, they can give you basic info or tell you your horoscope, but you can do that yourself with a deck of tarot cards  This app is taking advantage of people who are honestly curious about their lives and taking advantage of their wallets.  If you’re going to pay money, find someone who can see you in person or someone with a good reputation.  You might have to wait and pay more, but at least you’ll be getting someone real.  Not saying all the psychics on here aren’t real, it’s just too easy to waste minutes on basic info.  That’s where they get you.  Don’t fall for it.  Much love and light to all of you.  I hope you find what you are looking for and I hope that God blesses you with the answers you seek.  ❤️❤️❤️",
+      "rating": 2,
+      "sentiment": {
+        "label": "neutral",
+        "score": 0.655708372592926
+      }
+    },
+    {
+      "id": "11864621987",
+      "title": "Horrible app",
+      "text": "So let me tell you DONT DO IT DO NOT GO ON THIS APP!!! They are very greedy they say it’s a free reading and literally two seconds later they ask for money and not a few dollars $10 for literally 10 seconds they try to sign you up for auto pay even when you click on it as I have proof the they tried to charge my car over 8 times $10 each !! That wouldn’t happened if I clicked on auto pay I would never do that I hate auto pay the refuse to take accountability for them not clearly stating this hiccup! Not to mention when your credits go low they block the messages in the chat so you can see what the person messged you but hey listen to this they literally take their time to tell you anything and by the time the answer you question there asking for another $10 you are spending big dollars wishing 20 minutes for them to drag it the whole time. Than everything cost there’s so much in the app but instead on putting everything together they charge you separately look at all the reviews BEFORE you sign up!! They take no accountability for what they do wrong and there’s always a excuse for what they are doing stating it’s “policy “ well trust me I will be having a lawyer comb through your addendums and you guys WILL be held accountable for your. Greed don’t either bother replying I do not want to hear not one bit of excuse to why you guys are doing this to so many people you should be ashamed ! Taking money from people before they actually get any service is disgusting! I will keep leaving a review on another email over and over so everyone can see the truth!!!!",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.9127686619758606
+      }
+    },
+    {
+      "id": "4761806406",
+      "title": "An error right away?",
+      "text": "So my birthday is August 23rd, which I know is on a cusp. However, in the app it says August 23rd is a Virgo, yet it says I am a Leo in the app. I understand the whole cusp thing gives me qualities of both, but in the app it lists the beginning of Virgo as August 23rd, but yet it categorizes me as a Leo, which ends the 22nd? I definitely listed my birthday correctly. I don’t understand why it would categorize me as a Leo, when even in the app it begins Virgo on the 23rd? Is it a fluke? If you’re going to categorize me as a Leo, then at least change the dates you categorize with so there is at least an explanation. Don’t categorize me as a Leo, but then say Virgos start on the 23rd when you won’t even categorize me as a Virgo. \n\nAs for the app itself. The daily horoscopes are nice and even though it categorized me as a Leo instead of a Virgo, I was happy that I could still view the Virgo horoscope. As for the other features, you would have to pay to get anything else out of the app. Yes you get a free compatibility report, just one, if you wanted to try another you’d have to subscribe and pay. \n\nHonestly, I wish I could get past the Leo/Virgo issue I had, but it really bothers me and I think I’m going to have to delete the app. Please update your dates or fix the issue of having August 23rd-ers categorized as Leos when even in the app it says August 23rd is a Virgo.",
+      "rating": 2,
+      "sentiment": {
+        "label": "neutral",
+        "score": 0.8532118201255798
+      }
+    },
+    {
+      "id": "11970977550",
+      "title": "Profit > People",
+      "text": "I don’t trust a company that purposefully sets you up to “accidentally” purchase a year premium membership and then makes you jump through hoops for a refund even though you cancelled immediately and have not used the app. There are many beautiful horoscope & astrology resources out there and encourage people to find one that actually care about people over money (especially when it comes to readings and energy work). \n\n Thanks for updating your response to be less of a gaslight, but everything I said still stands and your support team is useless and can do nothing about the scam that is this app. I’m confident that the majority of these positive reviews are fake to blend in with all the ones calling this out for being a cash grab. \n\n RESPONSE TO YOUR ORIGINAL REPLY BACK: 🙄pathetic. You all are delusional & condescending. Look at all your reviews and the comments discussing this app online…. your business model is to trick people into paying for things they did not intend to. I did in fact click to sign up for the free trial and then it changed to the yearly subscription anyways. I immediately exited out and cancelled within seconds and you were still unable and unwilling to easily refund me. Exactly how you’ve tricked hundreds of others it sounds like. Sad that you have to scam people into making money vs just having a good business. And you falsely charged me $50 again…",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.8013612031936646
+      }
+    },
+    {
+      "id": "12190264147",
+      "title": "Do not use this app",
+      "text": "This app is a scam and deceptive. They said you are trying a free trial. There is no way to see if you have a subscription in app or on web. I contacted support to cancel they send you a bot to try to talk too. They send you a link to cancel through Apple purchases, but they don’t show the trial at all until they sneakily charge you 45 dollars multiple times. It set off a fraud alert on my card and had to cancel it. I won’t have access to my bank account for over a week now until I get a new card. The customer service I finally did talk to were extremely rude and unhelpful. Saying that by taking any quiz you agreed to a 45 dollar charge and failed to cancel. Again sent me links to cancel, which I had already tried to do on my own the day I downloaded. There was in fact later a message saying I couldn’t cancel until my subscription was active. It wasn’t active until they sneak in the 45 dollar charge. This company is deceptive. I reported them fraudulent. I called Apple to deal with it and they had no proof I signed up for this subscription through Apple Pay. If I could give 0 stars I would. This is absolutely a scam. The “psychic” I messaged to cancel said they are sorry and paid so they have nothing to do with the app. TLDR: BEWARE DO NOT USE THIS APP IT CHARGES YOU FOR EVERYTHING WITHOUT WARNING AND YOU CANNOT CANCEL UNTIL THEY GET MULTIPLE CHARGES OF 45 DOLLARS FROM YOU.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.9019270539283752
+      }
+    },
+    {
+      "id": "11582897081",
+      "title": "This app is a scam",
+      "text": "First of all, the app is really just about talking to psychics and not much about astrology or spirit animals or any of that like the ads claim. \n\nSecond, the app also makes you answer all these buzz feed quiz style questions and take a picture of your hand for a “palm reading” during the setup phase but never gives you the results of that.\n\nAnd finally, the biggest scam of all: at the end of all the questions and such, it forces you to pay before you can see the results (that don’t exist). But here’s the kicker: it initially tells you what the actual price is but if you can’t afford that, it gives you other prices you could pay including $1. I chose the $1 option because I couldn’t afford to pay full price nor do I want to before I’ve even seen the results. I ultimately decided the app wasn’t worth it so I deleted it. Well, a few days later I got a notification from my bank about this very app trying to charge me $45. So I blocked the charge and redownloaded the app and had to play around in settings for 10 minutes before I found the “how to check for active subscriptions” button  and entered in my email and discovered that the app had, in fact, signed me up for a subscription that I didn’t want. And it wasn’t even premium! I still had the option to sign up for premium because I didn’t have it. So what the h**l is the $45 for?",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.6950242519378662
+      }
+    },
+    {
+      "id": "12136193056",
+      "title": "DON’T WASTE YOUR TIME OR MONEY 👏🏽❗️",
+      "text": "Cus honey they WILL scam you! I’m not stupid nor am I blind! They offered a three day free trial in which at the end of it would be a payment plan per MONTH. I wasn’t introduced in paying consistently for this app so I was going to do a free trial and then cancel. Mind you when you use other apps you can cancel at ANY TIME before free trial ends. I cancel the very next day because I didn’t quite understand what exactly the benefits of this free trial were it was all regular stuff that an app should have without having to pay for it. You could find all that information ANYWHERE. Now here’s the kicker. I cancel my subscription the next day and notice that my trial isn’t ending in three days but in a YEAR and I was charged 60+$ for WHAT! I know what I was approving and it was NOT THAT. Many other people have unfortunately had the same experience and I wish I read the reviews first. I tried contending for my money back but they tried to play me and say they can’t find a subscription to cancel and kept using fancy words to divert from the issue. The psychics on there are fake too cus I asked them about this boy who played me in my face all while having a gf I didn’t give them that information all I asked was did he like me and would we get back together what’s our compatibility and they all just gave me answers that a s$tup1d gullible teenager would want to hear while in reality this boy is a cheater and only used me for temporary desires. And for “real” psychics why are there so many of them?!? Being a psychic shouldn’t be that easy for just anyoneee to do.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.8560426235198975
+      }
+    },
+    {
+      "id": "12286509238",
+      "title": "❤️❤️❤️",
+      "text": "A fantastic site of, experienced, psychics to help you on your journey, be it good or slightly confusing, at times. They send messages in a chat to you, personally, from that, you can read and choose someone or seek advice from someone randomly. I have chosen to speak with two psychics who have sent me messages and have had the most amazing positive experiences. Helpful, informative, honest, and supportive. You have the option to be alerted via text, email, etc when they are back on if you’d like to chat with them again, as well. Rather than monies, you are purchasing credits per min, usually 40 credits/min (little pricey but worth it for the sanity). 😂 \nInside of the app you also have horoscope and compatibility options. In the horoscope section, you have the option for daily updates, in addition to yearly access with a premium subscription (giving you career, love, etc). With compatibility, you may add a number of partners birthdates to your profile to see your percentage of compatibility (of course, this works best if you know both persons times of birth and locations).",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.8601651191711426
+      }
+    },
+    {
+      "id": "12371903552",
+      "title": "Kinda just irritated",
+      "text": "I give up on the 3min free reading with 3 psychics I must of typed the same message 20 times and everytime the online person once im done with message will be busy and give me more people recommended and it dont even save the dang text so i have to write it again or choose later im not sure if its like a way around the 3 min free but im just gonna give them back and i wonder if that would be a problem if it wasnt free but not curious enough to try again or put money into it! Havent thoroughly went through entire app yet, looked like might be some entertaining reads, biorhythm’s always seem interesting to me! Thought the trial was premium but had to watch ad just to see one the daily horoscopes for my sign! Anyway looked like the tarot and other readings could be pricy im not sure i can believe someone who has to be under 20 has 16 years experience but hey im not the psychic and the ones whos years of experience made sense with their age would not be available, well not once you got a message wrote or initiated chat! But i just downloaded the app and still trying to find the original palm scan results from a quick test that required me to install app to see results and pay for a trial that does not appear to be premium at all but i hope i do atleast find the test results since it was the point of any of this!",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.6207243800163269
+      }
+    },
+    {
+      "id": "13774003832",
+      "title": "The bed app for building self-awareness",
+      "text": "I’m truly impressed with this app. It’s intuitive to use, the price (mostly free but with purchase options outside the basic membership) are the best you’ll ever find maybe ever again in the App Store. And if it’s self-care you’re looking to do to maintain sanity right now Nebula is the lowest lift for biggest benefit I’ve ever even thought about. It’s useful insight into your own character that you can’t attain any other way. The professional readers and psychics available are top of the game and deeply compassionate and they really are flexible in that you’ll have text messaging to the degree you like and you’ll know that for a few bucks, you can always literally always get professional help from a trustworthy person. It’s nice knowing I have someone to talk me down should I ever need it and I do. I do. This app is easy to use and fun too. Please download it and thank me later. Kidding. You don’t have to thank me. I’m just a huge fan who’s been looking for something like this for ages and I’m overly excited. 🥳🩷💛❤️👍🏾👍🏾👍🏾",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.9721453189849854
+      }
+    },
+    {
+      "id": "12091047645",
+      "title": "Wanted to love it - feel duped",
+      "text": "Wanted to love this app but btwn the bait n switch to get money from ppl and while in the app everything is nickeled and dimed I had the app for less than a day. Then had to deal with getting my money back in which of course it can be taken in seconds but getting it back is a diff story. Customer service is fine. As you can see on other complaints they will comment things are “clearly stated” however upon talking to customer service on insta having them admit to the app switching the choice to the 50 dollar option bc it’s “preferred” is an issue … there should be no switching from the persons original choice of the free trial etc right before the person moves forward. This is a clear trick and needs to be fixed if this isn’t unintentional… however I can imagine getting close to 50 bucks from multiple users wouldn’t be turned down regardless. In the end if you have the money floating for this app I guess it could be fun, but in todays world clarity and ease is what makes a strong app long term. I’m glad other ppl are enjoying it though.\n\nUPDATE: The response to this review is the perfect example of what is going on here, no accountability, no real solution. I have spoken to plenty of people from this company and they while nice are essentially not helping. Thankfully apple helped me in the end.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.6021280288696289
+      }
+    },
+    {
+      "id": "10226790734",
+      "title": "DO NOT RISK IT.",
+      "text": "I got this app on a whim three months ago. I used it for one day and realized it was trash, so I unsubscribed and deleted it on my phone, and made sure it was off my subscriptions list on my iPhone (all the things you are supposed to do when cancelling an app). \nEvery month since then NEBULA HAS BEEN CHARGING ME. I go online to their main website for support, it is EXTREMELY deluded, there really is no information regarding customer issues or care. So I go to Apple support to report the app and get reimbursement, but because my iPhone and Apple both think this app is and has been unsubscribed and cancelled, I cannot select it for reporting and get reimbursement. I called my bank, luckily they were able to block Nebula for all future payments, but I do still need to file my claim to hopefully get my money back. After dealing with this annoyance for the last couple months I decided to go online and do a little more research on nebula reviews, turns out there are tons of people just like me with shockingly similar stories pertaining to being charged LONG AFTER their nebula subscription was cancelled. \n\nIMO I wouldn’t risk it, it’s been a hassle to get my 60 bucks back, and to be honest I think if I didn’t notice I was being charged monthly in the first place, AND if I wasn’t putting in the work now to stop Nebula, this would have just kept going on and on. \nThis app was made by imbeciles, I don’t think it’s necessarily an intentional scam, but the tech is just so pitiful, a 5 year old could do better. Just save yourself the money and the trouble, there are other silly horoscope apps out there.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.8680449724197388
+      }
+    },
+    {
+      "id": "5950653524",
+      "title": "HIDDEN CHARGES WONT SHOW UP UNDER PURCHASES OR SUBSCRIPTIONS",
+      "text": "BE VERY CAREFUL WHEN DOWNLOADING THIS APP. I signed up for the free trail but cancelled after I realized I wouldn’t be using it. I verified this under the subscription tab on my Apple account. HOWEVER, I soon started getting charged 9.99 WEEKLY from Apple and could not for the life of me find out where the hell these charges were coming from. Apple support could not help because they couldn’t see where the charge was coming from either and suggested that someone else in my household made the purchase. There is no one else connected to my account. I ended up moving all the money out of my bank account to avoid these charges. For months I’ve been inspecting every purchase I’ve made to see where it could be coming from. Finally after checking with my computer and cross referencing my phone purchases I see a Nebula weekly subscription charge for $0.00 4 days after the original purchase. Note that this charge does not show up on my iPhone X under purchases or subscriptions. After checking the app, I realized the in-app purchases add up with the random and constant attempts from apple to collect $9.99. As well as stating I am still subscribed to their weekly subscription. This subscription shows up as CANCELLED under my subscription tab and should be CANCELLED. This app is engaging in fraudulent and dishonest activities BEWARE.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.7237092852592468
+      }
+    },
+    {
+      "id": "11951237158",
+      "title": "Locking literally every piece of info behind a paywall is dumb and greedy",
+      "text": "I was looking for an easy app to use to have my birth chart information organized in a way that’s easy to read and navigate, there are plenty of websites that give you all this information for free, apps are just more convenient. Was entirely annoyed to see that literally EVERYTHING is locked behind a paywall besides very basic info like the sun, moon and rising signs that literally anyone can easily figure out with ten seconds of google. I get that it costs money to provide the convenience of this app and the services you host on it but jeez Louise you can’t find out a single freaking thing besides what your birth chart looks like and what your main planets are, literally everything else just teases you with a little snippet of text about it and locks it behind a paywall. I get paying for the readings and psychic services and like having a real person analyze your data but to not even let someone see the basic, established information about their planets and houses without paying is absolutely ridiculous. You’re not even going to let me look into basic information without paying for a subscription? Greeeeeeeeeeedy 🙄🙄 what a lame app",
+      "rating": 3,
+      "sentiment": {
+        "label": "neutral",
+        "score": 0.497539222240448
+      }
+    },
+    {
+      "id": "14048789013",
+      "title": "Interesting",
+      "text": "I’ve been a spiritual natural all my life. Since I was a child I’ve had the ability to listen to people. Like 100%. This doesn’t mean I’ve been one to give advice. Sometimes I’ll share an experience that i think a person might be able to relate to and that opens some doors. Most of the time a person finds the answer they are looking for if they simply feel seen and heard. This opens up internal blockage and often allows them to access everything they need to know. Because yes, that’s right, we all have the answers to all our questions stockpiled and waiting for us to access them. Most spiritualists understand this. Some use various items in conjunction with their listening skills. It’s similar to my offering anecdotal insights. But if I haven’t had an experience that I feel is an appropriate key to door they are trying to open. Well then I simply rely on my “way” to provide a safe place within which they can contemplate inner revelations. There are many legit spiritual healers here. Just take a little time and you will gravitate towards the appropriate guide for you.  \n- be excellent to one another✨",
+      "rating": 4,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.5679024457931519
+      }
+    },
+    {
+      "id": "12336334249",
+      "title": "Money Grab, Not Worth Your Time",
+      "text": "Where do I even start? First, I found this app through an advertisement on Pinterest that advertised a reading for some sort of witch magic type, but only AFTER I spend minutes of valuable time answering each question in the quiz, my actual results were behind a paywall, so I felt like if I didn’t spend a dollar, it was a waste of time. Okay, so I spent the dollar, then it told me I would receive a link to my reading in my gmail. So I downloaded the app, clicked the link in the gmail, and it STILL wouldn’t give me the results of the quiz I paid a dollar for. I WANT MY DOLLAR BACK.\n\nAnd don’t even get me started on the way the actual app works. The whole thing is just a greedy scam made to cheat you out of your money. They say “three minutes of free readings with three psychics!” But when you run out of credits after what I’m pretty sure was less than three minutes, you only had the chance to talk to one psychic, and then you have to buy more credits for an outrageous 10 dollars for JUST 80 credits. You can’t send messages after that, not even to apologize to the psychics for wasting their time. EVERYTHING on the app costs money. Every single feature. At this point, just buy tarot cards or a book on astrology. You’ll get way more bang for your buck that way.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.6391085386276245
+      }
+    },
+    {
+      "id": "11229606935",
+      "title": "\"Insightful and Thought-Provoking\"",
+      "text": "I recently had the opportunity to explore the Nebula astrology app, and I must say that it left a lasting impression. As someone who appreciates both spirituality and self-discovery, I found Nebula to be a valuable companion on my journey. Nebula doesn't just provide generic horoscopes; it delves deeper. The personalized birth chart readings were remarkably accurate. It felt like the app had peeked into my soul, revealing aspects of my personality and life path that resonated profoundly. Whether you're a seasoned astrology enthusiast or a curious beginner, Nebula's insights are worth exploring. As with any form of divination, skepticism is healthy. Nebula acknowledges this delicate balance. It doesn't claim to have all the answers, but it encourages introspection. Rather than spoon-feeding predictions, it nudges you to consider possibilities. And that's where the magic lies—when you blend cosmic wisdom with your own discernment. Nebula doesn't promise to change your fate overnight. Instead, it reminds us that we're the architects of our destiny. The planets may influence, but our choices steer the ship. It's like having a celestial GPS—guidance without coercion. So, yes, Nebula offers insights, but it also empowers us to take charge. Beyond the charts and interpretations, Nebula fosters a sense of community. Connecting with like-minded souls, sharing experiences, and learning from one another—it's a cosmic coffee shop where the universe serves wisdom in every cup. In a world where noise often drowns out whispers of the stars, Nebula stands out. It's not about blind faith; it's about embracing the mystery. So, whether you're navigating life's storms or basking in its sunsets, Nebula is a worthy companion—one that encourages growth, reflection, and stargazing.",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.9640828371047974
+      }
+    },
+    {
+      "id": "13403113261",
+      "title": "Tricked me into buying",
+      "text": "Be careful with this app: it tricks you into an \nastrocartography reading and a palm reading then asks for money to see the results then it automatically subscribes you to their services and all sorts of upgrades that you did not request. Then when you download true app (because they can’t email\nyou the reading you were promised when they asked for your email address), you get bombarded with tarot readings and offers: I pulled a bad card for you, let me help you make it better. They pry on your fear. Also the company is based in Cyprus so customer beware. I regret paying for this astrocartography analysis that was dangled as a carrot and will cancel asap. The “palm reading” was generic and written by ChatGPT. The astrocartography analysis is dropped over 8 days because “they are working on it”. (It’s a sales funnel that keeps you in their ecosystem). Also the system is rigged so that when you enter 1 star rating, you can’t submit it. Neither a 2 star rating. You get an error message until you select 5 stars. \nThis is a 1 star rating.",
+      "rating": 5,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.8237772583961487
+      }
+    },
+    {
+      "id": "12172171105",
+      "title": "I’m annoyed",
+      "text": "I have been using this app for YEARS, I’m the one in my friend group who forced my friends to download the app, and I check my horoscope on this app every single day it’s a routine. But every single update takes me one step closer to deleting the app forever. I hate the app now. It’s not cute, it’s not even fun anymore, it’s just ads. You give us one super vague annoying horoscope and that’s it, everything else is an ad. There used to be soo many fun features on this app that you guys have decided to take away. There’s no longer the moon phases and planets current location explanations like there used to me, or a few words at the top explaining what your focus of the day is, and if you want to look at your actual birth chart it’s impossible bc of all the ads you have to watch. Seriously rethink whatever team you have working on this app at the moment because you’re about to lose a lot of your “fans” to an app like co-star who instead of taking things away from us, is constantly adding new features",
+      "rating": 5,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.8507639169692993
+      }
+    },
+    {
+      "id": "13192729365",
+      "title": "Accurate",
+      "text": "my tarot card of the day was the eighth of cups.. let me rewind and explain that I was extremely skeptical.. but I randomly chose a card and though every other day I am generally very positive in my view of life, today has had more of a negative hue…  I drew the eight of cups or the 8 cups and it was right side up.. apparently this means something along the lines of burdens that are no longer have to exist.. the description speaks of letting go of these unnecessary burdens…. It could not have been more on point because I am holding onto some things that are only hurting me. And letting them go, could potentially have a dramatically positive impact in my life.  I’m choosing to see this as a sign from the universe to give this App a fair shot. You never know what you will learn when you listen to what the universe has to say. God speaks to all of us all the time.  these messages come in many forms and nothing is off the table. This app included.",
+      "rating": 5,
+      "sentiment": {
+        "label": "neutral",
+        "score": 0.5882232189178467
+      }
+    },
+    {
+      "id": "5998819267",
+      "title": "Be extremely careful",
+      "text": "I accidentally selected membership instead of the 3 day free trial. There was not a clear way to select the option and I assumed the 3 day free period was standard. Unfortunately, when I confirmed, what I thought was the 3 day trial, the full membership option lit up and I was charged $127. I IMMEDIATELY contacted Nebula and explained what had happened. I also contacted Apple’s help center. I was told that I am, for reasons unknown, ineligible for a refund.  I’m extremely disappointed that I have been forced to pay such an incredibly large amount for this app. I signed up out of curiosity and am paying dearly for it. I am now stuck with either not using it and wasting my hard earned money, or using an app I DO NOT WANT.   I can assure you that when this unfair subscription has expired, I definitely will not renew and will take great care to make sure this company never receives another penny from me.\n\nI’ve read through many reviews and have come to the conclusion that Nebula is VERY aware that their subscription process is confusing and causing a lot of people to mistakenly lose out on a LOT of money. This is obviously intentional. They are obviously doing it because they know they Apple won’t require them to issue refunds. This is extremely dishonest and shows a complete lack of integrity.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.8143814206123352
+      }
+    },
+    {
+      "id": "12051799393",
+      "title": "Illegal Activity",
+      "text": "So I refuse to be one of those people that just sit on here and rave I’m not going to tell an entirely full drawn out story. All I’m going to simply say and be very specific on is the fact of the matter that I have not had this app since June on my I deleted the app well Apparently since October 20th they somehow were able to get my card linked off of my Apple Pay. I would assume it has been charging me $8.79 and they’ve taken that payment out seven times so I’ve been charged over $60 for something that hasn’t even been on my phone for over 3/4 months if not longer. I re-downloaded it so I can figure out how to cancel the subscription which I just went into my iPhone and unsubscribed it then is trying to still charge me yet again, but it’s pending through my bank account because I canceled the transaction. I don’t know how these people are getting away with it, especially after reading multiple different reviews of the same exact thing that I’m going through I don’t know how to take any type of legal action with this, but I’m definitely going to try to get my money back something I wasn’t even using and they’ve been charging me for about two months and I haven’t even had the app downloaded on my phone so I don’t understand how they were even able to do that at all. Obviously, as to be expected, I was very shocked and still am very shocked that they’re still trying to charge me for something that I never accepted to let alone the fact of an app that I know that I’ve had deleted off my phone because I had to re-download  just to try to cancel the subscription. This is nuts. It’s like if you guys are broke then just say it, but you don’t have to steal people’s money and then act like you don’t know what’s going on!!!!!!!!!!!!!",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.6083263754844666
+      }
+    },
+    {
+      "id": "12000783686",
+      "title": "Wow how I hate that this App is so dirty to people",
+      "text": "I have a subscription until December 2 but they already took it from me because I canceled it ( when I did it said it wouldn’t interfere with my subscription until it expired ) but because 7.99 weekly isn’t cheap for something that is not worth it! I can’t afford it every week . I’ve paid so much money already to this app just be able to read a horoscope on the phone and when it comes to the other stuff on here like the people who do the readings that cost soooo much that I pay 7.99 a week then I can’t even get a free reading ?? I can’t afford to look at the questions they want me to call the people that predict the future and tell me that I would want to ask them . ???? This app could be great , but they are greedy and don’t have a problem with taking your money , and  you get barely any more than you did before , and you still have to pay extra for stuff instead of paying for the whole thing so if I don’t have any more money to pay then they don’t even bother to leave it on the app for the remainder of my time left , instead they shut me down , and I know I have been a good dang customer and they don’t even care !!!! So no stars for me to you !!!!!  I’m",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.8687194585800171
+      }
+    },
+    {
+      "id": "12742618920",
+      "title": "“The beckoning”",
+      "text": "Out of curiosity I downloaded the app to see what started it would say I was only to find out that there were going to be readings offered at a price by a variety of people who use tarot and maybe other methods. Although they were skilled readers I’ve never been one who resonated with putting a price on helping people. Now the astrology section although somewhat correct-looked off and outdated. The kind of astrology that’s good for people new to natal chart but not for those of us who are familiar with varieties of charts,asteroids,placements and aspects let alone a more accurate reflection of position utilized on some websites like Astrodienst. Tbh I don’t even bother with the palm reading. Mostly bc I was taught that a palm reading much like other readings begin when a person walks in the door. \nOverall a cool introductory app for people but not alot of new knowledge for people who have been around.\nThe whole starseed thing is interesting but on the grand scheme of things awareness comes with walking in integrity and purpose. I just so happen to help people confront their own selfish delusions and step into practicing consideration and empathy.",
+      "rating": 2,
+      "sentiment": {
+        "label": "neutral",
+        "score": 0.7600767612457275
+      }
+    },
+    {
+      "id": "10772121437",
+      "title": "Scammer/fraud",
+      "text": "I had to cancel a debit card because of this company. Not only that but I had to go to the bank and the bank had to flag the 3 attempts of false charges, because after opting out and deciding against the app subscription.. they still attempted to charge my bank account 3 times. All day I didn’t have access to my money in my account, had to change my debit card number and wait for it to be mailed to me, because of this company. I understand the need to pay for something if it is worth it, but this app/company isn’t worth the risk. **with the amount of reviews of STOLEN money from people, I truly HOPE they get sued and shut down.\n /update for the developers response./ I will not be contacting any “support team,” from this company. For all I know clicking on that website alone will result in another false charge. My bank is investigating the charges and I was assured they filed three separate police reports for the fraudulent attempts on my bank account. It is evident that this isn’t a horoscope app, it’s a front to steal money from innocent people. You take advantage of people’s curiosity and like I’ve said previously, I hope the company is sued and permanently banned.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.8995879292488098
+      }
+    },
+    {
+      "id": "10055138343",
+      "title": "Messages and Posts",
+      "text": "I would love this app but the chatting forum and direct messaging are screwed. I can hardly write a post, comment on other’s posts, or send direct messages because I keep getting “Unknown Error: Message contains inappropriate data” when I don’t say anything derogatory, I don’t say anything personal, I don’t say anything hateful or hurtful, and I don’t say anything offensive. There’s no reason for my messages, comments, or posts to be blocked but they get blocked very often and it’s very annoying. There are many times I try to help people who make posts about stuff they are struggling with and I can’t say anything positive or helpful because it gets blocked for “inappropriate data” without any indication of what is inappropriate and I reread what I wrote and see nothing inappropriate at all! Someone needs to fix this because I’m sure it’s common words that someone who wrote the rules for posting/commenting/messaging marked as inappropriate when these words, common everyday words, are not inappropriate in any way shape or form. If this issue gets fixed I’ll change my review from 2 star to 5 star.",
+      "rating": 2,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.8872635960578918
+      }
+    },
+    {
+      "id": "7550467798",
+      "title": "DO NOT DOWNLOAD THIS APP!!!",
+      "text": "I agreed to the free 7-day trial, on the 6th day, I could not find the unsubscribe link, so I emailed. Andrew” told me my request was received, and that I am now unsubscribed. After that, I was charged $9.99 three times. I emailed them about this, and they told me I did not unsubscribe in time, and that the subscription link was sent to me in an email, I should have used that to unsubscribe. I never received this link. All I could find in my emails is the support email. But they kept telling me I need to use this non-existent link. I went back-and-forth with them through e-mail, and all the while they were telling me that I cancelled too late and I am not entitled to a refund. This morning I got my fourth charge from them. They still have not cancelled my “subscription” which I never signed up for, nor have they sent me this link they kept telling me I received, which I didn’t. \n\nI now will have to contact my credit card company and  hope they will do something about it. \n\nDo not down load this app, unless you want serious headaches down the line. Read the other reviews, they corroborate this horrible experience and terrible customer service.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.7165728211402893
+      }
+    },
+    {
+      "id": "13808335028",
+      "title": "I stayed under constant stress of uncertainty until the friend suggested Nebula",
+      "text": "I actually felt like they design Murphy’s Law after me. I felt like my world was crashing down. I had nowhere to turn, had no one to speak to about things that were affecting my mind, body and soul. I reached out because I had no other recourse but literally use tarot card, readings, psychics, birth chart, readings, compatibility, quizzes, and what to look for in a mate. It took all the anticipation and anxiety and uncertainty away. I literally look at this app as an extension of me to know myself better, and to keep myself out of trouble and make good decisions. Mostly, the people that are here to help you, the psychics that can tell you and prepare you for things good bad or ugly they become your friends and you can feel it. And People can’t say it’s not a good feeling to feel heard and validated! \n\nNEBULA— I love you and I just can’t quit you baby!",
+      "rating": 5,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.5479181408882141
+      }
+    },
+    {
+      "id": "14315820320",
+      "title": "My experience",
+      "text": "The over all concept and advertised options to explore more into my birth chart are very intriguing and definitely captivating to me! However if I’m being totally honest, which I think is what we all read reviews for anyway, I have been let down more then have been satisfied so far. Until I just got a new phone (had a Xs) I wasn’t able to open the app on my phone at all! Not see it from the website even tho I was paying the monthly subscription fee. I wrote may emails to try to resolve the problem and not once did I get a reply. Now I am able to use the app, but coincidentally I can’t get my personal profile info to correct to fit my chart. Again, I’ve emailed and have not been answered. So, if the app works as it’s supposed to I think it’s great! I’d really appreciate if they replied, and more so reimbursed me for the nearly 2 years I wasn’t able to use the app and they ignored my requests to resolve the matter. That would show good business ethics and standing behind your product. ✌🏼🫶🏼",
+      "rating": 3,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.6885275840759277
+      }
+    },
+    {
+      "id": "13010131069",
+      "title": "Lotusfitz",
+      "text": "Awesome!!! Received what I needed…Confirmation I’m on the right track. Everything was spot on! I was always taught from a Christian standpoint this mysticism is dangerous. Well I’ve discovered that even Christian’s can be dangerous. I heard a sermon on Sunday, where the preacher said that some of of God’s worst are Christians because they blame everything on the devil and don’t take responsibility. Oddly enough, this is the headspace I am in about assuming responsibility to God, and in my journey, I came across this Website and was intrigued. I’m of the persuasion that you can have balance in your spirituality and walk with God Direction by tapping into your intuition. However, you want to label it. I love it how this site also addresses numerology. When I did the calculation of my birthdate. I couldn’t believe how it really was accurate about me. I can’t say enough about how it confirmed. I’m on the right track self discovery journey lately.",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.8905960321426392
+      }
+    },
+    {
+      "id": "7960744449",
+      "title": "Social media side",
+      "text": "It is an amazing app as far as the chart, advise, and reading aspect of it goes and I would give that part alone a 5 star rating but I simply can’t with the social media side included in the calculation of my opinion on the app. It’s just insanely hard to navigate. I think you should have a notification box set-up to make it easier to see responses to your comments and comments on your post. I also think you should be able to click on someone’s profile and see their other posts. Finally, I think you should be able to search (by key word) for people and posts. In addition to that, I think you should be able to edit your profile picture and maybe even add friends/make friend requests but these things wouldn’t help with the overall working of the app (I think it would improve the experience though).",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.4187965989112854
+      }
+    },
+    {
+      "id": "11889644785",
+      "title": "Upped my stars due to the Customer service … but  doesn’t help the future peeps",
+      "text": "I am so careful about fine print, but no matter what these guys absolutely are genius and tricking you with signing up. I did not sign up for a free trial. I did think that I was paying a small fee for a report that day. Of course I didn’t happen. I fell for the first time as well. Sad thing is I can’t find a report from anywhere in the app not on the Web through my account not in my emails. I’m sure they sent me something, \n\nThere’s no way they would still be in business otherwise. Anyhow, I did try chatting with a lovely bot this evening for the first time before I pursue canceling my $30 membership for I don’t know what It was entertaining and confirmed everything that I had been learning from my podcasts I probably would’ve considered staying with Nebula this time, but towards the end of a simple conversation of five minutes with the bot all of a sudden it turned into deposit more money to continue the conversation….",
+      "rating": 3,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.7561075091362
+      }
+    },
+    {
+      "id": "6941619915",
+      "title": "Absolutely hilarious",
+      "text": "This is peak astrology right here. General life advice posing as specific fortune telling? Check. Mystical sounding words that are never explained? Check. A roll of the dice to see if your partner actually loves you today? Check. Whatever a biorhythm is? Check. The nebulatalk tab is a riot. I can waste hours reading people explain their real issues and then someone being like “Oh! Thats because Venus is prolapsing today 😌” as if that means anything. Don’t try to read it if you’re not prepared for some nigh-on incomprehensible  grammar (not hyperbole, I think most of the users are having a constant stroke), but it makes it funnier if you’re prepared. 10/10 entertainment value if you like laughing at people who think this is real. I would give 5 stars, but 1 star has been removed for only including male and female in the gender select screen. I’m not surprised that people who think balls of gas billions of miles away determine your fate also believe in the gender binary, but I’m still docking points.",
+      "rating": 4,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.5951314568519592
+      }
+    },
+    {
+      "id": "13083503428",
+      "title": "Resonating on complete disappointment and sadness",
+      "text": "I am a dreamer, a believer, and a lover of all that is life and the constant en and flow that is we all collectively represent. The folks behind this app should feel deeply ashamed for manipulating the people aggressively trying to navigate through their life, using such tools as this app. This app is nothing short of a complete rip off That’s encouraging people to look into the readings that are offered just so they can get cut off at the moment. They are about to receive them asking for payment to further proceed. Not only that, but upon signing up for the subscription, I was not allowed an opportunity to reset my password change it or even receive one to log into the account and access my information. Cancel the subscription or do anything further. I am willing to bet that this app operates as a complete scam to the public, manipulating people in their deep fears and their understanding of what psychic abilities really are. I hope that the people running this out, feel deeply ashamed and move onto a more motivated approach to find their collective assets within their appropriate manners.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.5351414084434509
+      }
+    },
+    {
+      "id": "14479537364",
+      "title": "I expected answers not judgmental",
+      "text": "I’m very disappointed with this app. Some of the people on here are genuinely nice and helpful, but unfortunately, some are not.\n\nOne of my biggest issues happened when my account somehow got deleted. When I tried logging back in with the same information, it created a whole new account. Then I was questioned about why I supposedly had “a whole bunch of accounts.” I didn’t intentionally create multiple accounts—my original account was deleted, and trying to log back in created another one.\n\nI was also criticized for asking the same or similar questions. Sometimes people repeat a question because they’re desperate for clarity, reassurance, or a better understanding of what they’re going through. That doesn’t mean they should be judged or treated badly.\n\nAfter my experience, I personally don’t feel like this app is worth spending money on when you’re looking for answers. I’ve spent time on here hoping for genuine guidance, and instead I’ve walked away feeling disappointed and questioning whether the service is trustworthy.\n\nAt this point, I would rather go somewhere in person, such as Cassadaga, and speak with someone face-to-face. In my experience there, you don’t necessarily have to keep asking question after question—they can simply tell you what they feel or pick up on.\n\nThis is just my personal experience and opinion, but I feel like I wasted my time and money on this app. I expected a much better experience, and unfortunately, I’m leaving very disappointed.",
+      "rating": 2,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.8724820613861084
+      }
+    },
+    {
+      "id": "12359073037",
+      "title": "Scam Warning!!!",
+      "text": "I signed up for the free trial and afterwards I had a very very hard time finding where to cancel through their website. By the time I found it they had already charged me 45$ and yet when I looked at my account it said “subscription not active” I contacted them through their help desk, there’s no phone number to call. They replied through email saying they would refund my money if I told them which card I used and showed my Pay Pal information proving that I paid and what was charged. I responded and gave them all the information plus the screenshot showing that there was no active subscription and I have not heard from them again since. Now, I have to go through my Pay Pal and card companies to see if one of them can reverse or cancel the charges. I’m low income and can’t afford 45$ but they intentionally make it hard to find exactly where to look for cancelling for one thing and even when you don’t have an active subscription it seems they charge you anyway. Beware!! I shouldn’t have been so stupid to fall for their scheme. Please don’t fall for it either.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.7690926194190979
+      }
+    },
+    {
+      "id": "12144100261",
+      "title": "Colossal waste of time",
+      "text": "I struggle to find anything good about this app. There’s absolutely nothing of value. Nothing at all. Three minutes free with the psychic and it just didn’t even work or function. The horoscopes were written by a stoned College kid or something ridiculous. It’s also political. Support Ukraine. What’s next? Support support you support them support everybody. How about if someone wants to hear political position on stuff will ask for it. I’ll tune into a channel and specifically seek it out or bottom line. It’s just such a letdown. There’s not one element of the app that’s worthy of praise. Not structurally there’s no flow things are scattered. I don’t really know what it’s got going on. I had high hopes for it. It’ll let you down. It’ll break your heart. It’ll be the equivalency or far worse than the sequel to point break the remake. It won’t pleasantly surprise you. But I’m all about keeping the economy going and helping these fine people who at least put an effort into creating something. I’m sorry I’m trashing it. But spend money there a little bit and give it a whirl and make your own determination.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.8845441341400146
+      }
+    },
+    {
+      "id": "13691744500",
+      "title": "Palm reading AMAZING!!!!",
+      "text": "My palm reading was spot on. Every line it spoke of was true to my life and to my true self. It was fun to hear that I’m on track with my destiny. Also, that my characteristics mentioned were right on. It described each line thoroughly and summarized each line as well. I’ve never had a palm reading before so this has been a great experience for me. I recommend it to everyone!! It brings such insight into who each of us are individually. It also gave me some excitement to move forward with some of my creative dreams I have put on the back burner. There’s no time like the present. No need to procrastinate. My palm reading reassured me that I definitely have what it takes to achieve whatever I put my mind to. So don’t hesitate. Get your palm reading now and the reassurance that you do truly know yourself and you’re right on track. Beautiful reading!!!!",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.972402036190033
+      }
+    },
+    {
+      "id": "11006662661",
+      "title": "Love the insight but…",
+      "text": "As freakily accurate as the chart is, I am just now discovering there are various many other things that are taken into account—like your Pallas Sign among one…\n\nI paid for the lifetime thing and I hope that eventually in the future you include more of the other various miscellaneous things besides the planets!\n\nI’m excited to find out more!\n\nAlso, if there is a way to include more info on some of the chart items like with the significance of the percentages for modality and also elements and fem/masc thing? Like maybe if I long pressed on the little percentage chart it could explain it more? Possibly? For example, it says I am a fixed sign under traits (I’m an Aquarius!) but doesn’t explain the significance of my modality actually having the largest percentage in mutable?\n\nOtherwise. I love this app a lot and I showed my chart to my friends and they were astounded at how scarily accurate its description of me was.\n\nI also (sorry I’m asking for so much stuff, but I will use this app for as long as you exist!!!) would love to possibly see in the future a section that can kinda summarize our overall strengths but also areas we may have a tendency to be weak in or areas to be on the lookout for to focus on for enhanced personal growth!\n\nPlease and thank you, Nebula Team!\n\nKeep up the good work and love the app!!!",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.9219366908073425
+      }
+    },
+    {
+      "id": "13025806016",
+      "title": "Scam Artists!!",
+      "text": "These guys are such scam artists! 1. I did a palm reading. This was the VERY SPECIFIC information that was just about ME! … You have learned lessons over the years through your relationships ( so, learning from relationships is NOT a universal thing? ). Whether those relationships had a new vitality or was an entirely new relationship ( ok. So just one of those two?? Whew! I was worried there was gonna be 10 different kinds ). And then followed up by saying that I should be “open to love” ( alright. So, sorry guys it’s just ME that’s supposed to stay open to love. I guess everyone else is gonna have to close themselves off from it. That’s really too too bad ). \nOh.. I canceled my membership, deleted my account, and then a year later I start getting charged from them and it seems they had snuck in a few transactions within that year while I didn’t even have an account anymore. How the F does that work? And they asked me why I was leaving when I had to write them about this and I went off and said I haven’t even had this account in at least a year. I’m not leaving. I’ve been gone.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.7382655739784241
+      }
+    },
+    {
+      "id": "5665395444",
+      "title": "A truly great app.",
+      "text": "Not only is this app crazy accurate, but it provides education on everything you would want to know about astrology, birth and gemstones, your birth time, palm reading, etc. though it has an option to pay to unlock the lessons, you are also able to watch an add to unlock them, as well! So, if your a bit tight on funds, there’s still an option to educate yourself! \n\nI love the fact of when you are setting the app up to your customization, it asks more than just your name and birth date, with the little bit of extra information you provide of what time you were born and where, it is able to open up so much more of your personal chart. I’ve learned quite a few new things about myself with this app that I didn’t realize before and I’ve been going through the lessons to learn more about them all. I am a practicing Wiccan, so a lot of this is already known by me, but there’s always more to learn. \n\nI highly recommend this app. If you were debating, just download it and try it out for yourself. After filling in your information it will ask if you’d like to pay for a vip trial or have a few days of a free trial, you can bypass that and continue to use the app, which is also an amazing thing, because usually with these apps, you can’t do that. \n\nJust try it out! I’m sure you guys will love it as much as I do!",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.9059249758720398
+      }
+    },
+    {
+      "id": "12975647118",
+      "title": "Psychic, Sarah Stone",
+      "text": "This was the 1st time I’ve ever interacted with Nebula and the 1st time I’ve ever spoken with a real live Psychic, but I desperately needed 2 questions answered and didn’t know how else to get it done so I took a chance.  I bought my minutes, the screen opened up, and there were hundreds of Psychics to choose from, which scared me to death.  I thought it would only be the Psychic chosen for me sitting there.  Nope…you chose your own under different Sub-headings.\n\nI just took the 1st row and looked for someone down home looking and not all goth or hippiefied like most did, which led me to Sarah Stone, who fortunately, was available.  Thank heavens it did and she was!!!\n\nI couldn’t have possibly chosen anyone better than Sarah Stone and I will choose her every single time.  I may just go in there to sit and talk to her with no questions at all.\n\nShe answered both of my questions pretty quickly, not wasting an excess amount of time, and she did so with heart behind it.  She had a lot less years than most of the Psychics listed, but years don’t matter when you know what you’re doing and you do it like Sarah does.❤️\n\n“Hats off”🤠 to NEBULA for knowing a good person when they see one and bringing a great one like Sarah Stone on board to spread her knowledge and good will to your clients.🤗🤗🤗",
+      "rating": 5,
+      "sentiment": {
+        "label": "neutral",
+        "score": 0.5261357426643372
+      }
+    },
+    {
+      "id": "10832433655",
+      "title": "Darrani",
+      "text": "I’ll admit this app has surprised me on how accurate it is, I’ll say sometimes it’s a few days off. For example, let’s say today my horoscope told me I was going to encounter a loss of money by trusting someone, it’ll actually happen 3 days later or so. Sometimes it’s the other way around, sometimes it actually happens 3 days before it tells me. LOL maybe I’m delulu but anyways one thing that does bother me though is how mixed message it is. My horoscope will tell me to “make sure not to make any important decision on this day” and then my tarot card will tell me to go “make an important decision today or I’ll regret it in the future”. It confuses me a lot😂like who do I listen to? Of course, I do what I want and what my gut tells me but it just shows how the message isn’t clear or maybe someone isn’t proofreading before posting. Anyways, over all I like this app and in important times, it give me hope to keep going.",
+      "rating": 4,
+      "sentiment": {
+        "label": "neutral",
+        "score": 0.45221957564353943
+      }
+    },
+    {
+      "id": "13940524310",
+      "title": "Surprised",
+      "text": "I actually stumbled on the site by accident (as I do when looking around online). And because my curiosity was pulsing, I signed up for the free trial.\nHowever, looking through all the content and then reading the handful of reads that were specifically for me…I really enjoy this app. \nMuch of what “they” had written, after collecting some basic info (the usual, male/female, where I was born and what time I was born)was spot on!  Of course there is always certain things that can cover everyone in one way or another, but I have to admit, almost everything was very much me and what is going on in my life at this time. And that was true no matter which type of reading I had chose. It was enlightening. \nI wish I could dive in daily, but at this time, I don’t have the spare change. \nBut when I do…… I wouldn’t hesitate coming here for my spiritual connections and advice. Thank you Nebula. 😌",
+      "rating": 4,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.8672124147415161
+      }
+    },
+    {
+      "id": "9238108781",
+      "title": "Stole Money After Cancelled/Closed Account",
+      "text": "Do not download this app! If you do, please do not sign up for the trial/premium plans. I downloaded this app in July and signed up for the trial which was $1. Agreeing at the time to pay bi-weekly, within a week of having the app I decided I didn’t like it and would be closing my account. Now it’s the end of October and I was confused why I kept getting charged $19 bi-weekly from Obrio Limited. Turns out even though my account was closed/cancelled, the company that owns this app continued to charge me. That’s over $130 since July that was stolen from me. Money that would’ve been used to put food in my children’s mouths! I emailed support immediately to resolve this issue, their response was because the payments weren’t refunded within the first 30 days of initial purchase/signup I’m unable to get a refund but can get free materials to an app I don’t use/deleted my account with. Yet how was I supposed to know they were going to continue to charge my account after it had been closed and cancelled? So again I do not recommend this app.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.8319206833839417
+      }
+    },
+    {
+      "id": "7012591492",
+      "title": "Gender Offenses",
+      "text": "Hey y’all, as a 30 something woman, I get bothered enough on the daily about when my body should be creating a human life whether I want it or not, I don’t need it in an astrology app.  And I can promise I am nowhere near alone in this. There is literally nothing about astrology that should be “predicting” human life, this is not a period or ovulation app. Please remove this mysognist and frankly, invasive & plain rude part of your algorithm. Stop policing my body. Plenty of women struggle to get pregnant for years prior to conceiving, I imagine this would be extremely hurtful and offensive to them too. We are more than our bodies. I highly doubt there’s a “male”equivalent to this prompt I’ve received 3 times (the only one I’ve received multiple times I might add) since joining this app. Unless you are a period or ovulation app, you have no business talking about pregnancy or when my body should be “ready” stop telling women what to do with their bodies, in all capacities.",
+      "rating": 4,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.7995790839195251
+      }
+    },
+    {
+      "id": "9087926809",
+      "title": "Garbage",
+      "text": "I wouldn’t suggest downloading this app. I have been getting charged multiple times in a single day at completely random increments for MONTHS and didn’t know it because I didn’t sign up for anything and some of the charges came up under the App Store. Shame on me for not paying more attention or I would’ve noticed months ago. Tried to email customer service and got ran around in circles because they wouldn’t listen to what I was trying to ask which was how to cancel the subscription I never signed up for. I never asked for a refund and I made that very clear in my messages that I just wanted it to stop and they talked down to me like I was an idiot and the one who wasn’t understanding what they were saying when they simply were not giving me a simple answer to my question and we had to message the CEO of the company to get an answer that took 2 seconds. Ridiculous they’ve been stealing HUNDREDS of dollars out of my account and all I wanted to do was cancel it and they made it insanely difficult and stressful and I’ve read Many reviews that they make it almost impossible to cancel if you so choose. They told me I needed to go through Apple support for a refund and when I said I didn’t want a refund I just wanted to cancel (which at this point was the 3rd time I had said that) the customer support just said “as I already stated you need to contact Apple support to cancel your subscription we cannot help you” when he said NOTHING about speaking to them about canceling the subscription only about a refund. So tell me why they charged me through their app as well as the Apple store?? I have bank statements to prove this. This whole app is a scam praying on idiots who won’t question the charges on their account. Disappointing as it all could’ve been avoided if they had just taken the time to listen to my concerns and help me when I asked.\n\nMaybe hire better customer support to help people who need it.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.8923029899597168
+      }
+    },
+    {
+      "id": "14099571287",
+      "title": "Gratitude",
+      "text": "I’m honestly not even writing this review for any money. This app genuinely resonated with a lot going on in my life journey just like the great holy one Jesus who died for me makes things good and better in my life just by prayer with simple pure and loving intentions to improve everyone’s life and now including mine because for so long was leaving myself out of what goodness and to help guide me and walk fully in my divine purpose. And I can’t ever go backwards when I now know  things aren’t that great for me and what God has in my bright future of abundance and everlasting love to share with him and others who genuinely want the best for one another and to say you guys did a amazing job building this platform to help others and now I’m honored to say myself and want to show appreciation because this is boosting my ability to neglect all the\n Harmful things I’ve carried with a loving heart not knowing I was neglecting myself in ways that didn’t serve my day to day 100%. I deserve to live a life at 100% right along with everyone else that strives for better each day because it better and it’s not always rainbows and butterfly’s but if we’re giving it that 100% from today now on. So much more incredibly beautiful moments and miracles happen in our lives because we don’t need much to be simply to know we’re simply blessed by a father that knows us and shows us how to live holy and shielded from any wickedness interrupting the loving passions and dreams of living our true purpose to serve the one who is my happy place to for comfort and guidance praying for the same simple things without any doubt or disbelief that he is everything and his will provides motion to my laboring hands feeding the bread of life to not only my children but his children and knowing everything will be alright because he knows my heart and directs paths to achieve what he has place in our dreams gifting us with life to express more gifts that we have to polish up in the blood of Jesus to experience what he’s been trying to keep us seeking him in order to fulfill everything he has set out for us.  Again thank you and stay awesome you guys!",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.8943241834640503
+      }
+    },
+    {
+      "id": "13619149817",
+      "title": "Would give less stars if possible",
+      "text": "So many reasons NOT to support this scam!!! it is most DEFINITELY not worth the $50 a month they keep trying to autodraft from my bank!  I paid the $1.00 to create an account (“cancel any time” they say) so I could see a “sketch of my soul mate” - As a straight female I was a little shocked when these geniuses show me a sketch of an OLD WOMAN!  Hello psychic!  Not gay over here. (smh!). Honestly, I didn’t mind paying the dollar- but I immediately cancelled any subscription service (OBVIOUSLY!). But even after cancelling within the first two days of the “free trial” I STILL get a draft attempt on my card! FIFTY DOLLARS… FOR WHAT?!!  No. \nI have cancelled in every way possible. Even though I followed their own directions and have screenshots showing their app shows I have NO SUBSCRIPTION and no auto refill and no points and am not on any “plan,” these idiots continue EACH WEEK to attempt to draft $50 from my bank!!!  \nIt’s almost like once they got my bank info they just decided to do whatever they can get by with!  Ridiculous!  Stop trying to charge me!!!!",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.8949480652809143
+      }
+    },
+    {
+      "id": "13662062397",
+      "title": "Skeptic non believer happily surprised",
+      "text": "I don’t believe in tarot or psychics and may check a horoscope from time to time with a random friend or from the newspaper for entertainment value. the last 3-4 years have been the hardest ever in every category imaginable. I’ve felt depressed, lost, and at times hopeless. Happy to report after a 10 min reading from a psychic, I believe this was legit. Things that have been discussed privately with my spouse recently she echoed in synchronicity, and confirmed several answers for me that have been eating me alive for the last 6 years. Gave me insight into starting to get life back to a place of joy and love. I now have not just hope but a feeling of confidence I lost years ago that I and my husband together can and will overcome and succeed life’s stumbling blocks, fears and peculiarities, no matter the obstacles.",
+      "rating": 5,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.44112080335617065
+      }
+    },
+    {
+      "id": "12168501830",
+      "title": "Greedy.",
+      "text": "I downloaded this app back in 2020 and absolutely loved it. It was leagues ahead of its competitors. I dealt with the ads for the weekly/monthly/yearly subscription and wasn’t too annoyed. Fast forward to now… I can’t even read my birth chart without paying? Honestly, that was the main reason I used the app. Requiring a subscription to view this information is quite frankly ludicrous. I loved the way the app looks, it’s aesthetically pleasing and has a lot of neat features! But, the developer’s greed has pretty much rendered it unusable unless you want to dish out your money. Incredibly disappointing. I understand needing money to pay the staff/team that keeps your app afloat but there has got to be other ways than to milk every possible avenue for monetary gain. I would much rather make a one time purchase of a paid application like “Nebula: Complete” for $10-$15 so there’s no recurrent fees. Unfortunately, I doubt that will happen because I assume it wouldn’t be as profitable as charging to view information that can be found through a google search.",
+      "rating": 1,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.6153032183647156
+      }
+    },
+    {
+      "id": "11830779768",
+      "title": "Miscalculated",
+      "text": "This app gives inaccurate information. At the time of my birth the sun was not in Aq, it was in Capricorn. Whatever resource this app relies on is wrong. Get an app that uses astronomy so you can see exactly the positions of the sun, moon, rising, and other planets — otherwise you’ll spend your life thinking you are one way, but you’re really another. If you don’t, what happens is you being to twist the meanings to suit your true inner knowledge of self. If you’re strong enough, you’ll change the definitions and meanings of the constellations which further ruins the study of astrology. This app is wrong. Delete! Reply to comment from developer: those calculations you are talking about are fictional. They aren’t real. They don’t exist. This is all bologna! The constellations are real. The solar system is real. And your fake calculations aren’t associated with those real things. You are misguiding people with this nonsense.\n\nFurther response to owner: I’m not giving you an opinion, as you stated in your response. The calculations in your app are incorrect. That’s a fact, not an opinion.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.7588741779327393
+      }
+    },
+    {
+      "id": "13280970889",
+      "title": "Always spot on",
+      "text": "Nebula horoscope & astrology has become one of my all time favorite apps to use and learn more about my birth chart and all things horoscope related. So far they have been spot on about every aspect as far as breaking down my birth chart and describing each part perfectly but also giving great advice on what or what not to do or say on certain days. I now understand myself more and why I am the way I am and I’ve also learned a lot about others (friends and family) who have different horoscopes than me and everything has started to make more sense than ever. The psychic readings are ALWAYS spot on no matter which reader I choose. Thanks so much nebula for being true and honest and not just one of those apps who put what they think people want to hear and see instead of actual facts",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.8951666951179504
+      }
+    },
+    {
+      "id": "13772571145",
+      "title": "Great guidance",
+      "text": "I came by this app when I was in search of something. I needed clarity, and the psychics I found here gave me just that. While some weren’t giving me spiritual advice, they gave me insight from the outside of my situation showing me what was pretty obvious but being on the inside of the issue I was blinded. The psychics are very kind and supportive, I found them to be extremely helpful not only for answers but for a shoulder to lean on during difficult times, where discretion and privacy are of the utmost importance. Absolutely better than a therapist, I found calm, insight, understanding, empathy, and peace. Like a long lost friend who’s wagging their finger at you for slightly disappointing them, but kindly steering you in the right direction. Always ended the session feeling reinvigorated and ready to tackle the concerns. Thank youuuuu!",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.6961972117424011
+      }
+    },
+    {
+      "id": "12338461977",
+      "title": "Free Trial Fraud at Its Most Shameless",
+      "text": "This app offers a measly 3-day trial, which I naturally signed up for to see what the app had to offer—only to find that most features are still barred from usage unless you pay an additional fee for each specific component. A feature as simple as a birth chart reading requires a $20 payment. It even has a tab labeled \"Free,\" which shows the limited content you’re relegated to.\n\nSo, it seems like the “trial” wasn’t free at all—just a blatant ploy to get users to sign up in hopes they forget to cancel in time. At least other apps usually have the decency to unlock full premium access for a few minutes during the trial period. I can’t even imagine what the basic version of this app is like, and frankly, I don’t even want to check out what’s available. I’m completely put off by such brazen greed—and that’s saying a lot, considering most apps nowadays are pay-to-click by default.",
+      "rating": 3,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.6406869888305664
+      }
+    },
+    {
+      "id": "13695344018",
+      "title": "Surprisingly Insightful & Addictive",
+      "text": "I honestly didn’t expect to enjoy Nebula this much, but it’s become one of my favorite apps. The readings are detailed, thoughtful, and actually feel personalized instead of generic copy-and-paste astrology. Whether it’s birth charts, compatibility insights, or daily guidance, everything is explained in a way that’s easy to understand but still deep.\n\nThe app layout is clean and user-friendly, the visuals are calming, and the content feels intentional. It’s perfect whether you’re just curious about astrology or already deep into it. I also like that it doesn’t feel pushy or gimmicky like some similar apps.\n\nOverall, Nebula feels well-designed, engaging, and genuinely helpful. Definitely worth downloading if you’re into self-reflection, astrology, or just want a little guidance and fun insight added to your day",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.9476441740989685
+      }
+    },
+    {
+      "id": "13264024742",
+      "title": "Hands down best holistic insight I’ve ever gotten.",
+      "text": "I like to stay well rounded when it comes to my understanding of the the world around me and my inner human. Being of divine decent opens the door to embracing a wide variety of approaches that for others is supernatural but like the act of breathing in my case. I’ve gotten readings before but Nebula’s detailed and hefty portions are not only enjoyable to read but a chance to really reflect and later connect with the world out there an “in here.” The air of skepticism that naturally surrounds this kinds of personal research is most definitely lost when you get into the nitty gritty of your readings on Nebula. I would definitely recommend to anyone looking to feel more connected to themselves and the lives they are about to finally start experiencing for the first time in history.",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.7620196342468262
+      }
+    },
+    {
+      "id": "13589125301",
+      "title": "Best 1st Time Experience Ever!!!",
+      "text": "This is the first time I’ve ever done this, so take that into account if you want, but I had the best reading and experience than I ever could have imagined possible. First, she proved trustworthiness by mentioning a few things about me. Then she talked in general about the year ahead. When I added more time she went through each card and explained how it would apply in my life. Then we’d talk about it more and she was very enthusiastic about things, which was infectious. She knew there was great pain in me but saw that I needed to move on and make positive changes in my life putting myself first for once. And now, because of this reading I know I will move forward and make positive changes, meet challenges with extreme confidence and keep making choices for me in my life!",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.9593797326087952
+      }
+    },
+    {
+      "id": "12186255683",
+      "title": "COMPLETELY HORRIBLE",
+      "text": "Ive had this app since 2021 and the layout and information used to be great, now theirs fake psychic's, you have to pay to see your birth chart when it used to be free, and the daily horoscopes tell you that you have a possible chance of dying on specific days??!?! obviously its not true. My friend downloaded the app and we both had the same exact daily reading that we had a possible chance of dying from a car crash, and as someone who has anxiety and ptsd this gave me major paranoia. After that I deleted the app and just redownloaded it to look at my house placements and now its saying I gotta pay??!?? and if u look at the way the developers reply to the reviews its obvious they sold their app too someone in another country. This wouldnt be an issue if they weren't charging for everything, taking excess charges off of peoples cards, uploading fake psychic mediums and giving daily horoscopes that you have a chance of dying because the moon is in blah blah blah. HATE THIS APP NOW. ID RATE A 0 IF I COULD THIS DOESNT SEEM LEGAL!!!!!!! RUINED BY GREED!! REPORT THIS APP",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.8884387016296387
+      }
+    },
+    {
+      "id": "13694471274",
+      "title": "Pretty good",
+      "text": "I am somewhat suspicious of horoscopes and the related arts. I was into them as a teenager. But, then I realized that they are written in such a way as they can be applied broadly and many different types of people will see themselves in them. \n\nHowever, that said, your interpretation seems to be pretty close. You mention my artistic nature, my love of creating beauty and that is certainly true. Unlike other members of my family, I am very interested in how things look around me, and spend a lot of time decorating and organizing my environment. I also used to write creatively, draw and paint when I was younger and I would like to get back to myself. \n\nYou also spend a lot of time talking about drawing on my experiences, my intelligence and my ability to think critically which I do believe to be true. You said my 4th decade, which is odd because I just started my fifth. But, I feel like I have packed a whole lot of experiences into those years. I also am college educated, and try to sort through information to reach a logical conclusion. \n\nYet, you also talk about leading with my heart, which I am afraid I am often too prone to doing. \n\nOverall, it seemed a good and accurate reading. But, not sure why you said 4th decade when I know I gave you my birthdate. I’m turning 51 in April.",
+      "rating": 4,
+      "sentiment": {
+        "label": "neutral",
+        "score": 0.6901507377624512
+      }
+    },
+    {
+      "id": "13989558135",
+      "title": "More than expected",
+      "text": "I wasn’t expecting to love Nebula as much as I do, but wow—it really surprised me. The content feels intentional and refreshing, like it’s actually made for people who are tired of the same recycled stuff everywhere else. You can tell the creators genuinely care about what they’re putting out, and it shows in the quality.\n\nWhat I appreciate most is how it feels more personal and less crowded. No constant interruptions, no overwhelming noise—just solid, engaging videos that you actually want to sit and watch. It’s the kind of platform you open when you want something meaningful, not just background scrolling.\n\nDefinitely worth it if you enjoy thoughtful content and want to support creators doing their thing without all the clutter. Easy 5 stars from me.",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.9511540532112122
+      }
+    },
+    {
+      "id": "13005999915",
+      "title": "Do NOT GET THIS",
+      "text": "First of all, they say “money back guarntee” but not if you “didn’t know there was a subscription” and “did not like the product”. Literally the only two reasons people ask for a refund. And the subscription is not through the App Store so you cannot cancel unless you email them directly. If you like the product and it’s worth $45 a month for you, good for you. This is definitely not worth $45 for me. This is basically a scam. Spend your money on an actual tarot reader. They just want your money and won’t give you a refund even though it’s “money back guarantee” READ THE FINE PRINT. Set an alarm. In this economy, $45 is nothing to play with. Especially since I can go buy a shirt from a store for $45 and if I don’t like it I can return it. I don’t want this product, couldn’t find the cancellation so didn’t know I had a subscription and now they won’t give me a refund because the fine print of their “money back guarentee” is that you actually won’t get your money back. I would give 0 stars if I could.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.8342761397361755
+      }
+    },
+    {
+      "id": "8741494470",
+      "title": "It’s okay I guess",
+      "text": "Right off the bat I’m going to say I’m eleven. I downloaded this app because I think zodiac stuff is interesting. So as I was setting it up and got to the part where you select your birthday, I noticed if you use 2010, 2011, 2012 etc, it would automatically go to 2009. I do not know if it was programmed this way or if it’s an error. I was really disappointed with this. I believe the app should let people use any age they would like, whether it’s for their children, a friend or just anyone, because zodiac stuff is super fun! Even though it isn’t always quite accurate. I hope that people will be able to use ages younger than thirteen in the future with this app :/ — btw I believe this is a great app, again, I’m a bit upset that you aren’t able to use ages under thirteen 😕\n\nResponse to developer:\nOkay, that makes sense. I would be looking up to the update if it comes out! \nThank you for letting me know.",
+      "rating": 3,
+      "sentiment": {
+        "label": "neutral",
+        "score": 0.5398680567741394
+      }
+    },
+    {
+      "id": "6147313801",
+      "title": "It was great until",
+      "text": "The ads for one downloadable feature or stickers or something arbitrary one day became pop up annoyances, I can handle the typical pop up ad window and watch some bs clip of some bs product I’m never gonna consider buying a couple dozen times a day, without question, I’ve even enjoyed a service enough to shockingly pay to subscribe and turn off ads as a side effect of the other membership benefits one appreciates. As mentioned this app was enjoyable and consideration to become a member would have easily lean in the affirmative, yet one particular ad was presented, closed and presented again like five seconds later, closed in an effort to glean the insight that I was accustomed to understanding daily and before the sentence content could be determined the ad reappeared again, a different ad may have been less frustrating, but the same ad like a dozen times in a row, no shirt, was frustratingly annoying enough to compel me to share my encounter with the strange uncle and the bad touches I felt. I hope one day it will reconsider recent alterations and restore a user.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.6699774861335754
+      }
+    },
+    {
+      "id": "13600420685",
+      "title": "Horrible",
+      "text": "I never write reviews for apps but this one really sticks out to warn people not to download. It used to be okay when I had it a couple years ago. I recently downloaded it again and boy is it sad how much of weak cash grab it’s become. While before it had a quite a few free features you MUST have a subscription at 7.99/months. Okay fine. Plenty of apps cost money. But that must mean it’s good right? Nope. The subscription only includes very few features such as basic comparability reports based on your zodiac signs. It asks your sub, noon, and ascendant and then gives you a report based mentioning nothing but sun signs. Any horoscope site can tell you that. Most other features cost money including $20/per to reveal answers to personality quizzes to find out things like spirit animal or witch type. I doubt they’re accurate but wouldn’t know as shelling out $27 for this kind of service would mean I have officially lost my mind entirely. The money you scam out of other people will be repaid by forces of evil .",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.8409916758537292
+      }
+    },
+    {
+      "id": "4798717628",
+      "title": "My horoscope still says August and it’s the middle of September",
+      "text": "I just bought this app no more than a minute ago and was going through everything. I swiped over to the month horoscope and it says August for two of the categorizes. It’s in “love and relationships” and “health.” I kinda seems to me they just copy and paste and forgot to switch the months. I still have a trial and will probably be cancelling. I don’t know enough about the app yet but it dosent seem very genuine to me. I also tried to find a customer service email address so I wouldn’t have to post a review. Maybe it’s just a mistake from someone who got confused? But like I said it looks like it was last months post and just got recycled. I have pictures too if they need to be shown. Idk I’d at least like to have the right moths in my horoscope that costs over a $100 a year, or $9.99 a month. Everything else seems cool tho, but very run of the mill stuff you can get on any horoscope app or even websites where you put the same info in.",
+      "rating": 2,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.6201019287109375
+      }
+    },
+    {
+      "id": "13013676058",
+      "title": "Accurate, informative, and detailed",
+      "text": "I had a date this Monday August 11th and asked Lyra if my date was a good match and had long-term potential and she summarized him accurately. She said, no  I do not see long-term potential \nbecause you have the capacity to be involved in petty rivalries, competitions, and disputes. I’m a Christian and he identifies as a Christian but does not practice which is an issue for me so we were debating religion most of the date. It was not aggressive or a negative conversations, but I could tell this relationship would not be long-term. I want someone who is convicted in their beliefs and not still aimlessly searching at 42. \n\nFurther, she told me about better future potential with match making, work, and possibly a new online dating app. I just need to be open and take initiative.",
+      "rating": 5,
+      "sentiment": {
+        "label": "neutral",
+        "score": 0.6879669427871704
+      }
+    },
+    {
+      "id": "13699692664",
+      "title": "Wow, this is left me speechless first time in my life so glad I gave this a chance",
+      "text": "Absolutely take the opportunity to explore this app. Totally spot on. This has left me speechless for the first time in my life as a journey now into being six years old and going into the end part of my life there’s so much uncertainty. This just opened up my soulmate is me of course it’s finding who you are putting you back on track putting Humpty Dumpty back together again if that’s what’s needed I’ve always skeptical of these things, but totally spot on very pleased that I took the opportunity and I think a journey through life is such always a challenge with uncertainties, but this gave me some more insight into it now I’m entering into my final phase of my life I feel God bless. Thank you, April.",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.8596916198730469
+      }
+    },
+    {
+      "id": "11206406865",
+      "title": "Deceptive dealings",
+      "text": "I can’t say that I have tried the app to know if it’s truly great or not. I signed up to get the 3 day free before beginning a subscription. However.. after thinking that’s what I purchased I learned they billed me $52 for a yearly subscription. When I contacted the company to explain what happened…they basically told me to pay more attention and explained why I should keep the app. If this were a situation where I misread I would have. However….the option I believe I selected was highlighted. I use and iPhone and when I make a purchase I’m asked to confirm it…even when it is a trial. That did not happen here. So you don’t know what you truly purchased until you get the bill. Now I will never sign up for anything with this company again.  Once I did use the app…after 3 minutes I was asked to pay for something else. I have an app that provides horóscopos…I wouldn’t have paid for another. If it’s a good app…I would think they wouldn’t need to trick people to build business.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.5655708909034729
+      }
+    },
+    {
+      "id": "7559050403",
+      "title": "Scam app don’t believe fake reviews",
+      "text": "This app is a scam. After trying their free trial and seeing it’s not all that great they charged me after the trial was over. I cancel it and think nothing of it but next thing I know they’re charging me $9.99 a WEEK for this, mind you I never signed up for this subscription. I go and cancel that then realize the next week they’re still charging me. After a month attempting to find a way to contact these people to cancel the app and having no luck I had to ask my bank to block this app from making charges. Skip another week or so and they’re STILL trying to charge me 9.99 daily and I get a warning from my bank everyday that this app is trying to charge me luckily it doesn’t go through but the fact they’re still trying is absurd. DO NOT TRUST THIS APP!!! If I could I’d give this app -100 stars for this shady activity. Stay as far away as possible from this!!!\n\nAlso notice all the 5 star reviews for this are titled with random names obviously fake reviews",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.9230566024780273
+      }
+    },
+    {
+      "id": "7546839366",
+      "title": "DO NOT DOWNLOAD THIS APP",
+      "text": "This has been by far the worst experience I have ever had with an app. This app drained for than $25 from my account in SECONDS due to a technical failure. When I tried to get assistance for the situation the customer service team sent me through a loop asking for countless screenshots which I provided, I continuously asked for updates and they would only ask for more personal information, including a screenshot of my phones details. Although they admitted this was their fault, they refuse to refund the money and even made jokes during the interaction we had about leaving them a \"positive review\" as my feedback had put a \"big smile on their faces\" - I wish I trusted the other reviewers when they said this app is a scam and the customer service is anything but helpful. They want your money, they aren't looking to improve your life - this app is predatory and notifications will bring you directly into a transaction if you click on them. DO NOT DOWNLOAD THIS APP. You'll regret it, I promise.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.9211023449897766
+      }
+    },
+    {
+      "id": "5463347733",
+      "title": "Waste of time and $$$",
+      "text": "I downloaded this app thinking it would be worth wild, however, I was sadly mistaken. I’m a HUGE astrology enthusiast who has already done most research into my birth chart. After seeing an ad for the app I thought, “WTH why not give it a shot.” When it comes down to it this app has a lot of work to do to not only for convenience but also functionally. \n\nAfter downloading the app the first thing that rubbed me wrong was the amount of times I was asked to subscribe (sign-up for a membership). The first time I was prompted I didn’t know it was optional until I noticed the X (close button) in the top right corner. However, after closing the subscription screen I was prompted several more times to subscribe in order to do almost anything on the app. The basic functions of the app are horoscopes and your personal birth chart, which are free. These can pretty much be found on ANY website for free and are just as accurate if not better on other websites.  \n\nSecondly, I noticed that I accidentally put in the wrong birth time. When trying to correct this mistake I realized that there was no way to correct it or at the very least it is very difficult to find.\n\nOverall, in my opinion this app is not worth the time nor amount of $$$ for the features. The only thing I like about this app is the features it has such as the palmistry, however, you need to subscribe for $119 (annual) or 9.99 (monthly) to be able to access many or these features.",
+      "rating": 1,
+      "sentiment": {
+        "label": "neutral",
+        "score": 0.5542827844619751
+      }
+    },
+    {
+      "id": "7815531270",
+      "title": "App fromReal user",
+      "text": "I’m giving us a three star because when you sign up you do get a 38 page report for free, the app does do what it says it does, I removed stars because it is not intuitive on how to cancel the subscription. But I will say that the customer service was friendly and prompt, and the people out there that are giving it one star and calling it a scam, aren’t really being fair. Yes, this is a subscription service and it says that when you sign up. As far as people not getting refunds, no they do not give refunds just because you forgot to cancel your subscription, that’s on you. I didn’t like this app as much as I like costar, which is why I canceled, not because of the fees. It was easy to cancel, I just sent an email and said please cancel my subscription and in less than one day I had a response letting me know that my subscription is canceled. From a real user 👍",
+      "rating": 3,
+      "sentiment": {
+        "label": "neutral",
+        "score": 0.6006768941879272
+      }
+    },
+    {
+      "id": "14348773666",
+      "title": "I really enjoy this app!",
+      "text": "This app is very detailed and specific to you! It changes often offering new features and different insights. It has beautiful images and it reads in a way that is easy to understand for people who are new to charts , energies and such. The only reason idn give it 5 stars is because there is paywalls behind features even after paying the subscription fee. There is also a large price margin between weekly and yearly. I know it isn’t free to operate nor should it be with the level of services available. But I do think with the price difference from weekly to yearly that there is a more affordable price for people that may not have the yearly cost. With that caveat over all I do like this app and would recommend it to anyone that is interested in spiritual growth and self reflection.",
+      "rating": 4,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.9411690831184387
+      }
+    },
+    {
+      "id": "11404208341",
+      "title": "Great, but 1 flaw",
+      "text": "I like this app, it’s do accurate it’s kinda scary 😅 \nso my only concern is the app doesn’t have the Cusp information in here, the zodiac information is extremely accurate, however I would love the option to view information for my Cusp as well, it took my mom to point out that I even was a Cusp & I came to realize after looking at both of the Zodiac charts that represent me, I’m indeed connected to both Aquarius & Pisces, with Pisces being my technical main I guess 🤔 anyways, I’ll update my review for 4 stars to 5 stars if the developers ever add the option to view Cusps, aside from that 1 downside & ofc the crazy amount of $$$ it takes to talk to someone on here, it’s a very amazing app & extremely informative, I just ask for 1 extra bit of information which is the Cusps, that’s all I really ask for honestly 😅",
+      "rating": 4,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.653140664100647
+      }
+    },
+    {
+      "id": "13718742636",
+      "title": "Great compatibility reading!",
+      "text": "Ok so here’s my honest review. I went ahead and spent a dollar on a trial to get a compatibility report with the girl. I’m headed over heels in love with. That report seems pretty grounded, accurate and appropriate to me, but it came with 33 minutes of a psychic reading as soon as the three minutes started I felt pressured to get all my information out before they asked me for more money, which of course happened right at the moment when I was hoping to get an answer, the screen to you build me comes up. It feels planned. It feels disingenuous. It does not feel spontaneous and it does not feel like a real part of any kind of astrological reading. It just feels like a cheap scam to get our people‘s money and that calls a new question the validity of all the other information unfortunately",
+      "rating": 4,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.7237643003463745
+      }
+    },
+    {
+      "id": "6060161849",
+      "title": "Charges are ridiculous.",
+      "text": "$10 a WEEK for the same features is ridiculous. Then anything else in the app costs more money on top of that, and is not clearly explained until you put in all the info and it finally tells you the cost. \n\nNot to mention- the very first time I did the compatibility, an option to get a more specific report was in a box on the screen within the description. When I put in all the info, the app alerted me that I would receive an email by 11am the next day. I did not, and reached out to the support wondering why. While the replies were timely and informative, they did not have a solid answer for why it told me that and didn’t follow through. They said i didn’t pay, but i was not prompted to. \n\nWhen I went to cancel the subscription, there are roughly 20 different pricing options and the cancel option. How was my pricing determined? Needs work- onboarding would make a huge difference, and being upfront with cost as well.",
+      "rating": 2,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.8369730114936829
+      }
+    },
+    {
+      "id": "6909247346",
+      "title": "5 Stars",
+      "text": "This horoscope app is the most accurate one I have come across. I have been studying astrology myself for a few years and am really passionate about it. I had Co-Star for a while and it doesn’t even compare to this. I found co-star to be exceedingly inaccurate all the time, and also kind of a cynical app as well. \n\nNebula tacks the moon as well and has so much variety for checking palms and compatibility as well as seeking real professional astrologers too. \n\n5 stars to this app for gushing my day to day emotional, intellectual, and physical aptitude as well as a very accurate description. It knows when I’m going to be more emotional or click better with family. Or how I’ll feel good and it’s easier to attract love or how I may want to react. Etc. very good app love how it goes but all signs in the chart not just the sun sign !",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.9250315427780151
+      }
+    },
+    {
+      "id": "12888127585",
+      "title": "Scammer app- cannot cancel",
+      "text": "App doesn’t let you cancel. They let you sign up so easily but then when you want to cancel before they charge you a ridiculous amount of money for a bum service, you can’t cancel. Also not able to get a refund from Apple either. Oh and their website doesn’t even work. So basically you’re stuck paying them indefinitely because there’s no where to stop them. If I could give them zero stars I would. I want my money back. This app aims to take your money and scam you. The reviews on this page are more likely fake or paid to play.\n\nFollow up to my last review. Still have not been able to cancel my unwanted subscription to this company. They continue to bill me a radical amount for literally nothing. There is no place to request cancellation of service except by some stupid email. I have filed a complaint with the CFPB regarding unfair and deceptive practices in terms of cancellation of services and being unable to stop them from billing me.",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.9320214986801147
+      }
+    },
+    {
+      "id": "14259278617",
+      "title": "Insightful",
+      "text": "I’ve subscribed to Nebula on and off over the past couple years. When I’ve had to cancel it, it was due to my own financial situation at the time. I should also note that their customer service was beyond helpful and kind to me when I needed to cancel and they will absolutely go above and beyond to assist you! There are so many different areas to explore in this app and so much you can learn about yourself. They also have a space where you can go within the app to get a reading done, if that’s something you’re into. I’ve personally had 2 readings done since I joined Nebula and both of them were spot on! I would highly recommend this app to anyone considering downloading it. I promise you will not regret it!",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.6910194158554077
+      }
+    },
+    {
+      "id": "12349557016",
+      "title": "Nebula experience",
+      "text": "Today was my first reading with this app. Overall I am very pleased with my reading. Some down falls were the constant interruptions for payment. This by no means is a reflection of my reading but totally app issue. Someone who is in the middle of a conversation has to stop, make payment and return to the conversation can be annoying as we are there to discuss our concerns that we desperately are seeking guidance on. Understandable payment is needed however there should be another way to obtain without discord of our meeting. My person was amazing and knew what I was dealing with unfortunately after $100 I didn’t get all my answers but the one question I wanted she was able to verify and to me that was what I needed to hear today.",
+      "rating": 5,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.7856295108795166
+      }
+    },
+    {
+      "id": "12170359896",
+      "title": "Sad I Have to Uninstall",
+      "text": "It’s kind of sad that I’m writing this review because I’ve been an user with Nebula for over 3 years now and everytime I get on there to check my birth chart, it seems like it’s always something. At first I couldn’t check my birth chart because I needed to pay for the subscription but I could check my birth table. Now when I try to check my birth chart, it goes straight to me having to pay for a subscription in which all of these years of having Nebula I never dealt with before. But lately I’ve been realizing that Nebula has been removing access to almost all of their stuff in their app in order for users to pay for the subscription which is actually messed up because if that’s the case, why have the app free to download but not free to explore anything? 😂 I personally say it’s a waste of time to get this app nowadays because you can easily pull up your birth chart on different websites than nebula that would charge you to breathe on their app 🎉😂😂",
+      "rating": 1,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.7890288233757019
+      }
+    },
+    {
+      "id": "11069778066",
+      "title": "Careful, Subscriptions appear automatically!",
+      "text": "I paid $1.00 for the quick question that I never got to ask because I ran out of points before finishing the question. Since I didn’t want to pay the outrageous chat prices, I deleted the app after browsing through it.  I was reviewing my PayPal activity for the past month and found that two subscription options were charged to my account. I know that i didn’t enter those choices since I have a very specific protocol that I use when purchasing anything from the websites. It was not used, therefore this purchase was not made by me directly.  The reason I still gave them 4 ⭐️⭐️⭐️⭐️ is that their support services were very quick to help me resolve this issue to my satisfaction. That kind of support makes them top notch in my books !",
+      "rating": 4,
+      "sentiment": {
+        "label": "negative",
+        "score": 0.6547442078590393
+      }
+    },
+    {
+      "id": "8268427566",
+      "title": "PLEASE READ THE REVIEWS ABOUT BEING CHARGED!",
+      "text": "These guys are good! I was charge after downloading the app and it of course prompted me to try the premium version for 3 days free so I did and then when I subscribed it charged me for a 3 month subscription! So I had to search to find the info to reach out to support since they don’t have any of that information within the app and I reached out to them and the first person that responded tole me that I just already used a free trial with them before and that’s possibly whey I was charged. I never even heard of this app until today when I seen the ad on Instagram! I then received another email response from some Jim stating “ In our Terms and conditions of use clearly stated that only Apple can decide to refund as the payment went through App Store.” \n\nAnd who is going to read any of that before downloading an app! I’ll never download anything else Instagram recommends and this app is just as generic as all the other horoscope apps! What a waste of time!",
+      "rating": 1,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.7167961597442627
+      }
+    },
+    {
+      "id": "7760345306",
+      "title": "Great concept, weird notifications",
+      "text": "I got this app because my boyfriend got it and suggested it to me. At first, I was happy to find an app that was accurate and gave me more information than other astrology apps. Over time, it started sending me at least 3-5 notifications a day and the WORST PART was that they all said something along the lines of “Talk to an astrologer—find out when you will get married” or “Find out when you’ll have kids”. My boyfriend hasn’t received a single notification like this (about marriage and kids). I am not even near the average age that people have children and got so fed up with these notifications that I deleted the app. I also didn’t enjoy the interface and noticed quite a few grammatical errors, but this wouldn’t have made me stop using the app if it wasn’t sending me misogynistic notifications all day about personal life events that I don’t even care for at the moment.",
+      "rating": 2,
+      "sentiment": {
+        "label": "neutral",
+        "score": 0.4685940742492676
+      }
+    },
+    {
+      "id": "12894933255",
+      "title": "Subscription Payment Issues",
+      "text": "I had the service for multiple months. Last month, after I was charged, I went into my account and thought I had successfully cancelled my subscription. Somehow it didn’t go through and I was charged again this month. I immediately contacted support stating what had happened and asking simply for the current month’s refund as it had been a day, if that, since it was charged. I received a curt response about how my subscription was cancelled finally but that i understood charges at the time of the quiz. Which yes, I did, but most companies will refund within in a few days of the charges due to the various reasons subscriptions can be cancelled/renewed and their issues. They won’t. I won’t be renewing even though I thought about it in a month or so when our family finances are better. Long story short, make sure you get confirmation on subscription changes, because their customer support is no help.",
+      "rating": 1,
+      "sentiment": {
+        "label": "neutral",
+        "score": 0.49186286330223083
+      }
+    },
+    {
+      "id": "12373767831",
+      "title": "Repetitive",
+      "text": "I’ve been using this app for some years now and have actually found it to be insightful. However, as of late I’ve noticed that my daily readings are all the same, just switched up a bit. Like using the same exact wording from Thursday’s horoscope on Friday, just in different placements, but all the same message. This is interesting because in the past, they would feel more personalized and not generic. I wonder if this is because of an incorporation with Ai, but for me at least, the app has lost its appeal in terms of daily horoscopes, and I would much rather read the generic daily sign horoscopes instead since they have the same affect at this point. \n\nOther aspects of the app I still like, but my primary use was for the daily readings and now I just don’t find them to be as interesting. (Not necessarily the content, but the repetitiveness).",
+      "rating": 3,
+      "sentiment": {
+        "label": "positive",
+        "score": 0.6131234765052795
+      }
+    }
+  ],
+  "metadata": {
+    "mode": "quality",
+    "models": {
+      "sentiment": "cardiffnlp/twitter-roberta-base-sentiment-latest",
+      "sentiment_revision": "3216a57f2a0d9c45a2e6c20157c20c49fb4bf9c7",
+      "insights": "gemini-3.5-flash-lite"
+    },
+    "processing_time": {
+      "collection": 6.0529,
+      "app_info": 0.1903,
+      "preprocessing": 0.1411,
+      "sentiment": 76.095,
+      "gemini": 12.8183,
+      "validation": 0.0341,
+      "metrics": 0.0005,
+      "total": 95.3384
+    },
+    "gemini_usage": {
+      "candidates_token_count": 4226,
+      "prompt_token_count": 28712,
+      "prompt_tokens_details": [
+        {
+          "modality": "TEXT",
+          "token_count": 28712
+        }
+      ],
+      "total_token_count": 32938
+    },
+    "prompt_sha256": "63440eb9f674d311fd95084de994ba54718c6227bc33adb4b0b3ec51b2fbb383",
+    "peak_memory_mb": 896.64,
+    "preprocessing": {
+      "emoji": "preserved",
+      "whitespace": "preserved",
+      "title_limit": 200,
+      "text_limit": 4000,
+      "oversized_text": "separate 3000-character head and 1000-character tail",
+      "truncated_review_ids": [],
+      "sentiment": {
+        "emoji": "descriptive words",
+        "text_limit": 4000,
+        "title_limit": 200,
+        "truncated_review_ids": []
+      }
+    },
+    "warnings": []
+  }
+}

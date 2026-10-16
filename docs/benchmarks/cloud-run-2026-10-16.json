@@ -1,0 +1,746 @@
+{
+  "measured_at_utc": "2026-10-16T11:06:17.344971+00:00",
+  "service_url": "https://app-store-review-analyzer-795908196054.europe-central2.run.app",
+  "project": "obrio-test-task-api",
+  "region": "europe-central2",
+  "revision": "app-store-review-analyzer-00005-x56",
+  "source_commit": "29d893cbea4141e8f395fcdfb7466ce47059496e",
+  "build_id": "2a7a38db-a800-4e9e-a992-1c03ae03a8d6",
+  "image_digest": "sha256:414488dbd3012b0ba7d77dd70f4641b8cf97405ea6736299e5d9e55e65c7a28a",
+  "image_compressed_bytes": 1043325432,
+  "resource_profile": {
+    "vcpu": 1,
+    "memory_gib": 4,
+    "inference_threads": 1,
+    "pytorch_batch_size": 1,
+    "manual_instances": 1,
+    "http_concurrency": 8
+  },
+  "experiment": {
+    "app_id": "1459969523",
+    "country": "us",
+    "requested_reviews": 100,
+    "repeats_per_mode": 3,
+    "order": "fast, quality, repeated three times",
+    "first_started_at": "2026-10-16T10:53:40.090926+00:00",
+    "last_finished_at": "2026-10-16T11:01:05.972554+00:00",
+    "scope": "Live HTTP requests with fresh collection; successful input equality verified by payload hashes; all attempts retained"
+  },
+  "rates_usd": {
+    "cpu_vcpu_second": 2.16e-05,
+    "memory_gib_second": 2.4e-06,
+    "input_million_tokens": 0.3,
+    "cached_input_million_tokens": 0.03,
+    "output_million_tokens": 2.5
+  },
+  "cost_scope": "Allocated CPU and memory during each server request plus provider-reported tokens; before allowances/taxes; excludes startup/idle/build/storage/network/observability; failed attempts included",
+  "allocated_instance_cost_per_24h_before_allowances_usd": 2.69568,
+  "model_initialization_seconds": 39.995824999999996,
+  "concurrency_check": {
+    "health_status": 200,
+    "health_duration_ms": 173.52449998725206,
+    "busy_status": 409,
+    "busy_duration_ms": 55.194417014718056,
+    "retry_after": "5"
+  },
+  "native_metrics_window": "2026-10-16T10:52:00Z through collection time; includes startup, probes and all requests; sampled aggregates, not per-request peaks",
+  "native_metrics": {
+    "container/cpu/utilizations": {
+      "series_count": 1,
+      "point_count": 12,
+      "distribution_samples": 12,
+      "sample_mean_weighted": 0.2925629564559013,
+      "maximum_sample_mean": 0.9361012372963382,
+      "first_interval_start_utc": "2026-10-16T10:52:00.001Z",
+      "last_interval_end_utc": "2026-10-16T11:04:00Z"
+    },
+    "container/memory/utilizations": {
+      "series_count": 1,
+      "point_count": 12,
+      "distribution_samples": 12,
+      "sample_mean_weighted": 0.18264142672220865,
+      "maximum_sample_mean": 0.2211475372314453,
+      "first_interval_start_utc": "2026-10-16T10:52:00.001Z",
+      "last_interval_end_utc": "2026-10-16T11:04:00Z"
+    },
+    "container/instance_count": {
+      "series_count": 2,
+      "point_count": 24,
+      "maximum_per_state_sample": 1,
+      "first_interval_start_utc": "2026-10-16T10:53:00Z",
+      "last_interval_end_utc": "2026-10-16T11:04:00Z"
+    },
+    "container/startup_latencies": {
+      "series_count": 1,
+      "point_count": 12,
+      "distribution_samples": 1,
+      "sample_mean_weighted": 50140.992,
+      "maximum_sample_mean": 50140.992,
+      "first_interval_start_utc": "2026-10-16T10:52:00.001Z",
+      "last_interval_end_utc": "2026-10-16T11:04:00Z"
+    },
+    "request_count": {
+      "series_count": 3,
+      "point_count": 32,
+      "total_in_window_including_probes": 14,
+      "first_interval_start_utc": "2026-10-16T10:53:00.001Z",
+      "last_interval_end_utc": "2026-10-16T11:04:00Z"
+    },
+    "request_latencies": {
+      "series_count": 3,
+      "point_count": 32,
+      "distribution_samples": 14,
+      "sample_mean_weighted": 31661.782765405806,
+      "maximum_sample_mean": 98685.37541974998,
+      "first_interval_start_utc": "2026-10-16T10:53:00.001Z",
+      "last_interval_end_utc": "2026-10-16T11:04:00Z"
+    }
+  },
+  "records": [
+    {
+      "request_id": "cloud-benchmark-20261016T105340-58110f-fast-1",
+      "trace_id": "94a309b2240caf7ff76a5a7d1af841cd",
+      "mode": "fast",
+      "repetition": 1,
+      "http_status": 502,
+      "verified_report": false,
+      "reviews_collected": 100,
+      "shortfall": 0,
+      "failed_collection_pages": 2,
+      "collection_retries": 11,
+      "client_seconds": 57.317291625076905,
+      "server_seconds": 57.124298,
+      "stages_seconds": {
+        "collection": 25.087619999999998,
+        "preprocessing": 0.169942,
+        "sentiment": null,
+        "gemini_api": 31.674899,
+        "validation": 0.009068,
+        "metrics": null,
+        "app_lookup": 0.154439,
+        "report_assembly": null,
+        "pipeline": 57.117686
+      },
+      "gemini_usage": {
+        "candidates_token_count": 6557,
+        "prompt_token_count": 23703,
+        "total_token_count": 30260
+      },
+      "gemini_generations": 1,
+      "gemini_transport_retries": 0,
+      "semantic_repairs": 0,
+      "evidence_validation_failures": 1,
+      "validation_reason": "evidence_quote_not_in_source_excerpt",
+      "error_type": "INSIGHTS_INVALID",
+      "process_peak_rss_mib": null,
+      "trace_span_count": 19,
+      "trace_hierarchy_verified": true,
+      "cost_usd": {
+        "cpu": 0.0012338848368000001,
+        "memory": 0.0005483932608,
+        "input": 0.0071109,
+        "cached_input": 0.0,
+        "output_including_thinking": 0.0163925,
+        "total": 0.0252856780976
+      },
+      "review_payload_sha256": null
+    },
+    {
+      "request_id": "cloud-benchmark-20261016T105340-58110f-quality-1",
+      "trace_id": "1d2f249019b51de8ba6b6548329a643a",
+      "mode": "quality",
+      "repetition": 1,
+      "http_status": 200,
+      "verified_report": true,
+      "reviews_collected": 100,
+      "shortfall": 0,
+      "failed_collection_pages": 0,
+      "collection_retries": 1,
+      "client_seconds": 95.52906862506643,
+      "server_seconds": 95.343405,
+      "stages_seconds": {
+        "collection": 6.052728,
+        "preprocessing": 0.141111,
+        "sentiment": 76.094989,
+        "gemini_api": 12.812346,
+        "validation": 0.034108,
+        "metrics": 0.000472,
+        "app_lookup": 0.190267,
+        "report_assembly": 0.00019600000000000002,
+        "pipeline": 95.33851
+      },
+      "gemini_usage": {
+        "candidates_token_count": 4226,
+        "prompt_token_count": 28712,
+        "total_token_count": 32938
+      },
+      "gemini_generations": 1,
+      "gemini_transport_retries": 0,
+      "semantic_repairs": 0,
+      "evidence_validation_failures": 0,
+      "validation_reason": null,
+      "error_type": null,
+      "process_peak_rss_mib": 896.64,
+      "trace_span_count": 24,
+      "trace_hierarchy_verified": true,
+      "cost_usd": {
+        "cpu": 0.002059417548,
+        "memory": 0.000915296688,
+        "input": 0.0086136,
+        "cached_input": 0.0,
+        "output_including_thinking": 0.010565,
+        "total": 0.022153314236
+      },
+      "review_payload_sha256": "077456173c36cacb63c3f13ce4c9376afe428d04174fb1eb51e1f47ff76e0ff9",
+      "ratings": {
+        "rated_reviews": 100,
+        "unrated_reviews": 0,
+        "average": 2.86,
+        "counts": {
+          "1": 41,
+          "2": 8,
+          "3": 8,
+          "4": 10,
+          "5": 33
+        },
+        "percentages": {
+          "1": 41.0,
+          "2": 8.0,
+          "3": 8.0,
+          "4": 10.0,
+          "5": 33.0
+        }
+      },
+      "sentiment": {
+        "classified_reviews": 100,
+        "unclassified_reviews": 0,
+        "counts": {
+          "positive": 35,
+          "neutral": 16,
+          "negative": 49
+        },
+        "percentages": {
+          "positive": 35.0,
+          "neutral": 16.0,
+          "negative": 49.0
+        }
+      },
+      "issue_count": 7,
+      "negative_issue_coverage": 0.8163265306122449,
+      "covered_negative_reviews": 40,
+      "uncovered_negative_reviews": 9,
+      "issues": [
+        {
+          "category": "Billing Discrepancies and Unwanted Subscriptions",
+          "priority": "high",
+          "frequency": 30,
+          "negative_review_count": 27,
+          "negative_review_fraction": 0.5510204081632653
+        },
+        {
+          "category": "Customer Service and Refund Difficulties",
+          "priority": "high",
+          "frequency": 6,
+          "negative_review_count": 5,
+          "negative_review_fraction": 0.10204081632653061
+        },
+        {
+          "category": "Excessive Paywalls and Content Locking",
+          "priority": "medium",
+          "frequency": 9,
+          "negative_review_count": 7,
+          "negative_review_fraction": 0.14285714285714285
+        },
+        {
+          "category": "Chat Credit System and Psychic Cost",
+          "priority": "medium",
+          "frequency": 6,
+          "negative_review_count": 1,
+          "negative_review_fraction": 0.02040816326530612
+        },
+        {
+          "category": "App Errors and Inaccurate Astrology Data",
+          "priority": "medium",
+          "frequency": 4,
+          "negative_review_count": 2,
+          "negative_review_fraction": 0.04081632653061224
+        },
+        {
+          "category": "Inappropriate or Repetitive Content and Notifications",
+          "priority": "low",
+          "frequency": 4,
+          "negative_review_count": 2,
+          "negative_review_fraction": 0.04081632653061224
+        },
+        {
+          "category": "Gender Inclusivity Options",
+          "priority": "low",
+          "frequency": 2,
+          "negative_review_count": 1,
+          "negative_review_fraction": 0.02040816326530612
+        }
+      ],
+      "prompt_sha256": "63440eb9f674d311fd95084de994ba54718c6227bc33adb4b0b3ec51b2fbb383",
+      "response_bytes": 148646
+    },
+    {
+      "request_id": "cloud-benchmark-20261016T105340-58110f-fast-2",
+      "trace_id": "d8ab0b24dd139a653105abd204bb4966",
+      "mode": "fast",
+      "repetition": 2,
+      "http_status": 502,
+      "verified_report": false,
+      "reviews_collected": 100,
+      "shortfall": 0,
+      "failed_collection_pages": 0,
+      "collection_retries": 0,
+      "client_seconds": 60.46992258296814,
+      "server_seconds": 60.369798,
+      "stages_seconds": {
+        "collection": 4.876766,
+        "preprocessing": 0.152742,
+        "sentiment": null,
+        "gemini_api": 55.166565000000006,
+        "validation": 0.005687,
+        "metrics": null,
+        "app_lookup": 0.159116,
+        "report_assembly": null,
+        "pipeline": 60.367509
+      },
+      "gemini_usage": {
+        "candidates_token_count": 6554,
+        "prompt_token_count": 28325,
+        "total_token_count": 34879
+      },
+      "gemini_generations": 1,
+      "gemini_transport_retries": 0,
+      "semantic_repairs": 0,
+      "evidence_validation_failures": 1,
+      "validation_reason": "evidence_quote_not_in_source_excerpt",
+      "error_type": "INSIGHTS_INVALID",
+      "process_peak_rss_mib": null,
+      "trace_span_count": 21,
+      "trace_hierarchy_verified": true,
+      "cost_usd": {
+        "cpu": 0.0013039876368,
+        "memory": 0.0005795500608,
+        "input": 0.0084975,
+        "cached_input": 0.0,
+        "output_including_thinking": 0.016385,
+        "total": 0.0267660376976
+      },
+      "review_payload_sha256": null
+    },
+    {
+      "request_id": "cloud-benchmark-20261016T105340-58110f-quality-2",
+      "trace_id": "37286679dd54f0a3959f638a0c00af57",
+      "mode": "quality",
+      "repetition": 2,
+      "http_status": 502,
+      "verified_report": false,
+      "reviews_collected": 100,
+      "shortfall": 0,
+      "failed_collection_pages": 0,
+      "collection_retries": 0,
+      "client_seconds": 98.81731483305339,
+      "server_seconds": 98.691283,
+      "stages_seconds": {
+        "collection": 4.914461,
+        "preprocessing": 0.147089,
+        "sentiment": 67.85564500000001,
+        "gemini_api": 25.587571,
+        "validation": 0.010054,
+        "metrics": null,
+        "app_lookup": 0.15900899999999998,
+        "report_assembly": null,
+        "pipeline": 98.689054
+      },
+      "gemini_usage": {
+        "candidates_token_count": 8178,
+        "prompt_token_count": 57453,
+        "total_token_count": 65631
+      },
+      "gemini_generations": 2,
+      "gemini_transport_retries": 0,
+      "semantic_repairs": 1,
+      "evidence_validation_failures": 2,
+      "validation_reason": "evidence_quote_not_in_source_excerpt",
+      "error_type": "INSIGHTS_INVALID",
+      "process_peak_rss_mib": null,
+      "trace_span_count": 26,
+      "trace_hierarchy_verified": true,
+      "cost_usd": {
+        "cpu": 0.0021317317128,
+        "memory": 0.0009474363167999999,
+        "input": 0.0172359,
+        "cached_input": 0.0,
+        "output_including_thinking": 0.020445,
+        "total": 0.0407600680296
+      },
+      "review_payload_sha256": null
+    },
+    {
+      "request_id": "cloud-benchmark-20261016T105340-58110f-fast-3",
+      "trace_id": "87f27bd48f3e264e1be8ad46f5a6926a",
+      "mode": "fast",
+      "repetition": 3,
+      "http_status": 200,
+      "verified_report": true,
+      "reviews_collected": 100,
+      "shortfall": 0,
+      "failed_collection_pages": 0,
+      "collection_retries": 0,
+      "client_seconds": 23.56957712501753,
+      "server_seconds": 23.440151,
+      "stages_seconds": {
+        "collection": 4.851469,
+        "preprocessing": 0.14863300000000002,
+        "sentiment": null,
+        "gemini_api": 18.258195,
+        "validation": 0.018892,
+        "metrics": 0.00038500000000000003,
+        "app_lookup": 0.148955,
+        "report_assembly": 0.000261,
+        "pipeline": 23.435668
+      },
+      "gemini_usage": {
+        "candidates_token_count": 6100,
+        "prompt_token_count": 28325,
+        "total_token_count": 34425
+      },
+      "gemini_generations": 1,
+      "gemini_transport_retries": 0,
+      "semantic_repairs": 0,
+      "evidence_validation_failures": 0,
+      "validation_reason": null,
+      "error_type": null,
+      "process_peak_rss_mib": 906.18,
+      "trace_span_count": 23,
+      "trace_hierarchy_verified": true,
+      "cost_usd": {
+        "cpu": 0.0005063072616,
+        "memory": 0.00022502544959999998,
+        "input": 0.0084975,
+        "cached_input": 0.0,
+        "output_including_thinking": 0.01525,
+        "total": 0.0244788327112
+      },
+      "review_payload_sha256": "077456173c36cacb63c3f13ce4c9376afe428d04174fb1eb51e1f47ff76e0ff9",
+      "ratings": {
+        "rated_reviews": 100,
+        "unrated_reviews": 0,
+        "average": 2.86,
+        "counts": {
+          "1": 41,
+          "2": 8,
+          "3": 8,
+          "4": 10,
+          "5": 33
+        },
+        "percentages": {
+          "1": 41.0,
+          "2": 8.0,
+          "3": 8.0,
+          "4": 10.0,
+          "5": 33.0
+        }
+      },
+      "sentiment": {
+        "classified_reviews": 100,
+        "unclassified_reviews": 0,
+        "counts": {
+          "positive": 40,
+          "neutral": 8,
+          "negative": 52
+        },
+        "percentages": {
+          "positive": 40.0,
+          "neutral": 8.0,
+          "negative": 52.0
+        }
+      },
+      "issue_count": 7,
+      "negative_issue_coverage": 0.5769230769230769,
+      "covered_negative_reviews": 30,
+      "uncovered_negative_reviews": 22,
+      "issues": [
+        {
+          "category": "Unauthorized and unexpected recurring subscription charges",
+          "priority": "high",
+          "frequency": 11,
+          "negative_review_count": 11,
+          "negative_review_fraction": 0.21153846153846154
+        },
+        {
+          "category": "Aggressive paywalls blocking basic app features",
+          "priority": "high",
+          "frequency": 9,
+          "negative_review_count": 9,
+          "negative_review_fraction": 0.17307692307692307
+        },
+        {
+          "category": "Excessive and interruptive chat pricing for psychics",
+          "priority": "medium",
+          "frequency": 5,
+          "negative_review_count": 3,
+          "negative_review_fraction": 0.057692307692307696
+        },
+        {
+          "category": "Unresponsive customer service during refund requests",
+          "priority": "medium",
+          "frequency": 3,
+          "negative_review_count": 3,
+          "negative_review_fraction": 0.057692307692307696
+        },
+        {
+          "category": "Misleading astrological calculations and horoscope errors",
+          "priority": "low",
+          "frequency": 4,
+          "negative_review_count": 3,
+          "negative_review_fraction": 0.057692307692307696
+        },
+        {
+          "category": "Inappropriate or invasive gender and lifestyle prompts",
+          "priority": "low",
+          "frequency": 3,
+          "negative_review_count": 1,
+          "negative_review_fraction": 0.019230769230769232
+        },
+        {
+          "category": "Overly restrictive messaging moderation error",
+          "priority": "low",
+          "frequency": 1,
+          "negative_review_count": 0,
+          "negative_review_fraction": 0.0
+        }
+      ],
+      "prompt_sha256": "e10ecfefa2eeec87309fe2025079efe8620f193d00c283fd298be0b504c3bf69",
+      "response_bytes": 142335
+    },
+    {
+      "request_id": "cloud-benchmark-20261016T105340-58110f-quality-3",
+      "trace_id": "038c083528465a9ef6e8acb34c49352b",
+      "mode": "quality",
+      "repetition": 3,
+      "http_status": 200,
+      "verified_report": true,
+      "reviews_collected": 100,
+      "shortfall": 0,
+      "failed_collection_pages": 0,
+      "collection_retries": 0,
+      "client_seconds": 110.10869054193608,
+      "server_seconds": 110.01120900000001,
+      "stages_seconds": {
+        "collection": 4.8586279999999995,
+        "preprocessing": 0.163099,
+        "sentiment": 70.03404300000001,
+        "gemini_api": 34.693504000000004,
+        "validation": 0.035497999999999995,
+        "metrics": 0.00041299999999999996,
+        "app_lookup": 0.176594,
+        "report_assembly": 0.000111,
+        "pipeline": 110.006568
+      },
+      "gemini_usage": {
+        "cached_content_token_count": 26153,
+        "candidates_token_count": 8240,
+        "prompt_token_count": 57459,
+        "total_token_count": 65699
+      },
+      "gemini_generations": 2,
+      "gemini_transport_retries": 1,
+      "semantic_repairs": 1,
+      "evidence_validation_failures": 1,
+      "validation_reason": "evidence_quote_not_in_source_excerpt",
+      "error_type": null,
+      "process_peak_rss_mib": 907.18,
+      "trace_span_count": 28,
+      "trace_hierarchy_verified": true,
+      "cost_usd": {
+        "cpu": 0.0023762421144,
+        "memory": 0.0010561076064,
+        "input": 0.009391799999999999,
+        "cached_input": 0.0007845899999999999,
+        "output_including_thinking": 0.0206,
+        "total": 0.0342087397208
+      },
+      "review_payload_sha256": "077456173c36cacb63c3f13ce4c9376afe428d04174fb1eb51e1f47ff76e0ff9",
+      "ratings": {
+        "rated_reviews": 100,
+        "unrated_reviews": 0,
+        "average": 2.86,
+        "counts": {
+          "1": 41,
+          "2": 8,
+          "3": 8,
+          "4": 10,
+          "5": 33
+        },
+        "percentages": {
+          "1": 41.0,
+          "2": 8.0,
+          "3": 8.0,
+          "4": 10.0,
+          "5": 33.0
+        }
+      },
+      "sentiment": {
+        "classified_reviews": 100,
+        "unclassified_reviews": 0,
+        "counts": {
+          "positive": 35,
+          "neutral": 16,
+          "negative": 49
+        },
+        "percentages": {
+          "positive": 35.0,
+          "neutral": 16.0,
+          "negative": 49.0
+        }
+      },
+      "issue_count": 8,
+      "negative_issue_coverage": 0.8571428571428571,
+      "covered_negative_reviews": 42,
+      "uncovered_negative_reviews": 7,
+      "issues": [
+        {
+          "category": "Unwanted and Unrecognized Subscriptions/Charges",
+          "priority": "high",
+          "frequency": 28,
+          "negative_review_count": 27,
+          "negative_review_fraction": 0.5510204081632653
+        },
+        {
+          "category": "Difficult Subscription Cancellation and Unresponsive Support",
+          "priority": "high",
+          "frequency": 11,
+          "negative_review_count": 8,
+          "negative_review_fraction": 0.16326530612244897
+        },
+        {
+          "category": "Aggressive Paywalls and Monetization of Core Features",
+          "priority": "high",
+          "frequency": 9,
+          "negative_review_count": 6,
+          "negative_review_fraction": 0.12244897959183673
+        },
+        {
+          "category": "Expensive and Disruptive In-App Chat/Psychic Readings",
+          "priority": "medium",
+          "frequency": 5,
+          "negative_review_count": 1,
+          "negative_review_fraction": 0.02040816326530612
+        },
+        {
+          "category": "Inaccurate Astrological Calculations and Data Errors",
+          "priority": "medium",
+          "frequency": 3,
+          "negative_review_count": 2,
+          "negative_review_fraction": 0.04081632653061224
+        },
+        {
+          "category": "Inappropriate, Repetitive, or Anxious Push Notifications",
+          "priority": "low",
+          "frequency": 3,
+          "negative_review_count": 1,
+          "negative_review_fraction": 0.02040816326530612
+        },
+        {
+          "category": "Community Messaging and Error Handling Flaws",
+          "priority": "low",
+          "frequency": 2,
+          "negative_review_count": 2,
+          "negative_review_fraction": 0.04081632653061224
+        },
+        {
+          "category": "Limited Gender Inclusivity Options",
+          "priority": "low",
+          "frequency": 2,
+          "negative_review_count": 1,
+          "negative_review_fraction": 0.02040816326530612
+        }
+      ],
+      "prompt_sha256": "de11ed2564ee25395da243f6b3c5ed21ed528a27dff0b740c80b0a31e1756866",
+      "response_bytes": 149681
+    }
+  ],
+  "aggregates": {
+    "fast": {
+      "attempts": 3,
+      "valid_reports": 1,
+      "observed_report_success_fraction": 0.3333333333333333,
+      "successful_server_seconds_median": 23.440151,
+      "successful_server_seconds_min": 23.440151,
+      "successful_server_seconds_max": 23.440151,
+      "all_attempts_server_seconds_median": 57.124298,
+      "successful_cost_usd_median": 0.0244788327112,
+      "all_attempts_cost_usd": 0.07653054850640001,
+      "effective_cost_per_valid_report_usd": 0.07653054850640001,
+      "stage_medians_successful_seconds": {
+        "collection": 4.851469,
+        "preprocessing": 0.14863300000000002,
+        "sentiment": null,
+        "gemini_api": 18.258195,
+        "validation": 0.018892,
+        "metrics": 0.00038500000000000003,
+        "app_lookup": 0.148955,
+        "report_assembly": 0.000261,
+        "pipeline": 23.435668
+      },
+      "evidence_validation_failures": 2,
+      "semantic_repairs": 0
+    },
+    "quality": {
+      "attempts": 3,
+      "valid_reports": 2,
+      "observed_report_success_fraction": 0.6666666666666666,
+      "successful_server_seconds_median": 102.67730700000001,
+      "successful_server_seconds_min": 95.343405,
+      "successful_server_seconds_max": 110.01120900000001,
+      "all_attempts_server_seconds_median": 98.691283,
+      "successful_cost_usd_median": 0.028181026978399998,
+      "all_attempts_cost_usd": 0.0971221219864,
+      "effective_cost_per_valid_report_usd": 0.0485610609932,
+      "stage_medians_successful_seconds": {
+        "collection": 5.455678,
+        "preprocessing": 0.152105,
+        "sentiment": 73.064516,
+        "gemini_api": 23.752925,
+        "validation": 0.034803,
+        "metrics": 0.00044249999999999997,
+        "app_lookup": 0.1834305,
+        "report_assembly": 0.00015350000000000002,
+        "pipeline": 102.672539
+      },
+      "evidence_validation_failures": 3,
+      "semantic_repairs": 2
+    }
+  },
+  "matched_successful_comparisons": [
+    {
+      "fast_request_id": "cloud-benchmark-20261016T105340-58110f-fast-3",
+      "quality_request_id": "cloud-benchmark-20261016T105340-58110f-quality-1",
+      "review_count": 100,
+      "sentiment_agreement": 0.72
+    },
+    {
+      "fast_request_id": "cloud-benchmark-20261016T105340-58110f-fast-3",
+      "quality_request_id": "cloud-benchmark-20261016T105340-58110f-quality-3",
+      "review_count": 100,
+      "sentiment_agreement": 0.72
+    }
+  ],
+  "accuracy_metrics": {
+    "macro_f1": null,
+    "negative_recall": null,
+    "reason": "No human-labeled ground truth; model agreement and coverage are not accuracy"
+  },
+  "known_limitations": [
+    "Three attempts per mode are not a production reliability estimate",
+    "Earlier local results are not Cloud Run measurements",
+    "Peak RSS is a process-lifetime high-water mark on the shared dual-mode instance",
+    "Google may ingest the latest native Monitoring samples after this snapshot"
+  ],
+  "native_snapshot_collected_at_utc": "2026-10-16T11:04:56.234050+00:00",
+  "build_seconds": 252.621329417
+}

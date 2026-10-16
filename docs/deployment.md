@@ -165,3 +165,11 @@ The earlier known-good processing revision is `app-store-review-analyzer-00001-h
 - Gemini reported 25,624 input and 1,432 output tokens; one transport retry, no evidence repair. Estimated processing-window cost is $0.0144330 using the calculation above. Peak process RSS was 894.02 MiB.
 
 The README presents this final measured result. The initial release and 10-review rollout checks above remain historical verification records, not comparable speed benchmarks.
+
+## Dual-mode release — 2026-10-16
+
+Revision `app-store-review-analyzer-00005-x56` serves 100% of traffic from image digest `sha256:414488dbd3012b0ba7d77dd70f4641b8cf97405ea6736299e5d9e55e65c7a28a`, built from source `29d893cbea4141e8f395fcdfb7466ce47059496e`. Cloud Build `2a7a38db-a800-4e9e-a992-1c03ae03a8d6` passed both image-profile smoke checks. Manual one-instance scaling, 1 vCPU/4 GiB, one inference thread, concurrency 8, public access and secret version 1 were preserved.
+
+The paused revision `00004-cfw` was verified to reject processing before the full drain window; the new image was staged without traffic before the switch. The previous working processing revision is `00003-67b`, which predates the mode parameter. Reload clients and omit mode if reverting there. Do not roll back to the maintenance-paused revision.
+
+The new revision's six live 100-review experiments, including validation failures, exact request costs, token usage, trace correlation, and native monitoring, are documented in [Cloud Run results](cloud-experiments.md). Both modes remain available, with quality the compatibility default and fast experimental. The earlier benchmark tables above are historical records, not current mode comparisons.

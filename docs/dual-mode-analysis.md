@@ -53,7 +53,7 @@ Optional `gold_labels=/absolute/path/labels.json` accepts a human-labeled ID-to-
 - Automated checks: 174 Python tests plus 60 subtests; eight frontend tests; JavaScript and deployment-shell syntax checks; locked dependency resolution.
 - Full 100-review requests were verified for both modes using the real Gemini SDK with mocked HTTP responses. Assertions cover unique IDs, ratings, ID-order independence, one local inference only in quality, actual token accounting, mixed-sentiment evidence and independent negative denominators.
 - A fresh production-only uv environment installed without Torch, Transformers, or Hugging Face and successfully served readiness and dashboard HTML. A subprocess import blocker separately proves fast-only startup does not import local ML.
-- Docker daemon and browser automation were unavailable locally. Container build/smoke and visual browser verification therefore remain environment checks; CI now covers both image targets. No deployment was performed.
+- At initial local verification, Docker daemon and browser automation were unavailable. Subsequent Cloud Build smoke checks passed for both image targets, and the dual-mode revision was deployed. See [Cloud Run experiments](cloud-experiments.md) for measured results and remaining limitations.
 - Live Gemini calls used the same saved 100-review Nebula dataset for both adapters. The final paired run passed source verification and metrics, including one evidence repair for quality. Full original reviews and live raw responses remain local; the checked-in [evaluation summary](benchmarks/analysis-modes-macos-arm64.json) contains only measurements and model provenance.
 
 | Final local run | Fast | Quality |
@@ -71,3 +71,7 @@ Optional `gold_labels=/absolute/path/labels.json` accepts a human-labeled ID-to-
 This is one local ARM Mac comparison, excluding collection, model loading, HTTP response handling, and Cloud Run overhead. Fast usage reported 26,031 cached input tokens; no uncached-cost assumption is made. Sentiment agreement was 73%, with no human ground truth; macro-F1 and negative recall remain unmeasured. Coverage is not issue precision or accuracy. These results do not establish production latency or superior quality for either method.
 
 Development live checks exposed provider rejection of the initial ID-enumerated schema, overly long generated fields, quotation formatting differences, a shortened quotation with an ellipsis, and temporary provider HTTP 503 responses. The final static schema, tighter prompt, bounded source restoration, strict omitted-word rejection and bounded transport/evidence policies address these without accepting invented evidence. Failed earlier trials are not counted as successful reports or evidence of a production success rate. The experiment records failed runs explicitly and returns a nonzero status if any mode fails.
+
+## Deployed experiment
+
+Revision `app-store-review-analyzer-00005-x56` now serves both modes. The six live 100-review trials produced one valid fast report and two valid quality reports, with three explicit evidence-validation rejections. Cloud timings and success fractions supersede local results for deployed behavior; see [full measurements and methodology](cloud-experiments.md).

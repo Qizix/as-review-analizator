@@ -1,0 +1,11 @@
+base_url: https://app-store-review-analyzer-795908196054.europe-central2.run.app
+app_id: "1459969523"
+country: us
+review_count: 100
+modes: [fast, quality]
+repeats: 3
+hydra:
+  run:
+    dir: hydra_outputs/cloud_benchmark/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  job:
+    chdir: false
