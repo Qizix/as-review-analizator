@@ -30,7 +30,7 @@ class AnalyzeSentimentTests(unittest.TestCase):
         result = analyze_sentiment(data)
         from app.settings import SENTIMENT_REVISION
         pipeline.assert_called_once_with(task="text-classification", model=MODEL, revision=SENTIMENT_REVISION, device="cpu")
-        pipeline.return_value.assert_called_once_with([review["text"] for review in data["reviews"]], batch_size=8, truncation=True, max_length=512)
+        pipeline.return_value.assert_called_once_with([review["text"] for review in data["reviews"]], batch_size=1, truncation=True, max_length=512)
         self.assertEqual(data, original)
         self.assertEqual([review["id"] for review in result["reviews"]], ["a", "b", "c"])
         self.assertEqual([review["sentiment"]["label"] for review in result["reviews"]], ["positive", "negative", "neutral"])
@@ -38,6 +38,7 @@ class AnalyzeSentimentTests(unittest.TestCase):
         for before, after in zip(data["reviews"], result["reviews"]):
             self.assertEqual(before, {key: value for key, value in after.items() if key != "sentiment"})
         self.assertEqual(result["metadata"]["app_id"], "123")
+        self.assertEqual(result["metadata"]["sentiment_analysis"]["batch_size"], 1)
         self.assertEqual(result["metadata"]["sentiment_analysis"]["analyzed_count"], 3)
 
     @patch("app.services.sentiment.pipeline")

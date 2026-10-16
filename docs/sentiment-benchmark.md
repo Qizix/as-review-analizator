@@ -2,9 +2,9 @@
 
 ## Scope and decision
 
-This experiment evaluates the pinned Xenova ONNX conversion against the existing CardiffNLP PyTorch classifier. It does not change the API, production inference backend, Cloud Run resources, model metadata, or deployment. ONNX Runtime and NumPy are explicit development dependencies managed through uv; production dependency installation remains unchanged. No Apple, Gemini, or cloud compute calls are made by the benchmark. Initial model downloads use Hugging Face.
+This experiment evaluates the pinned Xenova ONNX conversion against the existing CardiffNLP PyTorch classifier. The experiment does not change the API or inference backend. A subsequent rollout selects PyTorch batch size 1; the model, CPU, memory, and inference-thread settings stay the same. ONNX Runtime and NumPy are explicit development dependencies managed through uv; production dependency installation remains unchanged. No Apple, Gemini, or cloud compute calls are made by the benchmark. Initial model downloads use Hugging Face.
 
-**Local result:** PyTorch batch size 1 was fastest, at 6.331 seconds versus the current batch size 8 at 7.713 seconds. The 8-bit ONNX candidates were slower on this ARM Mac and changed sentiment labels. Do not deploy quantized weights based on these results; the target Linux x86 CPU still requires measurement.
+**Local result:** PyTorch batch size 1 was fastest, at 6.331 seconds versus the former production batch size 8 at 7.713 seconds. The 8-bit ONNX candidates were slower on this ARM Mac and changed sentiment labels. Do not deploy quantized weights based on these results; the target Linux x86 CPU still requires measurement.
 
 ## Reproduce
 
@@ -34,7 +34,7 @@ Versions: Torch 2.14.1, Transformers 5.19.0, ONNX Runtime 1.31.0, NumPy 2.5.4. P
 
 ## Measured results
 
-| Backend | Batch size | Median inference | Speed vs current | Label agreement |
+| Backend | Batch size | Median inference | Speed vs batch 8 | Label agreement |
 |---|---:|---:|---:|---:|
 | pytorch | 8 | 7.713 s | 1.00× | 100% |
 | pytorch | 1 | 6.331 s | 1.22× | 100% |
@@ -45,7 +45,7 @@ Versions: Torch 2.14.1, Transformers 5.19.0, ONNX Runtime 1.31.0, NumPy 2.5.4. P
 | onnx_uint8 | 8 | 20.740 s | 0.37× | 99% |
 | onnx_uint8 | 1 | 14.977 s | 0.51× | 99% |
 
-Agreement is against the current PyTorch batch-8 output, not human ground truth. PyTorch batch 1 preserved all 100 labels with maximum winning-confidence change below 0.000001. Full-precision ONNX preserved all labels with maximum winning-confidence change below 0.000003.
+Agreement is against the benchmark reference PyTorch batch-8 output, not human ground truth. PyTorch batch 1 preserved all 100 labels with maximum winning-confidence change below 0.000001. Full-precision ONNX preserved all labels with maximum winning-confidence change below 0.000003.
 
 INT8 changed two labels at each batch size, but not the same two reviews: batch 8 changed one positive and one negative review to neutral, while batch 1 changed two positive reviews to neutral. UINT8 changed one positive review to negative at both batch sizes. These changes can alter negative evidence eligibility and downstream issue metrics; the effect is not limited to confidence scores. No claim is made that the changed labels are more or less accurate without a human-labeled evaluation.
 
@@ -55,7 +55,7 @@ Dynamic quantization can depend on the batch activation range, so changing batch
 
 These are ARM macOS results, not a Cloud Run benchmark. They cannot establish the speed of ONNX Runtime on Linux x86 or explain the entire observed cloud slowdown. Downloads/cache state differ across backend loads, so stored load durations are diagnostic rather than a fair cold-start comparison. Timings are not an SLA, and 100 examples do not establish classification accuracy.
 
-Next, run the same input hash on the target Linux x86 environment with the same thread limits. Compare the current backend, batch size 1, full-precision ONNX, and the quantized candidates. Inspect changes to negative review IDs and review ambiguous/changed labels manually before any backend rollout. Keep token limits and preprocessing fixed during the comparison. The production service remains unchanged.
+Next, run the same input hash on the target Linux x86 environment with the same thread limits. Compare the current backend, batch size 1, full-precision ONNX, and the quantized candidates. Inspect changes to negative review IDs and review ambiguous/changed labels manually before any backend rollout. Keep token limits and preprocessing fixed during the comparison. The quantized backends remain experimental; production continues to use PyTorch.
 
 The [raw measurements and per-review predictions](benchmarks/sentiment-macos-arm64.json) retain all three durations per configuration, winning-confidence differences, and changed IDs. Tests in `tests/test_sentiment_benchmark.py` verify batch order, tokenizer arguments, output shape/finiteness, and label comparison.
 

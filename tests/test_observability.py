@@ -98,7 +98,7 @@ def test_complete_trace_hierarchy_usage_and_log_correlation(instrumented, capsys
     assert by_name["appstore.request"].parent.span_id == by_name["reviews.collect"].context.span_id
     assert by_name["gemini.request"].parent.span_id == by_name["insights.generate"].context.span_id
     assert by_name["reviews.collect"].attributes["app.reviews.collected_count"] == 2
-    assert by_name["sentiment.classify"].attributes["app.batch_size"] == 8
+    assert by_name["sentiment.classify"].attributes["app.batch_size"] == 1
     assert by_name["insights.validate"].attributes["app.issues.count"] == 1
     gemini = by_name["gemini.request"]
     assert gemini.attributes["app.retry_count"] == 1

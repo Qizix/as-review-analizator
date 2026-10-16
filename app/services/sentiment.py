@@ -6,6 +6,7 @@ from app.settings import SENTIMENT_REVISION
 
 
 MODEL = "cardiffnlp/twitter-roberta-base-sentiment-latest"
+BATCH_SIZE = 1
 
 
 def load_classifier(settings=None):
@@ -42,7 +43,7 @@ def analyze_sentiment(data, classifier=None, revision=SENTIMENT_REVISION):
     if texts:
         if classifier is None:
             classifier = load_classifier()
-        predictions = classifier(texts, batch_size=8, truncation=True, max_length=512)
+        predictions = classifier(texts, batch_size=BATCH_SIZE, truncation=True, max_length=512)
     if len(predictions) != len(reviews):
         raise ValueError("classifier returned an unexpected number of predictions")
     analyzed = []
@@ -60,7 +61,7 @@ def analyze_sentiment(data, classifier=None, revision=SENTIMENT_REVISION):
                 "model": MODEL,
                 "revision": revision,
                 "device": "cpu",
-                "batch_size": 8,
+                "batch_size": BATCH_SIZE,
                 "truncation": True,
                 "max_length": 512,
                 "analyzed_count": len(analyzed),

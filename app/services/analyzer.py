@@ -10,6 +10,7 @@ from app.services.app_info import lookup_app_info
 from app.services.insights import generate_insights, InsightDecodeError
 from app.services.metrics import calculate_metrics
 from app.services.review_batch import ReviewBatch
+from app.services.sentiment import BATCH_SIZE
 from app.services.validator import InsightValidationError
 from app.services.execution import AnalysisError, AnalysisRun
 from app.settings import SENTIMENT_MODEL
@@ -68,7 +69,7 @@ class Analyzer:
             with stage("preprocessing", "reviews.preprocess"):
                 batch = ReviewBatch(collected)
                 preprocessing = batch.preprocessing
-            with stage("sentiment", "sentiment.classify", {"app.model": SENTIMENT_MODEL, "app.reviews.count": len(collected["reviews"]), "app.batch_size": 8}):
+            with stage("sentiment", "sentiment.classify", {"app.model": SENTIMENT_MODEL, "app.reviews.count": len(collected["reviews"]), "app.batch_size": BATCH_SIZE}):
                 batch.classify(self.classifier, self.settings.sentiment_revision)
                 classified = batch.source
             insights = generate_insights(batch, run, self.settings.gemini_model)

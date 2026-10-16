@@ -8,7 +8,7 @@
 - `app_info.py`: best-effort Apple lookup for name, developer, store/icon URLs, and current version. Failure retains ID/country without fabricating metadata.
 - `preprocessor.py`: converts Unicode emoji to bracketed words, collapses whitespace, caps titles at 200 characters and texts at 4,000 with head/tail preservation, and records truncated IDs. Original source text is retained for the final report.
 - `review_batch.py`: owns original and prepared reviews together, attaches inference labels consistently, and supplies defensive copies to insight generation. Callers cannot independently substitute sentiment groups.
-- `sentiment.py`: loads CardiffNLP RoBERTa on CPU, classifies preprocessed text in batches of 8, and truncates at 512 tokens. The revision is pinned to `3216a57f2a0d9c45a2e6c20157c20c49fb4bf9c7`. Torch uses one thread by default. Rating never determines sentiment.
+- `sentiment.py`: loads CardiffNLP RoBERTa on CPU, classifies preprocessed text one review at a time (batch size 1), and truncates at 512 tokens. The revision is pinned to `3216a57f2a0d9c45a2e6c20157c20c49fb4bf9c7`. Torch uses one thread by default. Rating never determines sentiment.
 - `metrics.py`: calculates independent distributions and denominators, unique issue frequencies, negative fractions, and union-based coverage. Undefined ratios are null.
 - `insights.py`: sends compact negative/positive/neutral arrays and a versioned system prompt to Gemini 3.5 Flash-Lite, using `response_json_schema`, capturing provider usage, and owning bounded evidence repair.
 - `validator.py`: rejects unknown/nonnegative/duplicate evidence and duplicate categories. Quotations are taken directly from original reviews. Keywords come from semantic grouping.
