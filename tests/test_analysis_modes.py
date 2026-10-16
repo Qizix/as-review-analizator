@@ -181,7 +181,7 @@ def test_fast_request_uses_one_real_sdk_call_no_ratings_and_no_cpu_inference(fas
     assert "responseJsonSchema" in config and "responseSchema" not in config
     schema = config["responseJsonSchema"]
     assert "sentiments" in schema["required"]
-    assert schema["$defs"]["ReferencedIssue"]["properties"]["evidence"]["items"]["type"] == "integer"
+    assert schema["$defs"]["ReferencedIssue"]["properties"]["evidence"]["items"] == {"minimum": 0, "maximum": 5, "type": "integer"}
     api.factory.assert_not_called()
     assert api.collect.call_args.kwargs["max_pages"] == 10
     api.client.app.state.telemetry.provider.force_flush()

@@ -63,7 +63,13 @@ class ReferencedAnalysis(UnifiedAnalysis):
 def request_analysis(reviews, prompt, usage, model, mode, *, deadline):
     result_type = ReferencedAnalysis if mode == "fast" else IssueAnalysis
     schema = result_type.model_json_schema()
-    payload = reference_excerpts(reviews)[0] if mode == "fast" else reviews
+    payload = reviews
+    if mode == "fast":
+        payload, references = reference_excerpts(reviews)
+        if references:
+            schema["$defs"]["ReferencedIssue"]["properties"]["evidence"]["items"]["maximum"] = len(references) - 1
+        else:
+            schema["properties"]["issues"]["maxItems"] = 0
     text = request_structured({"reviews": payload}, prompt, schema, usage, model, deadline=deadline)
     with operation("insights.decode"):
         try:
