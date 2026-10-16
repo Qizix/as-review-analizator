@@ -36,7 +36,7 @@ curl -X POST http://127.0.0.1:8000/api/analyze \
 
 Ratings and sentiment stay independent. Complaints can be identified in positive and neutral reviews too. The application uses no database or persistent report storage; FastAPI serves the dashboard directly, with no frontend build step. Mode names describe the methods; comparative accuracy has not been established.
 
-## Successful Cloud Run benchmarks
+## Cloud Run benchmarks
 
 Measured **16 October 2026**, using identical sets of **100 Nebula reviews** on a warm **1 vCPU / 4 GiB** instance in Warsaw. These figures summarize **one validated fast report and two validated quality reports**, rather than overall request reliability.
 
