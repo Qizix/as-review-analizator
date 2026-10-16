@@ -1,12 +1,13 @@
 import hashlib
 import re
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.observability import observe, operation, warning
 from app.services.insights import InsightDecodeError, ModelReport, request_structured
+from app.services.source_excerpts import reference_excerpts
 from app.services.validator import InsightValidationError, build_report
 from app.settings import SENTIMENT_BATCH_SIZE, SENTIMENT_MODEL
 
@@ -51,10 +52,19 @@ class UnifiedAnalysis(IssueAnalysis):
     sentiments: list[SentimentPrediction]
 
 
+class ReferencedIssue(GroundedIssue):
+    evidence: list[Annotated[int, Field(ge=0, strict=True)]] = Field(min_length=1)
+
+
+class ReferencedAnalysis(UnifiedAnalysis):
+    issues: list[ReferencedIssue]
+
+
 def request_analysis(reviews, prompt, usage, model, mode, *, deadline):
-    result_type = UnifiedAnalysis if mode == "fast" else IssueAnalysis
+    result_type = ReferencedAnalysis if mode == "fast" else IssueAnalysis
     schema = result_type.model_json_schema()
-    text = request_structured({"reviews": reviews}, prompt, schema, usage, model, deadline=deadline)
+    payload = reference_excerpts(reviews)[0] if mode == "fast" else reviews
+    text = request_structured({"reviews": payload}, prompt, schema, usage, model, deadline=deadline)
     with operation("insights.decode"):
         try:
             return result_type.model_validate_json(text)
@@ -80,16 +90,24 @@ def _source_quote(quote, source):
 def validate_analysis(batch, reviews, result, prompt, model):
     visible = {review["id"]: review for review in reviews}
     issues, quotations = [], {}
+    references = reference_excerpts(reviews)[1] if isinstance(result, ReferencedAnalysis) else {}
     for issue in result.issues:
         evidence = {}
         for item in issue.evidence:
-            source = visible.get(item.review_id)
-            if source is None:
-                raise InsightValidationError("unknown_evidence_ids")
-            quote = _source_quote(item.quote, source)
-            if quote is None:
-                raise InsightValidationError("evidence_quote_not_in_source_excerpt")
-            evidence.setdefault(item.review_id, quote)
+            if isinstance(result, ReferencedAnalysis):
+                reference = references.get(item)
+                if reference is None:
+                    raise InsightValidationError("unknown_evidence_excerpt")
+                review_id, quote = reference
+            else:
+                review_id = item.review_id
+                source = visible.get(review_id)
+                if source is None:
+                    raise InsightValidationError("unknown_evidence_ids")
+                quote = _source_quote(item.quote, source)
+                if quote is None:
+                    raise InsightValidationError("evidence_quote_not_in_source_excerpt")
+            evidence.setdefault(review_id, quote)
         issues.append({**issue.model_dump(exclude={"evidence"}), "evidence_ids": sorted(evidence)})
         quotations[" ".join(issue.category.split())] = evidence
     if isinstance(result, UnifiedAnalysis):
@@ -111,7 +129,11 @@ def interpret_reviews(batch, mode, classifier, run, settings):
         labels = {review["id"]: review["sentiment"]["label"] for review in batch.source["reviews"]}
         reviews = [{**review, "sentiment": labels[review["id"]]} for review in reviews]
     prompt = PROMPT_PATH.read_text(encoding="utf-8")
-    prompt += "\nClassify every review using -1=negative, 0=neutral, 1=positive. Return exactly one prediction per ID." if mode == "fast" else "\nUse the supplied text-based sentiment labels; do not return new predictions."
+    if mode == "fast":
+        prompt = PROMPT_PATH.with_name("analyze_reviews_references.txt").read_text(encoding="utf-8")
+        prompt += "\nClassify every review using -1=negative, 0=neutral, 1=positive. Return exactly one prediction per ID."
+    else:
+        prompt += "\nUse the supplied text-based sentiment labels; do not return new predictions."
     if not reviews:
         result = UnifiedAnalysis(sentiments=[], issues=[]) if mode == "fast" else IssueAnalysis(issues=[])
         return validate_analysis(batch, reviews, result, prompt, settings.gemini_model)
@@ -136,4 +158,8 @@ def interpret_reviews(batch, mode, classifier, run, settings):
                 raise
             observe(insight_repair_count=1)
             warning("INSIGHTS_RETRY", reason=exc.reason)
-            prompt += f"\nRegenerate the report. Validation failed: {exc.reason}. Return the complete structured result, including every sentiment prediction when requested. Copy short, contiguous, nonempty quotations directly from one source field without paraphrasing, correcting spelling, or adding ellipses. Use existing IDs and exact nonempty source excerpts; keep categories unique."
+            prompt += f"\nRegenerate the complete structured report. Validation failed: {exc.reason}. Use existing IDs and keep categories unique."
+            if mode == "fast":
+                prompt += " Evidence must be a list of existing integer excerpt IDs from the supplied reviews. Do not generate quote text. Return every sentiment prediction."
+            else:
+                prompt += " Use exact nonempty source excerpts. Copy short, contiguous quotations directly from one source field without paraphrasing, correcting spelling, or adding ellipses."

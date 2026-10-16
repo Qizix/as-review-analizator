@@ -15,7 +15,7 @@ from app.main import create_app
 from app.schemas import AnalyzeRequest
 from app.services.collector import collect_reviews
 from app.services.execution import AnalysisRun
-from app.services.interpretation import IssueAnalysis, SentimentPrediction, UnifiedAnalysis, interpret_reviews, validate_analysis
+from app.services.interpretation import ReferencedIssue, ReferencedAnalysis, IssueAnalysis, SentimentPrediction, UnifiedAnalysis, interpret_reviews, validate_analysis
 from app.services.metrics import calculate_metrics
 from app.services.review_batch import ReviewBatch
 from app.services.validator import InsightValidationError
@@ -135,6 +135,8 @@ def fast_api(monkeypatch):
     client_type = genai.Client
     requests = []
     response_data = unified().model_dump()
+    for issue in response_data["issues"]:
+        issue["evidence"] = [{"n": 1, "p": 3, "u": 5}[item["review_id"]] for item in issue["evidence"]]
     responses = []
     finish = {"finishReason": "STOP"}
 
@@ -171,15 +173,15 @@ def test_fast_request_uses_one_real_sdk_call_no_ratings_and_no_cpu_inference(fas
     assert len(api.requests) == 1
     payload = api.requests[0]
     reviews = json.loads(payload["contents"][0]["parts"][0]["text"])["reviews"]
-    assert all(set(review) == {"id", "title", "text"} for review in reviews)
-    assert reviews[0]["text"] == source()["reviews"][0]["text"]
+    assert all(set(review) == {"id", "excerpts"} for review in reviews)
+    assert reviews[0]["excerpts"] == [{"id": 0, "text": "Broken"}, {"id": 1, "text": "Crashes 😡\nafter updates"}]
     config = payload["generationConfig"]
     assert config["thinkingConfig"].get("thinkingLevel", config["thinkingConfig"].get("thinking_level")).lower() == "minimal"
     assert "tools" not in payload
     assert "responseJsonSchema" in config and "responseSchema" not in config
     schema = config["responseJsonSchema"]
     assert "sentiments" in schema["required"]
-    assert "enum" not in schema["$defs"]["Evidence"]["properties"]["review_id"]
+    assert schema["$defs"]["ReferencedIssue"]["properties"]["evidence"]["items"]["type"] == "integer"
     api.factory.assert_not_called()
     assert api.collect.call_args.kwargs["max_pages"] == 10
     api.client.app.state.telemetry.provider.force_flush()
@@ -201,7 +203,7 @@ def test_invalid_fast_outputs_fail_after_bounded_repair_without_fallback(fast_ap
     if invalid == "sentiments":
         api.response["sentiments"].pop()
     elif invalid == "quote":
-        api.response["issues"][0]["evidence"][0]["quote"] = "invented"
+        api.response["issues"][0]["evidence"][0] = 999
     else:
         api.response["unexpected"] = True
     response = api.client.post("/api/analyze", json={"app_id": "123", "mode": "fast"})
@@ -216,7 +218,7 @@ def test_fast_repairs_validation_failure_with_complete_verified_report(fast_api,
     api = fast_api
     broken = deepcopy(api.response)
     if invalid == "quote":
-        broken["issues"][0]["evidence"][0]["quote"] = "invented"
+        broken["issues"][0]["evidence"][0] = 999
     else:
         broken["sentiments"].pop()
     api.responses.append(broken)
@@ -234,7 +236,7 @@ def test_fast_repairs_validation_failure_with_complete_verified_report(fast_api,
             assert evidence["quote"] in review["title"] or evidence["quote"] in review["text"]
     prompt = api.requests[1]["systemInstruction"]["parts"][0]["text"]
     assert "Validation failed:" in prompt
-    assert "including every sentiment prediction" in prompt
+    assert "Return every sentiment prediction" in prompt
     assert api.requests[0]["contents"] == api.requests[1]["contents"]
     event = next(record.event_data for record in caplog.records if getattr(record, "event_data", {}).get("event") == "request.completed")
     assert event["insight_repair_count"] == 1
@@ -363,6 +365,8 @@ def test_full_hundred_review_request_for_each_mode(fast_api, mode):
     api.collect.return_value = data
     result = {"issues": [{"category": "Playback", "action": "Investigate freezing videos.", "priority": "high", "keywords": ["videos freeze"], "evidence": [{"review_id": str(i), "quote": "videos freeze"} for i in range(100)]}]}
     if mode == "fast":
+        for issue in result["issues"]:
+            issue["evidence"] = [int(item["review_id"]) * 2 + 1 for item in issue["evidence"]]
         result["sentiments"] = [{"review_id": str(i), "sentiment": -1 if i % 2 else 1} for i in reversed(range(100))]
     api.response.clear()
     api.response.update(result)
@@ -415,3 +419,48 @@ def test_truncated_or_blocked_generation_fails_even_when_json_is_complete(fast_a
     assert response.status_code == 502
     assert set(response.json()) == {"detail"}
     assert len(api.requests) == 1
+
+
+def test_referenced_excerpts_preserve_unicode_and_do_not_cross_cropped_fields():
+    from app.services.source_excerpts import reference_excerpts, source_excerpts
+
+    data = source()
+    text = "It doesn’t open 😡\n" * 400
+    data["reviews"][0]["text"] = text
+    batch = ReviewBatch(data)
+    visible = batch.semantic_reviews[0]
+    excerpts = source_excerpts(visible)
+    assert all(0 < len(excerpt) <= 240 for excerpt in excerpts)
+    assert all(any(excerpt in visible.get(field, "") for field in ("title", "text", "text_tail")) for excerpt in excerpts)
+    assert "".join(excerpts) == visible["title"] + visible["text"] + visible["text_tail"]
+    assert reference_excerpts([visible])[0] == [{"id": "n", "excerpts": [{"id": index, "text": excerpt} for index, excerpt in enumerate(excerpts)]}]
+    result = ReferencedAnalysis.model_validate({"sentiments": unified().model_dump()["sentiments"], "issues": [{
+        "category": "Startup", "action": "Investigate startup failures.", "priority": "high", "keywords": [],
+        "evidence": [len(excerpts)-1],
+    }]})
+    report = validate_analysis(batch, batch.semantic_reviews, result, "prompt", "model")
+    quote = report["insights"]["high"]["single"][0]["evidence_quotes"][0]["quote"]
+    assert quote == excerpts[-1] and quote in text
+
+
+@pytest.mark.parametrize("identifier", [-1, True, "1", 1.0])
+def test_excerpt_ids_must_be_nonnegative_strict_integers(identifier):
+    with pytest.raises(ValueError):
+        ReferencedIssue(category="Startup", action="Investigate.", priority="high", keywords=[], evidence=[identifier])
+
+
+def test_references_bind_to_original_review_and_reject_unknown_identifiers():
+    batch = ReviewBatch(source())
+    result = ReferencedAnalysis.model_validate({"sentiments": unified().model_dump()["sentiments"], "issues": [{
+        "category": "Playback", "action": "Investigate playback failures.", "priority": "high", "keywords": [],
+        "evidence": [1, 3, 5, 1],
+    }]})
+    report = validate_analysis(batch, batch.semantic_reviews, result, "prompt", "model")
+    issue = report["insights"]["high"]["repeated"][0]
+    assert issue["evidence_ids"] == ["n", "p", "u"]
+    assert issue["review_count"] == 3
+    assert issue["negative_review_count"] == 1
+    assert issue["evidence_quotes"][1] == {"review_id": "p", "quote": "Love it but videos freeze"}
+    result.issues[0].evidence = [999]
+    with pytest.raises(InsightValidationError, match="unknown_evidence_excerpt"):
+        validate_analysis(batch, batch.semantic_reviews, result, "prompt", "model")

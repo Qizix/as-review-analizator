@@ -31,7 +31,7 @@ curl -X POST http://127.0.0.1:8000/api/analyze \
 
 1. **Collect:** Fetch unique Apple reviews with bounded retries and explicit shortfall reporting.
 2. **Analyze:** Choose `fast` for unified Gemini sentiment and issue analysis, or `quality` (default) for RoBERTa sentiment followed by Gemini issue analysis.
-3. **Verify:** Check review IDs and source quotations, with one repair attempt for invalid evidence or incomplete predictions. Calculate all metrics in Python; reject reports that still fail validation.
+3. **Verify:** Fast mode selects numbered source excerpts; Python copies the original text into the report. Validate evidence and predictions, with one repair attempt, and calculate all metrics in Python.
 4. **Explore:** Filter issues, read full supporting reviews, and download the JSON report from the dashboard.
 
 Ratings and sentiment stay independent. Complaints can be identified in positive and neutral reviews too. The application uses no database or persistent report storage; FastAPI serves the dashboard directly, with no frontend build step. Mode names describe the methods; comparative accuracy has not been established.
