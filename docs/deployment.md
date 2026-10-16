@@ -104,7 +104,7 @@ Official references: [public access](https://docs.cloud.google.com/run/docs/auth
 
 ## Current deployment target
 
-Project: `obrio-test-task-api`. Runtime region: `europe-central2` (Warsaw). Cloud Build runs in `europe-west1` with Cloud Logging-only build logs. The runtime service account is `review-analyzer@obrio-test-task-api.iam.gserviceaccount.com`; Gemini credentials are supplied by Secret Manager, pinned to a numeric version. Build and Docker contexts exclude checked-in report examples and local secrets. Release verification follows below.
+Project: `obrio-test-task-api`. Runtime region: `europe-central2` (Warsaw). Cloud Build runs in `europe-west1` with Cloud Logging-only build logs. The runtime service account is `review-analyzer@obrio-test-task-api.iam.gserviceaccount.com`; Gemini credentials are supplied by Secret Manager, pinned to a numeric version. The operator selected manual scaling with one instance through Cloud Console on 2026-10-16; this live setting was preserved during the batch-1 rollout. It differs from the prepared autoscaling/scale-to-zero profile above and keeps one instance allocated until scaling is changed. Build and Docker contexts exclude checked-in report examples and local secrets. Release verification follows below.
 
 ## Initial release verification — 2026-10-15
 
@@ -137,3 +137,17 @@ Gemini 3.5 Flash-Lite standard paid rates are $0.30 per million input tokens and
 - Processing-window total: $0.0294529, displayed as $0.0295.
 
 This is an allocation-based estimate before free tiers, credits, discounts, and taxes, not an invoice. Instance-based billing also covers startup and idle time until shutdown; builds, artifact/source storage, Secret Manager, networking, logging, and tracing have separate costs. Idle time cannot be attributed uniquely to one request without a billing-allocation policy. No fixed all-inclusive per-request charge is claimed.
+
+## Batch size 1 rollout — 2026-10-16
+
+- Source commit: `ee4ded65669284f95b9f8bb79f5090024af097b4`; batch size 1 is shared by inference, standalone sentiment metadata, and the sentiment span attribute.
+- Cloud Build: `67603f9e-65ff-4cfe-922b-f70c040cfcb8`, successful Linux container build and smoke checks.
+- Image digest: `sha256:5376042dd01faaf864cd64f8d437d0253a0d4ad079d6fb9e1d75ce21cf32fa9d` in the existing regional `review-analyzer/app` repository.
+- Processing was paused on revision `app-store-review-analyzer-00002-tlw`, then a full 300-second request drain window elapsed. The new image was staged without traffic before the switch.
+- Serving revision: `app-store-review-analyzer-00003-67b`, healthy and serving 100% traffic on the existing public URL. One CPU, 4 GiB memory, one inference thread, and the operator's manual one-instance scaling remain unchanged. PyTorch and the original model/tokenizer remain in use; no ONNX backend was deployed.
+- Verification request: `batch-one-c0ad9ded8522`; trace ID `e22d538cda98439fb881e0d7abf2a3b5`. Cloud Trace returned 24 spans and confirmed `app.batch_size=1` on `sentiment.classify`. Cloud Logging attributed the completed request to the new revision.
+- Real API result: HTTP 200, 10 unique reviews and three validated issues. Apple returned HTTP 429 for catalog pages 2–10; fallback sources added no unique reviews. The 90-review shortfall and incomplete collection were explicitly reported. No padding or fabricated reviews were introduced.
+- Measured times: collection 35.10 seconds, sentiment 15.74, Gemini 8.67, server HTTP duration 59.72. This 10-review result cannot establish a performance improvement against the earlier 100-review benchmark; Apple throttling prevents a comparable live sample.
+- During analysis, concurrent processing returned 409 and health remained 200. Release checks passed with 139 Python tests, 62 subtests, and six frontend tests.
+
+The earlier known-good processing revision is `app-store-review-analyzer-00001-h68` (batch size 8). If rollback is needed, route 100% traffic there; do not select the maintenance-paused revision `00002-tlw`. Git commits were kept local as requested; deployment used the Cloud Build source upload.

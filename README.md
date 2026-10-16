@@ -70,7 +70,7 @@ Stage timings come from the structured request log; totals include orchestration
 
 Estimates use paid list prices before free-tier allowances, credits, discounts, and taxes. Cloud Run startup/idle time, builds, storage, networking, logs, and traces are additional; this is not the full billed cost or a fixed price. Review length, repairs, and instance performance change each request's usage. See [calculation and pricing sources](docs/deployment.md#per-request-cost-calculation).
 
-An [ONNX/quantization benchmark](docs/sentiment-benchmark.md) now compares the Xenova conversion against PyTorch. On the local ARM Mac, batch size 1 improved PyTorch inference from 7.71 to 6.33 seconds; quantized ONNX was slower and changed some labels. Production inference now uses PyTorch batch size 1; the ONNX backends remain experimental. The timing and cost tables above record the earlier batch-8 deployment.
+An [ONNX/quantization benchmark](docs/sentiment-benchmark.md) now compares the Xenova conversion against PyTorch. On the local ARM Mac, batch size 1 improved PyTorch inference from 7.71 to 6.33 seconds; quantized ONNX was slower and changed some labels. Production inference now uses PyTorch batch size 1; the ONNX backends remain experimental. The timing and cost tables above record the earlier batch-8 deployment. See the [batch-1 rollout verification](docs/deployment.md#batch-size-1-rollout--2026-10-16) for the latest cloud check.
 
 ## Application example: Nebula
 
