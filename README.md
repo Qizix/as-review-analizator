@@ -53,8 +53,6 @@ Measured **16 October 2026**, using identical sets of **100 Nebula reviews** on 
 
 Costs include Gemini tokens and request-time compute, before allowances and taxes. They exclude startup and idle costs. The current always-allocated instance costs approximately **$2.70/day** in compute, which already includes request-time compute.
 
-See [the full experiment record, timings, and pricing methodology](docs/cloud-experiments.md) for all attempts and measurement limits.
-
 ## Example: Nebula
 
 The verified cloud quality report analyzed **100 unique US reviews** of **Nebula: Spiritual Guidance** (`1459969523`):
@@ -77,7 +75,3 @@ Selected recommendations:
 Reviews may support multiple issues. Recommendations reflect the sampled feedback, not independently verified defects. [Download the complete report](examples/nebula-cloud-report.json).
 
 ![Nebula dashboard with rating and sentiment charts, prioritized issues, and full review text](examples/nebula-dashboard.png)
-
-Dashboard screenshot from an [earlier sample report](examples/nebula-report.json); its issue groups differ from the cloud example above.
-
-[Architecture](docs/architecture.md) · [Analysis modes and fast-only setup](docs/dual-mode-analysis.md) · [Deployment](docs/deployment.md) · [Observability](docs/observability.md)
