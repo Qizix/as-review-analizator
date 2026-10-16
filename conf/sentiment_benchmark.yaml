@@ -1,0 +1,14 @@
+input: examples/nebula-report.json
+backends: [pytorch, onnx_fp32, onnx_int8, onnx_uint8]
+batch_sizes: [8, 1]
+repeats: 3
+threads: 1
+max_length: 512
+onnx_model: Xenova/twitter-roberta-base-sentiment-latest
+onnx_revision: f3ec4d0925f90c3ca7ee7814f52d6ee7cf180445
+
+hydra:
+  run:
+    dir: hydra_outputs/sentiment_benchmark/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  job:
+    chdir: false

@@ -63,3 +63,5 @@ The standalone metrics tool accepts the grouped insight format, verifies app/cou
 ## Verification
 
 `uv run --locked pytest -q` covers source fixtures, preprocessing, batch consistency, classifier alignment, SDK serialization, repair, exact counts, overlap, empty inputs, deadlines, error attribution, and CLI outputs without live provider calls. The [sample report](../examples/nebula-report.md) documents a supplied live application export.
+
+For an isolated CPU backend/batching comparison using saved reviews, see the [sentiment benchmark](sentiment-benchmark.md). It uses Hydra, development-only ONNX Runtime, pinned conversion artifacts, and no Gemini calls.
